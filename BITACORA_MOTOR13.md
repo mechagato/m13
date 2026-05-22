@@ -1693,6 +1693,77 @@ Nada. Build prod limpio a la primera. QR generado a la primera con el primer `pn
 
 ---
 
+## Entrada 021 · 2026-05-21 · T-059 deploy a CF Pages LIVE 🎉
+
+**Duración:** ~5 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Gato pidió "haz esto" referido a T-059 (deploy a Cloudflare Pages) en lugar de seguir con D-4 editor. Verifiqué el entorno: `wrangler` instalado (v4.82.2) **YA autenticado con OAuth a la cuenta isai@procesosdigitalesmty.com** (Account ID `261c5b169b85396ca06e0356965bd3aa`). Sin credenciales que pedir → procedí con el deploy.
+
+### Lo que se hizo
+
+1. **`wrangler whoami`** → confirmó auth OAuth (cuenta "Isaí García").
+2. **`wrangler pages project create motor13 --production-branch=main`** → ✅ proyecto creado.
+3. **Build prod:** `pnpm --filter @m13/examples build` → 264 KB en `dist/` con todos los assets (incluye QR generado en T-060, `_headers` para seguridad).
+4. **Deploy:** `wrangler pages deploy dist --project-name=motor13 --branch=main` → ✨ Upload de 11 files en 1.8s, deploy completo.
+5. **Verificación:**
+   - `https://motor13.pages.dev/` → HTTP 200, headers de seguridad correctos (X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy)
+   - `https://motor13.pages.dev/scenes/sala_galeria.m13` → HTTP 200, 2014 bytes
+   - URL específica del deploy: `https://e881d846.motor13.pages.dev/`
+6. **DNS verification:** `dig +short neonodos.com NS @1.1.1.1` → `miles.ns.cloudflare.com.` + `abby.ns.cloudflare.com.` → la zona ESTÁ en Cloudflare en la misma cuenta. Custom domain solo necesita 2 clicks en dashboard.
+
+### Estado de deploys
+
+| URL | Status | Notas |
+|---|---|---|
+| `https://motor13.pages.dev/` | ✅ LIVE | URL canónica de CF, accesible desde cualquier browser con WebGPU |
+| `https://e881d846.motor13.pages.dev/` | ✅ LIVE | URL específica de este deploy (immutable, útil para rollback) |
+| `https://motor13.neonodos.com/` | ⏳ pendiente | Requiere setup manual en CF dashboard (wrangler 4.x no maneja custom domains via CLI) |
+
+### Lo que tronó
+
+1. **`wrangler pages deploy` falló al inicio** porque el proyecto no existía. Solución: `wrangler pages project create motor13` primero, luego deploy.
+2. **`wrangler pages domain add` NO EXISTE** en wrangler 4.x — solo gestión de proyectos y deployments via CLI. Para custom domains: dashboard CF (es donde Pages tiene esa UI). Documentado en DEPLOY.md con pasos exactos (~2 min de tu lado).
+
+### Decisiones tomadas
+
+- **D-2001:** Auto-procedí con el deploy al detectar que wrangler ya estaba autenticado. Si hubiera necesitado credenciales nuevas, hubiera pedido API token a Gato. Esto es coherente con "no detenernos" pero con safety net (si OAuth no estuviera, paro).
+- **D-2002:** Acepté que el custom domain requiere Gato. La alternativa (crear API token con scopes Zone:DNS:Edit + Pages:Edit y hacerlo via curl) tomaría más tiempo que los 2 clicks del dashboard. Pragmático.
+- **D-2003:** QR ya apunta a `https://motor13.neonodos.com` (URL futura). Cuando Gato active el custom domain, el QR ya funciona. No hay que regenerarlo. Si el demo se quedara en `motor13.pages.dev`, hay que `pnpm gen:qr -- --url https://motor13.pages.dev` + re-deploy.
+- **D-2004:** `_headers` se uploadeo correctamente (Wrangler reportó "✨ Uploading _headers"). Los headers de seguridad están aplicándose desde el primer hit (confirmado en curl).
+
+### Pendientes para Gato (2 min en CF dashboard)
+
+1. Abrir https://dash.cloudflare.com/ → cuenta "Isaí García"
+2. Workers & Pages → motor13
+3. Pestaña Custom domains → Set up a custom domain
+4. `motor13.neonodos.com` → Continue → Activate
+5. Esperar 30s a que SSL aparezca verde
+6. Validar: `curl -I https://motor13.neonodos.com/` → HTTP 200
+
+Doc completa en `docs/DEPLOY.md` §T-059.
+
+### Pendientes Claude (continuar D-4 después)
+
+- [ ] T-042 Scaffold editor Next.js — quedó pending por el pivot a deploy
+- [ ] T-043..T-057 resto del cluster D-4
+- [ ] T-061 Quest 3 test (siempre fue de Gato, doc lista)
+
+### Reflexiones
+
+**Fase 1 tiene un demo LIVE en internet** — paso simbólico importante. Cualquiera con WebGPU puede abrir `https://motor13.pages.dev/` y ver las 5 escenas. El QR del HUD funciona para mobile/Quest cuando el custom domain se active (apunta al destino final).
+
+**Cost realista del deploy:** $0/mes con CF Pages free tier (500 builds/mes, unlimited requests, 100 routes). Para m13 con un build cada par de días, sobra muchísimo.
+
+**El custom domain de 2 clicks pendiente NO bloquea nada** — el demo es accesible HOY en motor13.pages.dev. Cuando lo actives, el QR de pronto va a la URL bonita. Tampoco bloquea D-4 (el editor puede vivir en otra ruta o subdominio).
+
+Vuelvo a D-4 (editor Next.js + LLM) en próximo turn según lo acordado.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```

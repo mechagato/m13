@@ -2,45 +2,59 @@
 
 Pasos para llevar el demo a `https://motor13.neonodos.com` y validar en Quest 3.
 
-> **Quién lo hace:** Gato (acción manual en dashboards externos).
-> **Por qué no Claude:** requiere acceso a Cloudflare dashboard + Quest 3 físico — fuera del alcance del runtime de Claude Code.
+## Estado actual (2026-05-21 23:55)
+
+- ✅ **Deploy técnico HECHO** desde Claude Code vía wrangler CLI.
+- ✅ **URL preview LIVE:** [https://motor13.pages.dev/](https://motor13.pages.dev/) (deploy automático con cada `wrangler pages deploy`)
+- ✅ **URL específica del último deploy:** https://e881d846.motor13.pages.dev/
+- ⏳ **Custom domain pendiente:** `motor13.neonodos.com` (~2 min en dashboard CF, ver §T-059 abajo)
+- ⏳ **Quest 3 test pendiente:** ver §T-061 abajo
 
 ---
 
 ## T-059 — Deploy a Cloudflare Pages
 
-### Pre-requisitos
-- Build de producción listo: `pnpm --filter @m13/examples build` (ya pasa, 260 KB total)
-- Cuenta Cloudflare con el dominio `neonodos.com` administrado
-- `wrangler` CLI instalado: `pnpm add -g wrangler`
+### Estado: ✅ deploy técnico hecho, custom domain pendiente
 
-### Opción A — Deploy directo con wrangler (más rápido)
+El deploy a `motor13.pages.dev` ya está LIVE. Lo único que falta es vincular el subdominio `motor13.neonodos.com` apuntando ahí.
+
+### Re-deploy futuros (cuando edites el demo)
 
 ```bash
 cd /home/isai1618/neonodos-core/NeoNodos_System/m13
 pnpm --filter @m13/examples build
 cd packages/examples
-wrangler login   # primera vez, abre browser para auth Cloudflare
 wrangler pages deploy dist --project-name=motor13 --branch=main
 ```
 
-Output esperado:
-```
-✨ Successfully deployed to https://motor13.pages.dev
-```
+(wrangler ya está autenticado con OAuth en esta máquina con la cuenta isai@procesosdigitalesmty.com / Account ID `261c5b169b85396ca06e0356965bd3aa`.)
 
-Después configurar el custom domain:
+### Custom domain — pasos exactos en CF dashboard (~2 min)
+
+Wrangler CLI 4.x **NO** maneja custom domains (solo el dashboard). Hacer:
+
+1. Abrir [https://dash.cloudflare.com/](https://dash.cloudflare.com/) → cuenta "Isaí García"
+2. Workers & Pages → **motor13** (el proyecto recién creado)
+3. Pestaña **Custom domains** → botón **Set up a custom domain**
+4. Escribir `motor13.neonodos.com` → **Continue**
+5. CF detecta automáticamente que la zona `neonodos.com` está en la misma cuenta (lo verifiqué — los NS apuntan a `miles.ns.cloudflare.com` + `abby.ns.cloudflare.com`)
+6. CF propone: agregar registro CNAME `motor13` → `motor13.pages.dev` en zona `neonodos.com` → **Activate domain**
+7. Esperar ~30s a que SSL/TLS se aprovisione (badge cambia a verde "Active")
+8. Verificar:
+   ```bash
+   curl -I https://motor13.neonodos.com/
+   # Esperar HTTP 200
+   ```
+
+### Después del custom domain — regenerar el QR
+
+El QR actual apunta a `https://motor13.neonodos.com` (URL final esperada — ya correcto). Pero si quieres validarlo:
 
 ```bash
-wrangler pages project list
-wrangler pages deployment list --project-name=motor13
+cd /home/isai1618/neonodos-core/NeoNodos_System/m13
+pnpm gen:qr   # regenera el PNG (output idéntico si la URL no cambió)
+# Si OK, no hace falta re-deploy. Si cambias la URL: re-deploy.
 ```
-
-En el dashboard de Cloudflare:
-1. Workers & Pages → motor13 → Custom domains
-2. Add → `motor13.neonodos.com`
-3. CF detecta que el dominio ya está administrado → crea CNAME automático
-4. Espera ~30s a que propague + SSL aparezca
 
 ### Opción B — Deploy via GitHub (CI/CD continuo)
 
