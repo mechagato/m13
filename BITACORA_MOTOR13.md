@@ -1318,6 +1318,141 @@ Bueno tenerlas en CLAUDE.md aunque NO se trabajen. Sirven como antídoto contra 
 
 ---
 
+## Entrada 018 · 2026-05-21 · T-025..T-036 catálogo D-3 completo + showcase
+
+**Duración:** ~30 min Claude (con effort high según Gato)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cierre del cluster D-3. Tras tener toda la infraestructura (T-017..T-024 ya completados), agregamos los **10 conceptos restantes** del catálogo Fase 1 + escena showcase + README final. Gato dijo "dale con todas tus recomendaciones" y luego "sí continúa", confirmando paralelización masiva.
+
+### Lo que se hizo
+
+**10 nuevos conceptos (todos archivos pequeños, ~30-60 líneas cada uno):**
+
+#### Materiales (T-025..T-030)
+
+| ID | Params | Descripción |
+|---|---|---|
+| `pared_concreto_pulido` | darkness, roughness | Concreto pulido industrial (loft/oficina/parking) |
+| `pared_madera_oscura` | darkness, grainScale | Madera oscura (despacho/biblioteca) |
+| `piso_marmol_blanco` | veinIntensity | Mármol floor-optimized (galería/lobby) |
+| `metal_oxidado` | rustAmount | Metal con óxido naranja (rústico) |
+| `metal_bronce_pulido` | shimmer | Bronce con shimmer animado por `u.time` |
+| `vidrio_esmerilado` | clarity | Vidrio esmerilado EMULADO (sin transmisión real, limitación v0.1) |
+
+#### Geométricos (T-031..T-034)
+
+| ID | Params | wgslSdf |
+|---|---|---|
+| `pedestal_marmol` | cornerRadius | round_box con cornerRadius parametrizable |
+| `lampara_colgante` | glowIntensity, length | Cilindro emisivo inline (sin contribución real a luz de escena) |
+| `esfera_decorativa` | — | Sphere simple (radius desde scale.x) |
+| `cubo_basico` | — | Box puro (usa scale del object) |
+
+**Registry actualizado** (`synth/src/index.ts`):
+- 18 imports organizados por origen (bootstrap × 8, materiales D-3 × 6, geos D-3 × 4)
+- `RAW_CONCEPTS` array de 18 elementos
+- attachManifest sin cambios — pre-computa paramsJsonSchema para los 8 que ahora lo tienen
+
+**Tests del manifest reescritos** — antes verificaban "8 conceptos sin params", ahora:
+- `BOOTSTRAP_IDS` (8) — verifican que siguen SIN params, defaults, wgslSdf (compat backward)
+- `D3_MATERIAL_IDS` (6) — verifican que TODOS declaran paramsSchema + defaults + paramsJsonSchema serializable
+- `D3_GEO_IDS` (4) — verifican category 'object_geo' + wgslSdf con función `sdf_<id>`
+- Total: 18 conceptos, TOTAL_COUNT validado en cada test
+- Nuevo test específico T-022: verifica que el JSON Schema de un concepto (metal_oxidado) refleja correctamente las restricciones Zod (`minimum:0`, `maximum:1`)
+
+**T-035 — Escena showcase `_concepts_showcase.m13`:**
+- Cuarto grande 8×4×8 m, spawn en (0, 0, -6) para vista panorámica
+- **18 conceptos referenciados en 1 escena** (validado por script de inspección):
+  - Walls: pared_concreto_pulido con params (darkness 0.4, roughness 0.4)
+  - Floor: piso_marmol_blanco (veinIntensity 0.4)
+  - Ceiling: pared_yeso_blanco
+  - 15 objetos en 4 filas: bootstrap × 4, D-3 materials × 4, D-3 geos × 4, bootstrap sobrantes × 3
+- Comprobado en runtime: MAT_PARAMS 11 f32 slots, WGSL 17.4 KB, YAML 3.7 KB (< 30 KB budget de escena)
+- Registrada en `examples/src/main.ts` como 5ta escena del selector. Hotkey 5.
+
+**T-036 — README synth final:**
+- Tabla "Phase 1 catalog (18 concepts)" reemplaza la antigua "Bootstrap catalog (8)"
+- 3 sub-tablas: Bootstrap (8), D-3 materiales (6 con sus params), D-3 geos (4)
+- Sección "Showcase scene" apunta al .m13 nuevo
+- Sección "Catalog roadmap" actualizada: Phase 1 ✅ catalog complete, futuras fases enumeran extensiones (Phase 2 azulejo_talavera etc, Phase 3 neural, Phase 4 splatting).
+
+### Verificaciones
+
+- ✅ `pnpm typecheck` limpio en los 3 packages.
+- ✅ `pnpm test` → **86/86 pass** (24 parser + 12+7+8+9+3 compiler + 6+3 engine + 15 synth — +3 vs T-022 por nuevos tests del catálogo).
+- ✅ Determinismo: las 4 escenas demo siguen produciendo el mismo SHA-256 (nuevos conceptos no se referencian en demos viejos, hash igual).
+- ✅ `pnpm dev` Vite ready 266ms. Escena showcase responde HTTP 200.
+- ✅ Bundle: 58.64 KB gzipped (+1.85 KB vs T-022, ~59% del budget de 100 KB).
+- ✅ `pnpm bench:compile` p95 22.31 ms para 50 objetos (~9× bajo budget de 200 ms — el growth de catálogo no afectó performance).
+- ✅ Showcase compila con 18 conceptos, 11 slots MAT_PARAMS, sin errores.
+
+### Decisiones tomadas
+
+- **D-1701:** Los 6 materiales nuevos TODOS declaran paramsSchema + defaults. Razón: el catálogo es la oportunidad de demostrar el flow completo de T-018/T-019. Sin params, el catálogo sería visualmente idéntico al bootstrap.
+- **D-1702:** 2 de los 4 geos declaran params (pedestal_marmol con cornerRadius, lampara_colgante con glowIntensity + length). Los otros 2 (esfera_decorativa, cubo_basico) NO necesitan — usan el `scale` del object directamente. Esto valida que `paramsSchema` es opcional incluso para geos.
+- **D-1703:** Cada concept con sus params hardcodea las restricciones Zod (`.min(0).max(1)`). Esto se traduce automáticamente a JSON Schema con `minimum`/`maximum` para el editor LLM, sin escribir el JSON Schema a mano.
+- **D-1704:** `vidrio_esmerilado` documenta su LIMITACIÓN (sin transmisión real) tanto en su comment header como en el README. Es un punto débil pero honesto — Fase 3-4 traerá la versión real con neural / splatting.
+- **D-1705:** `lampara_colgante` también documenta limitación (no añade luz real a la escena, es solo apariencia HDR via `color * (1 + glow)`). Para luz real, workaround manual de mover `light.position` al scene.
+- **D-1706:** Showcase incluye TODOS los 18 conceptos en 1 escena. Razón: si TODOS renderizan sin shader errors, el catálogo está sano. Decisión > tener 18 escenas mini que validen 1 cada una.
+- **D-1707:** El showcase usa hotkey 5 (5ta opción), después de templo (4). Mantiene compat con muscle-memory: 1-4 son las 4 originales.
+- **D-1708:** Tests del manifest se organizan por origen del concepto (BOOTSTRAP/D3_MATERIAL/D3_GEO). Más mantenible que mezclar — al agregar conceptos en Fase 2 basta con añadir un nuevo array constante + un test de "los X nuevos de Fase 2".
+
+### Lo que tronó
+
+- 4 tests del manifest fallaron tras agregar los nuevos conceptos (esperaban "todos sin params") — atrapado y reescrito el archivo de tests para reflejar la nueva realidad (bootstrap vs D-3 separados).
+- `_concepts_showcase.m13` v1 tenía solo 15 conceptos referenciados — 3 bootstrap quedaron fuera. Agregué 3 objetos más para llegar a los 18. Atrapado por el script de inspección efímero antes de commitear.
+
+### Pendientes para próxima sesión
+
+**Cluster D-3 cerrado.** Avance:
+- ✅ T-017 (interface)
+- ✅ T-018 (compiler params)
+- ✅ T-019 (renderer buffer)
+- ✅ T-020 (E2E + bug fix)
+- ✅ T-021 (kind:concept)
+- ✅ T-022 (manifest JSON)
+- ✅ T-023, T-024 (READMEs)
+- ✅ T-025..T-034 (10 conceptos)
+- ✅ T-035 (showcase)
+- ✅ T-036 (README final)
+
+**Siguientes clusters disponibles:**
+- D-5 (escenas formales del spec: T-037 sala_galeria, T-038 cocina_industrial, T-039 oficina_neonodos, T-040 reconciliar registry, T-041 FPS validation)
+- D-4 (editor Next.js + LLM — el más caro, 11 componentes)
+- D-6 (benchmark vs Three.js)
+- D-7 (demo público + Quest 3)
+- D-8 (docs + spec Fase 2)
+
+### Reflexiones
+
+**El cluster D-3 está COMPLETO.** El motor m13 ahora tiene:
+- 18 conceptos de síntesis material/geométrica funcionales y testeados
+- Soporte completo de params editables vía Zod → uniforms WGSL
+- Soporte de conceptos geométricos con SDF propio
+- Manifest JSON exportable para el editor LLM
+- Showcase visual + READMEs completos en inglés
+
+**Cifras:**
+- 86 tests verdes (de cero al inicio de Fase 1)
+- 58.64 KB bundle gzipped (~59% del budget)
+- p95 compile-time 22 ms para 50 objects (10× bajo budget)
+- 0 regresiones en escenas demo originales
+
+**Próxima decisión estratégica:** ¿qué cluster atacar?
+- D-5 es rápido (3-4 escenas, ya tenemos los conceptos para construirlas)
+- D-4 es el monstruo (editor + LLM) — mejor abordarlo después de D-5/D-7 para tener escenas reales que el editor pueda mostrar
+- D-7 (demo público) requiere D-5 listo
+
+Mi recomendación: **D-5 siguiente (rápido) → D-7 (demo público) → D-4 (editor) → D-6 (benchmark) → D-8 (cierre)**. Esta secuencia maximiza valor temprano (demo accesible) y deja el editor (riesgo más alto) cuando los demás están firmes.
+
+Si Gato lo aprueba, próxima sesión = T-037 (sala_galeria.m13) — escena minimalista con yeso + mármol + esfera + pedestal.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
