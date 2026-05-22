@@ -31,9 +31,9 @@ async function main(): Promise<void> {
 
   await QRCode.toFile(OUTPUT_PATH, url, {
     type: 'png',
-    width: 320,
-    margin: 2,
-    errorCorrectionLevel: 'M',
+    width: 480, // mayor resolución → más fácil de escanear desde lejos
+    margin: 4, // quiet zone más amplio (recomendado por spec QR)
+    errorCorrectionLevel: 'H', // 30% redundancia — máxima tolerancia a daño/luz
     color: {
       dark: '#0e1014', // m13 HUD dark
       light: '#f5f1e8', // m13 HUD cream
