@@ -127,6 +127,69 @@ Si Gato aprueba el plan, recomiendo arrancar Prompt #3 con orden de tasks: spec 
 
 ---
 
+## Entrada 003 · 2026-05-21 · Tasks Fase 1 + D-1 cluster ejecutado
+
+**Duración:** continuación de la sesión de Entrada 002
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Gato aprobó el plan Fase 1 y pidió arrancar Prompt #3 sin detenernos ("tu decide con lo mejor"). Esta entrada cubre la generación del task breakdown completo y la ejecución del primer cluster (D-1 — spec formal `.m13 v0.1`).
+
+### Lo que se hizo
+
+**Prompt #3 — task breakdown:**
+1. Generado `docs/tasks/phase-1-tasks.md` con 78 tasks (T-000..T-078), ordenadas por camino crítico, con dependencias, complejidad 30-90 min cada una, etiquetas BLOQUEADOR/PARALELIZABLE/OPCIONAL/INFRA.
+2. Mapa de dependencias y orden sugerido por semana (6 semanas en lugar de 5 del spec original).
+
+**Decisiones operativas en autonomía (Gato dijo "no detenernos"):**
+- **D-201:** Repo m13 queda anidado en `neonodos-core/NeoNodos_System/m13/` por ahora. Repo independiente `mechagato/motor-13` se decide al cerrar Fase 3 (alineado con Constitution §8.4 sobre licenciamiento).
+- **D-202:** Subdominio `motor13.neonodos.com` se configura cuando llegue T-059 (deploy de demo público), no antes.
+- **D-203:** Quest 3 confirmado disponible (Gato avisa mid-sesión) → T-061 mantiene Quest 3 test dentro del MVP Fase 1, no diferido a Fase 5.
+
+**Cluster D-1 ejecutado (T-001..T-006):**
+
+- **T-001..T-004:** Spec formal `m13-spec/v0.1.md` escrita (596 líneas, 13 secciones). Cubre: identidad, schema raíz, primitivos, conceptos (catálogo de 14 con categorías), superficies, objetos + animaciones, ambiente/luz/window, determinismo, validación pipeline, política de extensión y versionado, 3 ejemplos positivos (minimal/intermedio/templo_mexica), 3 contraejemplos (versión inválida, concepto inexistente, tipos rotos), apéndices con glosario y referencias cruzadas.
+- **T-005:** Generador `tools/gen-json-schema.ts` con `zod-to-json-schema`. Script `pnpm gen:schema` produce `m13-spec/v0.1.schema.json` (6.90 KB, 277 líneas, draft-07). **Verificado determinista**: dos corridas consecutivas → diff zero.
+- **T-006:** Parser actualizado:
+  - Constante `SUPPORTED_VERSION = '0.1'` exportada.
+  - Validación early: si `version !== '0.1'` → error claro `m13 v0.2 no soportado por este runtime`.
+  - Warnings para campos desconocidos en el nivel raíz vs whitelist (`KNOWN_ROOT_KEYS`).
+  - Tipo `ParseOptions { silent?: boolean }` para suprimir warnings cuando se requiera.
+  - Smoke test 4/4 pass: versión inválida, campos extra (warning, no error), válido limpio (sin warnings), YAML estructural roto.
+
+**Verificaciones:**
+- `pnpm typecheck` ✅ limpio en 3 packages tras cada cambio.
+- `pnpm dev` ✅ Vite ready 255ms, sigue sirviendo el demo.
+- `pnpm gen:schema` ✅ determinista.
+
+### Decisiones tomadas
+
+- **D-201..D-203:** ver arriba.
+- **D-204:** El JSON Schema usa `$refStrategy: 'root'` y `target: 'jsonSchema7'`. Es el formato que el editor LLM va a inyectar como contexto del prompt sistema (T-051).
+- **D-205:** El parser separa validación de versión (early, error fuerte) de validación de schema (Zod, errores agregados) de política de extensión (warning, no fatal). Tres capas independientes.
+
+### Lo que tronó
+
+Nada estructural. Un solo tropezón menor: el package.json se modificó dos veces seguidas (zod-to-json-schema install + script gen:schema), tuve que releerlo entre Edits. Sin impacto.
+
+### Pendientes para próxima sesión (siguiente cluster D-2)
+
+- [ ] T-007 setup Vitest + coverage v8 ([BLOQUEADOR] del cluster D-2)
+- [ ] T-008..T-012 tests parser + compiler + determinismo
+- [ ] T-013 caché de shaders por hash
+- [ ] T-014..T-016 benchmark compile-time + bundle size budget
+- [ ] T-017 Concept interface extendida con `paramsSchema` (BLOQUEADOR del cluster D-3)
+
+### Reflexiones
+
+El cluster D-1 cerró rápido porque la mayoría es documentación + un generador trivial. La parte interesante del parser (warnings + version) es 50 líneas pero abre la puerta a la política de extensión completa. El JSON Schema de 6.9 KB es lo bastante chico para incluir en el contexto del LLM editor sin saturar el prompt (presupuesto T-051: <4000 tokens totales).
+
+D-1 valida que el bootstrap original ya tenía el schema correctísimo — la spec formal es básicamente "explicar bonito lo que el código ya hace". Los siguientes clusters (D-2 runtime tests, D-3 conceptos) son donde empieza la implementación real. Mi recomendación: arrancar D-2 con T-007 (vitest) en la próxima sesión.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
