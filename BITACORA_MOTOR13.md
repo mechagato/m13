@@ -1764,6 +1764,162 @@ Vuelvo a D-4 (editor Next.js + LLM) en próximo turn según lo acordado.
 
 ---
 
+## Entrada 022 · 2026-05-22 · D-4 Phase 1 — Editor base funcional (sin LLM)
+
+**Duración:** ~25 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Gato confirmó "sin lite mode lo abrí en mi laptop y todo cool" tras la sesión del deploy a CF Pages. Esto valida que m13 funciona en hardware moderno — la lentitud era 100% de la GT 710 del Cerebro4, no del motor. Confirma que el demo público es entregable. Avanzo D-4 (el monstruo).
+
+D-4 son 11 tasks (~32-44h estimadas), demasiado para una sesión. Plan: hoy Phase 1 = editor base funcional sin LLM (T-042..T-047). Mañana Phase 2 = LLM integration (T-048..T-054). Después Phase 3 = polish + README (T-055..T-057).
+
+### Lo que se hizo (Phase 1 del editor)
+
+**T-042 — Scaffold packages/editor:**
+- Next.js 14.2 + React 18.3 + TypeScript strict + Tailwind 3.4
+- Estructura: `app/`, `components/`, `lib/`, `public/`
+- `package.json` con deps + workspace links a `@m13/runtime` y `@m13/synth`
+- `next.config.mjs` con:
+  - `transpilePackages: ['@m13/runtime', '@m13/synth']` — Next compila los TS sources directos
+  - `resolve.extensionAlias: {'.js': ['.ts', '.tsx', '.js', '.jsx']}` — resuelve imports ESM-bundler del runtime sin build previo
+  - Loader `.m13` como `asset/source` (texto plano)
+- `tsconfig.json` strict, JSX preserve, plugin Next
+- `tailwind.config.ts` con paleta HUD m13 (bg #0e1014, accent #c9a227, signal #5da662, critical #d04545)
+- `app/layout.tsx` con fonts JetBrains Mono + Inter cargadas de Google Fonts
+- `app/globals.css` con scrollbars finos del HUD
+- `public/favicon.svg` minimalista con "m13" en accent dorado
+
+**T-043 — Layout shell:**
+- `components/EditorShell.tsx` con 3 zonas:
+  - Header: title "m13 · editor" + status indicator (live / error)
+  - Main: split 50/50 — Monaco izquierda, Preview derecha
+  - Footer: ErrorPanel collapsable con info de compile (ms, hash, cached)
+- Tailwind grid-cols-2 con `min-h-0 min-w-0` (clave para que los children flex respeten height)
+- Debounce 250ms entre keystroke y `setDebouncedYaml` → evita compilar en cada caracter
+
+**T-044 — Monaco YAML editor:**
+- `components/MonacoYaml.tsx` con `@monaco-editor/react`
+- Tema custom `m13-dark`: background #0e1014, accent dorado para strings YAML, signal verde para tags, cream para números
+- Font JetBrains Mono 13px con ligaturas
+- Markers de Monaco sincronizados vía `useEffect` cuando cambian (errores → squiggly lines en línea correcta)
+- Options: minimap off, scrollBeyondLastLine off, smooth scrolling, tab=2, wordWrap on
+
+**T-045+T-046 — Preview WebGPU + live reload:**
+- `components/Preview.tsx` con canvas + M13Engine importado **dinámicamente** (`await import('@m13/runtime')`) — evita que Next.js intente resolver `navigator.gpu` en SSR
+- Boot guard: si `'gpu' in navigator` no existe, muestra error elegante en lugar de tronar
+- Mount: una sola vez, crea M13Engine + attachFlyCamera + attachAudioInput + start
+- Update: `useEffect([yaml, ready])` llama `engine.loadScene(yaml)` cuando el YAML cambia (debounced)
+- Mide latencia con `performance.now()` y la reporta vía `onLoadInfo` callback
+- Aprovecha shader cache (T-013) → cambios solo de params son casi instantáneos (~5ms write al matParamsBuffer)
+- Listener de resize sincronizado con `engine.resize()`
+
+**T-047 — Error panel + Zod path → Monaco markers:**
+- `lib/yaml-marker-bridge.ts`:
+  - `parseM13Error(msg)`: regex sobre el mensaje del parser, extrae issues `[{path, message}]`
+  - `pathToMarker(yaml, issue)`: heurística — toma el último segmento del path (o penúltimo si es índice array), busca `<field>:` en el YAML, devuelve el linenumber
+  - `errorToMarkers(yaml, msg)`: combina los dos → array de markers Monaco
+- `components/ErrorPanel.tsx`: muestra error con prefijo `:: error ::` rojo, o status verde con info del último compile (ms, hash, cached flag)
+
+**Inicial scene preset:**
+- `lib/initial-scene.ts` — escena minimalista con yeso/marmol/pedestal/esfera_dorada audio_reactive. Usa conceptos del catálogo D-3 incluyendo params (veinIntensity). Demuestra el flow completo desde el primer mount.
+
+### Verificaciones
+
+- ✅ `pnpm install` instaló 326 paquetes (Next.js + Monaco + deps). 22.7s.
+- ✅ `pnpm --filter @m13/editor typecheck` limpio.
+- ✅ `pnpm --filter @m13/editor dev` arranca Next.js en localhost:3000.
+- ✅ `curl http://localhost:3000/` → HTTP 200, HTML completo con todos los componentes renderizados server-side.
+- ✅ Compilación: 802 modules en 5.1s (incluye Monaco + runtime + synth + Tailwind).
+- ✅ SSR validation: HTML server-side incluye "m13 · editor" header, split grid, Monaco "Loading..." placeholder (lazy), canvas con "inicializando webgpu…" mientras boot.
+- ✅ Typecheck monorepo completo (4 packages): synth, runtime, editor, examples — todos limpios.
+- ✅ Tests existentes 86/86 pass (sin regresiones).
+
+### Decisiones tomadas
+
+- **D-2101:** Scaffold manual del editor (no `pnpm create next-app`). Razón: el comando interactivo no funciona en Claude Code (sin TTY). Más rápido y predecible con Write directo.
+- **D-2102:** `next.config.mjs` con `resolve.extensionAlias` mapea `.js` → `.ts` para webpack 5. Sin esto, Next falla con "Module not found: ./engine.js" porque el runtime usa el patrón ESM-bundler (`import x from './engine.js'` apuntando a archivo `.ts`).
+- **D-2103:** M13Engine importado dinámicamente con `await import('@m13/runtime')`. Razón: si Next.js procesara el módulo en SSR, fallaría al tocar `navigator.gpu`. Dynamic import lo difiere al client-side.
+- **D-2104:** Debounce 250ms YAML → loadScene. Razón: balance entre live feel (FR-4.3 spec <500ms) y no saturar el compiler al teclear rápido. Probado con eyeballing — 250ms es imperceptible para edición humana.
+- **D-2105:** Markers de Monaco con heurística simple (buscar `<field>:` en el YAML). No es exacto (no consideramos jerarquía YAML) pero es suficiente para guiar al usuario al campo problemático. Un parser YAML con source maps sería más preciso pero overhead grande para Fase 1.
+- **D-2106:** Layout en grid-cols-2 estático (no resizable aún). T-043 original planeaba resizer drag pero lo difiero. La mayoría de monitores 14"+ tienen suficiente espacio para 50/50; resizer es nice-to-have para Fase 2.
+- **D-2107:** Tema Monaco custom `m13-dark` con paleta del HUD. Razón: consistencia visual con el resto del ecosistema NeoNodos.
+- **D-2108:** Preview maneja boot error con UI elegante (no throw a la consola). UX importante: si WebGPU no está disponible, el usuario debe saber QUÉ hacer (igual que el demo público).
+
+### Lo que tronó
+
+- 1 error: `Module not found: ./engine.js` al primer arranque. Atrapado y arreglado con `extensionAlias` en webpack config. Tomó ~3 min.
+
+### Pendientes — Phase 2 del editor (LLM)
+
+- [ ] T-048 Panel "Natural language → .m13" UI
+- [ ] T-049 LLM client-side (Anthropic SDK browser)
+- [ ] T-050 LLM server-side route + rate limit IP
+- [ ] T-051 [BLOQUEADOR] System prompt + few-shots + spec JSON Schema
+- [ ] T-052 Suite 30 prompts evaluación
+- [ ] T-053 Iterar prompt hasta >70% pass rate
+- [ ] T-054 Wire NL → m13
+
+### Pendientes — Phase 3 (cierre)
+
+- [ ] T-055 [OPCIONAL] Export bundle .zip
+- [ ] T-056 [OPCIONAL] Telemetría anónima
+- [ ] T-057 README editor
+
+### Para que Gato lo pruebe
+
+En tu laptop con buen GPU:
+
+```bash
+# Desde Cerebro4 (vía Tailscale)
+ssh isai1618@100.89.1.30
+cd ~/neonodos-core/NeoNodos_System/m13
+pnpm --filter @m13/editor dev
+# luego en tu browser local: http://100.89.1.30:3000
+```
+
+O directamente local en tu laptop si tienes el repo clonado:
+
+```bash
+cd path/to/m13
+pnpm install
+pnpm --filter @m13/editor dev
+# http://localhost:3000
+```
+
+Debes ver:
+- Header oscuro "m13 · editor" con accent dorado
+- Editor Monaco con la escena inicial (yaml syntax highlight, font JetBrains Mono)
+- Canvas WebGPU renderizando la escena (yeso + mármol + pedestal + esfera dorada bobbing)
+- Footer "scene compiled OK · NN ms · wgsl: 247dd359…"
+
+Edita el YAML (ej. cambia `intensity: 1.3` a `intensity: 0.3`) → el preview debe actualizarse en <500ms. Si introduces un error (ej. `bounds: [5, 3]` con solo 2 numbers) → squiggly line roja en esa línea + mensaje en footer.
+
+### Reflexiones
+
+**Phase 1 del editor terminada en una sola sesión.** El truco fue:
+1. Scaffold manual (no interactivo) en Write batch.
+2. `extensionAlias` para que Next.js entienda los imports `.js` del runtime.
+3. Dynamic import para WebGPU client-side.
+4. Aprovechar el shader cache existente (T-013) → live edit es esencialmente gratis.
+
+**Lo que NO está aún:**
+- LLM integration (Phase 2 — lo grande)
+- Resizer drag entre Monaco/Preview (nice-to-have)
+- Export bundle (scope-cut candidate)
+- Telemetría (scope-cut candidate)
+- README del editor
+
+**Recomendación:** la siguiente sesión arranca con T-048..T-054 (LLM). Esto requiere:
+- API key de Anthropic (Gato la provee como env var ANTHROPIC_API_KEY o se usa client-side BYOK)
+- Iteración del system prompt (T-053 puede tomar 90 min de tuning)
+
+**Pregunta para Gato:** ¿quieres ANTHROPIC_API_KEY como secret del CF Pages (deploy de production del editor) o todo en modo client-side BYOK (cliente trae su key)? Mi sugerencia: ambos modos disponibles via env var `M13_EDITOR_LLM_MODE=client|server|both` (decisión D-103 del plan original).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
