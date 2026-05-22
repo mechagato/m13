@@ -1,6 +1,6 @@
 import { parseScene } from './parser/index.js';
 import type { M13Scene } from './parser/schema.js';
-import { compileScene, type CompiledScene } from './compiler/index.js';
+import { compileScene, hashWgsl, type CompiledScene } from './compiler/index.js';
 import {
   initRenderer,
   renderFrame,
@@ -16,6 +16,13 @@ export interface M13EngineOptions {
   pixelRatio?: number;
   /** Callback opcional para stats de cada frame */
   onFrame?: (stats: FrameStats) => void;
+}
+
+export interface SceneLoadInfo {
+  /** Hash SHA-256 del WGSL compilado. Identidad de la escena renderizada. */
+  wgslHash: string;
+  /** true si el pipeline GPU se reutilizó (cache hit), false si se reconstruyó. */
+  reusedPipeline: boolean;
 }
 
 /**
@@ -46,6 +53,10 @@ export class M13Engine {
   private fpsTimer = 0;
   private lastFps = 0;
   private lastMs = 0;
+  /** Hash del WGSL del último shader cargado. null si no hay shader cargado. */
+  private lastWgslHash: string | null = null;
+  /** Info de la última operación loadScene (cache hit/miss + hash). */
+  private lastLoadInfo: SceneLoadInfo | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts: M13EngineOptions = {}) {
     this.canvas = canvas;
@@ -54,23 +65,42 @@ export class M13Engine {
 
   /**
    * Carga una escena desde un texto YAML (.m13). También acepta una URL absoluta o relativa.
+   *
+   * Aplica caché de pipeline GPU: si el WGSL del nuevo shader es idéntico al
+   * último cargado (mismo hash SHA-256), se reutiliza el `RendererState` y se
+   * evita `initRenderer` (que es el costo dominante de un re-load).
    */
   async loadScene(yamlOrUrl: string): Promise<M13Scene> {
     const text = looksLikeUrl(yamlOrUrl) ? await fetchText(yamlOrUrl) : yamlOrUrl;
     const scene = parseScene(text);
     const compiled = compileScene(scene);
-    if (this.renderer) {
-      // re-create pipeline con el nuevo shader
+    const newHash = await hashWgsl(compiled.wgsl);
+
+    const cacheHit = this.renderer !== null && newHash === this.lastWgslHash;
+
+    if (!cacheHit) {
       this.renderer = await initRenderer(this.canvas, compiled);
-    } else {
-      this.renderer = await initRenderer(this.canvas, compiled);
+      this.lastWgslHash = newHash;
     }
+
     this.compiled = compiled;
+    this.lastLoadInfo = { wgslHash: newHash, reusedPipeline: cacheHit };
+
     if (this.camera) {
       this.camera.setBounds(boundsForCamera(scene.bounds));
       this.camera.reset(scene.spawn);
     }
     return scene;
+  }
+
+  /** Hash SHA-256 del WGSL actualmente cargado, o null si no hay escena. */
+  getWgslHash(): string | null {
+    return this.lastWgslHash;
+  }
+
+  /** Info de la última operación `loadScene`. Útil para diagnóstico y tests. */
+  getLastLoadInfo(): SceneLoadInfo | null {
+    return this.lastLoadInfo;
   }
 
   attachFlyCamera(opts: FlyCameraOptions = {}): FlyCamera {

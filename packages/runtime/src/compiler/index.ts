@@ -66,6 +66,25 @@ function f(n: number): string {
   return n.toFixed(6);
 }
 
+/**
+ * Hashea el WGSL output con SHA-256 vía Web Crypto API.
+ *
+ * Cross-platform: funciona en navegador (siempre) y Node 15+ (donde
+ * `crypto.subtle` está disponible globalmente). Para tests en Node con
+ * versiones más viejas, usar `node:crypto.createHash` directamente.
+ *
+ * El hash es la clave de caché de shaders en M13Engine — misma escena
+ * compilada dos veces produce el mismo WGSL (T-011/T-012) → mismo hash
+ * → reuso del pipeline GPU sin recompile.
+ */
+export async function hashWgsl(wgsl: string): Promise<string> {
+  const buf = new TextEncoder().encode(wgsl);
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 function materialIdOf(m: M13Material): string {
   return typeof m === 'string' ? m : m.concept;
 }
