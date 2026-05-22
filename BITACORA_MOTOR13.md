@@ -496,6 +496,65 @@ La opción T-073 del task breakdown (snapshot tests visuales con Playwright) aho
 
 ---
 
+## Entrada 009 · 2026-05-21 · T-012 Test determinismo SHA-256
+
+**Duración:** ~5 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Test formal del contrato de determinismo implementado por T-011. Cierra el cluster de tests del compiler (T-010 estructura + T-011 implementación + T-012 verificación).
+
+### Lo que se hizo
+
+Nuevo archivo `packages/runtime/src/compiler/__tests__/compiler-determinism.test.ts` con **7 tests**:
+
+1. **100 corridas de `sala_basica` → 1 hash SHA-256 único** (377ms total = 3.77ms por compile).
+2. **100 corridas × 4 escenas demo → 1 hash único por escena** (4 hashes distintos entre escenas, 1 hash estable dentro de cada una). 400 compilaciones en 714ms.
+3. **Control negativo:** las 4 escenas distintas producen 4 hashes distintos (no colisiones).
+4. **`conceptsUsed` siempre ordenado lexicográficamente** en 20 corridas — valida el `.sort()` del T-011.
+5. **Floats con 6 decimales fijos**, sin ruido IEEE 754 (verifica que `0.1` no se escapa como `0.10000000000000001`).
+6. **Pureza funcional**: dos YAMLs con whitespace/comments distintos pero schema equivalente → mismo hash. Confirma que parser+compiler no son sensibles a presentación.
+7. **Test DOCUMENTAL**: orden de `objects[]` SÍ afecta el output. Si el autor reordena el array, el shader cambia (índices `obj0..objN` se reasignan). Decisión consciente — si se quiere ortogonalidad sobre orden, abrir issue para v0.2.
+
+### Verificaciones
+
+- ✅ `pnpm test` → **43/43 pass** (24 parser + 12 compiler-output + 7 determinismo). Duración 1.83s.
+- ✅ Coverage compiler: **100% líneas / 96.96% branches / 100% funciones** (subió ligeramente desde 96.42% de branches por las nuevas rutas que ejercitan los tests).
+- ✅ Parser sigue 100%.
+- ✅ `pnpm typecheck` limpio.
+
+### Decisiones tomadas
+
+- **D-801:** Tests usan `node:crypto.createHash('sha256')` para hash. Misma librería que usará M13Engine en T-013 (caché de pipelines) — consistencia entre test y producción.
+- **D-802:** Iteraciones por test: 100 según el spec/plan. Performance lo permite (~4ms por compile en Cerebro4). No necesario reducir.
+- **D-803:** Documentamos explícitamente que `objects[]` order matters (test #7). Es una garantía intencional: el autor controla la asignación de índices `obj<N>` y el orden en `opUnion`. Si se quisiera ortogonalidad, sería un cambio del compiler (sort por `id`) en v0.2.
+- **D-804:** Helper `hashWgsl(yamlText)` privado del test file. No exportamos al runtime porque T-013 lo hará de manera más integrada con la API del engine.
+
+### Lo que tronó
+
+Nada. Tests verdes a la primera. El smoke manual previo (en T-011) ya había validado el patrón — los tests son su contraparte formal.
+
+### Pendientes para próxima sesión
+
+- [ ] T-013 caché de shaders en M13Engine por hash SHA-256 (depende directamente de T-012)
+- [ ] T-014 benchmark compile-time: 50 objetos en <200ms (ya tenemos métrica preliminar de 3.77ms por compile pequeño)
+- [ ] T-015/T-016 bundle size budget
+- [ ] T-017 [BLOQUEADOR] extender Concept interface con paramsSchema (abre D-3)
+
+### Reflexiones
+
+T-012 cayó en 5 minutos porque T-011 ya había hecho el trabajo duro (sort + toFixed). Esto valida la cadena del plan: T-010 expone la estructura, T-011 garantiza el contrato, T-012 lo blinda con tests automatizados.
+
+Performance secundaria: **3.77ms por compileScene en escena de 2 objects (sala_basica)**. Si esto escala linealmente con número de objetos, una escena de 50 objects estaría en ~100ms — dentro del budget de 200ms del T-014/spec H1.3. Pero la métrica real la mediremos en T-014 con un benchmark dedicado.
+
+Coverage del compiler subió de 96.42% a **96.96% de branches** porque el test #7 (yaml con vs sin objects[] reverse) ejercita rutas con múltiples objetos en orden distinto. Cerca del 100% conceptual. Las ramas restantes (3.04%) probablemente son del switch-case sin fallthrough — irrelevante a efectos prácticos.
+
+Cluster D-2 puede ahora avanzar al lado runtime/engine (T-013 caché). El compiler está listo para conectarse al pipeline con confianza.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
