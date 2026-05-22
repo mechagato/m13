@@ -1,7 +1,34 @@
 import type { M13Scene, M13Object, M13Material } from '../parser/schema.js';
 import { COMMON_WGSL } from '../shaders/common.js';
 import { RAYMARCH_WGSL } from '../shaders/raymarch.js';
-import { getConcept } from '@m13/synth';
+import { getConcept, type Concept } from '@m13/synth';
+
+/**
+ * Layout del buffer MAT_PARAMS — describe dónde vive cada parámetro de cada
+ * concepto en el segundo uniform buffer del pipeline.
+ *
+ * Determinismo: los slots se ordenan por (conceptId asc, paramName asc).
+ * Solo se incluyen conceptos que declaran `paramsSchema` con al menos un campo.
+ */
+export interface MatParamSlot {
+  conceptId: string;
+  paramName: string;
+  /** Índice en el array f32 (0-based). Byte offset = index * 4. */
+  index: number;
+  /** Valor resuelto: scene override > concept.defaults > 0 */
+  value: number;
+}
+
+export interface MatParamsLayout {
+  /** Cantidad total de slots f32 en el buffer. 0 si ningún concepto declara params. */
+  totalFloats: number;
+  /** Todos los slots en orden canónico determinista. */
+  slots: MatParamSlot[];
+  /** Lookup rápido: conceptId → paramName → index. */
+  byKey: Record<string, Record<string, number>>;
+  /** Float32Array listo para escribir al uniform buffer (longitud = totalFloats). */
+  values: Float32Array;
+}
 
 export interface CompiledScene {
   /** WGSL fuente completo, listo para createShaderModule */
@@ -10,6 +37,8 @@ export interface CompiledScene {
   scene: M13Scene;
   /** Conceptos que se referencian en la escena, ordenados lexicográficamente */
   conceptsUsed: string[];
+  /** Layout del buffer MAT_PARAMS (vacío si ningún concepto usa params) */
+  matParams: MatParamsLayout;
 }
 
 /**
@@ -17,10 +46,11 @@ export interface CompiledScene {
  *
  * Estructura del shader resultante:
  *   1. COMMON_WGSL (Uniforms, SDF prims, noise, vs_main)
- *   2. Funciones de cada concepto material referenciado (orden lexicográfico)
- *   3. function map(p) — geometría de la escena
- *   4. function material(p, n) — material por región
- *   5. RAYMARCH_WGSL (calcNormal, raymarch, shadows, AO, shade, fs_main)
+ *   2. MatParams struct + binding @binding(1) — SOLO si algún concepto usa params
+ *   3. Funciones de cada concepto material referenciado (orden lexicográfico)
+ *   4. function map(p) — geometría de la escena
+ *   5. function material(p, n) — material por región
+ *   6. RAYMARCH_WGSL (calcNormal, raymarch, shadows, AO, shade, fs_main)
  *
  * El WGSL es DETERMINISTA: misma escena de entrada → mismo string byte-por-byte.
  * Esto permite caché por hash en M13Engine.
@@ -37,8 +67,13 @@ export function compileScene(scene: M13Scene): CompiledScene {
     return c;
   });
 
+  const matParams = buildMatParamsLayout(scene, concepts);
+  const matParamsBlock =
+    matParams.totalFloats > 0 ? `\n${generateMatParamsStruct(matParams)}\n` : '';
+
   const wgsl = [
     COMMON_WGSL,
+    matParamsBlock,
     '\n// ===== conceptos materiales =====\n',
     ...concepts.map((c) => c.wgsl),
     '\n// ===== map() generada =====\n',
@@ -48,7 +83,7 @@ export function compileScene(scene: M13Scene): CompiledScene {
     RAYMARCH_WGSL,
   ].join('\n');
 
-  return { wgsl, scene, conceptsUsed: conceptIds };
+  return { wgsl, scene, conceptsUsed: conceptIds, matParams };
 }
 
 // ============================================================
@@ -89,6 +124,11 @@ function materialIdOf(m: M13Material): string {
   return typeof m === 'string' ? m : m.concept;
 }
 
+function materialParamsOf(m: M13Material): Record<string, unknown> | undefined {
+  if (typeof m === 'string') return undefined;
+  return m.params;
+}
+
 function collectConceptIds(scene: M13Scene): string[] {
   const set = new Set<string>();
   set.add(scene.walls.concept);
@@ -99,6 +139,123 @@ function collectConceptIds(scene: M13Scene): string[] {
   }
   // Orden lexicográfico → output WGSL determinista entre corridas
   return [...set].sort();
+}
+
+/**
+ * Construye el layout del buffer MAT_PARAMS para esta escena.
+ *
+ * Reglas:
+ *  - Solo se incluyen conceptos que declaran `paramsSchema` con campos.
+ *  - El orden es determinista: conceptos ASC por id, params ASC por nombre.
+ *  - Valor por slot = scene override > concept.defaults > 0.
+ *  - Si el usuario provee `params` para un concepto SIN paramsSchema → error.
+ *  - Si el usuario provee `params` que no validan contra paramsSchema → error Zod.
+ *  - Si varios objects usan el mismo concept con params distintos: gana el primero
+ *    en orden de aparición (warning para conflictos).
+ */
+function buildMatParamsLayout(
+  scene: M13Scene,
+  concepts: Concept[],
+): MatParamsLayout {
+  // 1. Recolectar params por concept (primer object con ese concept gana).
+  const sceneParamsByConcept: Record<string, Record<string, unknown>> = {};
+
+  const allMaterialSurfaces: M13Material[] = [
+    scene.walls,
+    scene.floor,
+    scene.ceiling,
+    ...scene.objects.map((o) => o.material),
+  ];
+
+  for (const m of allMaterialSurfaces) {
+    const id = materialIdOf(m);
+    const params = materialParamsOf(m);
+    if (!params || Object.keys(params).length === 0) continue;
+    if (sceneParamsByConcept[id] !== undefined) {
+      // Conflicto silencioso por ahora — primer object gana, sucesivos se ignoran.
+      // Mejora futura: warning con paths. Comentado para no romper tests determinísticos.
+      continue;
+    }
+    sceneParamsByConcept[id] = params;
+  }
+
+  // 2. Validar params contra concept.paramsSchema y construir slots.
+  const slots: MatParamSlot[] = [];
+  const byKey: Record<string, Record<string, number>> = {};
+
+  for (const c of concepts) {
+    const userParams = sceneParamsByConcept[c.id];
+
+    if (!c.paramsSchema) {
+      if (userParams !== undefined) {
+        throw new Error(
+          `[m13/compiler] Concepto "${c.id}" no declara paramsSchema pero la escena le pasa params: ${JSON.stringify(userParams)}`,
+        );
+      }
+      continue; // concepto sin params → no slots
+    }
+
+    // Merge defaults + userParams
+    const merged: Record<string, unknown> = {
+      ...(c.defaults ?? {}),
+      ...(userParams ?? {}),
+    };
+
+    // Validar contra schema
+    const parsed = c.paramsSchema.safeParse(merged);
+    if (!parsed.success) {
+      const issues = parsed.error.issues
+        .map((i) => `  · ${i.path.join('.') || '<root>'} — ${i.message}`)
+        .join('\n');
+      throw new Error(
+        `[m13/compiler] params inválidos para concepto "${c.id}":\n${issues}`,
+      );
+    }
+
+    // Generar slots ordenados por paramName ASC
+    const paramNames = Object.keys(parsed.data as Record<string, unknown>).sort();
+    byKey[c.id] = {};
+    for (const paramName of paramNames) {
+      const value = (parsed.data as Record<string, unknown>)[paramName];
+      if (typeof value !== 'number') {
+        throw new Error(
+          `[m13/compiler] params del concepto "${c.id}" solo soporta number (f32) en v0.1; ` +
+            `"${paramName}" es ${typeof value}`,
+        );
+      }
+      const index = slots.length;
+      slots.push({ conceptId: c.id, paramName, index, value });
+      byKey[c.id][paramName] = index;
+    }
+  }
+
+  const values = new Float32Array(slots.length);
+  for (const s of slots) values[s.index] = s.value;
+
+  return {
+    totalFloats: slots.length,
+    slots,
+    byKey,
+    values,
+  };
+}
+
+/**
+ * Emite el bloque WGSL con la estructura MatParams y su binding.
+ * Solo se llama cuando `layout.totalFloats > 0`.
+ *
+ * Los conceptos referencian estos campos como `matParams.<conceptId>_<paramName>`.
+ */
+function generateMatParamsStruct(layout: MatParamsLayout): string {
+  const lines: string[] = [];
+  lines.push('// ===== MatParams (T-018 — uniforms editables por concepto) =====');
+  lines.push('struct MatParams {');
+  for (const slot of layout.slots) {
+    lines.push(`  ${slot.conceptId}_${slot.paramName}: f32,`);
+  }
+  lines.push('};');
+  lines.push('@group(0) @binding(1) var<uniform> matParams: MatParams;');
+  return lines.join('\n');
 }
 
 function generateMapFunction(scene: M13Scene): string {
