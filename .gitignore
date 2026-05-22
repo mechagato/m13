@@ -4,6 +4,7 @@ dist/
 .DS_Store
 .env
 .env.local
+.env.*.local
 .vite/
 .cache/
 coverage/
@@ -11,3 +12,12 @@ coverage/
 .idea/
 .vscode/
 !.vscode/settings.json
+
+# Next.js
+.next/
+next-env.d.ts
+.swc/
+
+# Build artifacts
+build/
+out/
