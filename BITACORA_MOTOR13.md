@@ -938,6 +938,108 @@ El cluster D-3 ahora tiene su BLOQUEADOR (T-017) cerrado. Las próximas tasks T-
 
 ---
 
+## Entrada 014 · 2026-05-21 · T-018 Compiler params propagation
+
+**Duración:** ~15 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Segunda task del cluster D-3. Con la interface `Concept` extendida (T-017), el compiler puede leer `paramsSchema` y propagar parámetros desde `.m13` hasta el WGSL. T-018 implementa el lado del compiler — T-019 hará el del renderer (buffer físico) y T-020 el E2E.
+
+Gato confirmó "continuar con el orden que debe seguir" — sin reordenamientos por la pregunta del Quest 3. Sigo con catálogo del spec.
+
+### Lo que se hizo
+
+**Cambios en `packages/runtime/src/compiler/index.ts`:**
+
+1. **Tipos nuevos exportados:**
+   - `MatParamSlot { conceptId, paramName, index, value }` — un slot del buffer
+   - `MatParamsLayout { totalFloats, slots, byKey, values: Float32Array }` — layout completo
+   - `CompiledScene.matParams: MatParamsLayout` (nuevo campo)
+
+2. **Helper `materialParamsOf(m)`:** extrae `params` del material en forma extendida (`{concept, params}`), retorna `undefined` para forma corta.
+
+3. **Helper `buildMatParamsLayout(scene, concepts)`:**
+   - Recolecta params por concept del scene (primer object con ese concept gana — conflictos silenciados sin warning para mantener determinismo).
+   - Para cada concept usado:
+     - Si NO tiene `paramsSchema` y el scene le pasó params → **error claro**.
+     - Si tiene `paramsSchema`: merge `defaults` + `userParams` → validar con Zod → si falla, error con path.
+     - Genera slots ordenados por `paramName` ASC.
+   - Restricción v0.1: solo params tipo `number` (f32). Otros tipos → error.
+   - Retorna `Float32Array` listo para escribir al buffer GPU (T-019).
+
+4. **Helper `generateMatParamsStruct(layout)`:**
+   - Emite `struct MatParams { conceptId_paramName: f32, ... };`
+   - Emite `@group(0) @binding(1) var<uniform> matParams: MatParams;`
+   - **Solo se llama si `totalFloats > 0`** — escenas sin params NO ven cambios en su WGSL (backward compat con los 8 conceptos del bootstrap).
+
+5. **`compileScene` integrado:**
+   - Llama `buildMatParamsLayout` antes de generar WGSL.
+   - Inserta el bloque MatParams entre COMMON_WGSL y los concept WGSLs (cuando aplica).
+   - Retorna `matParams` como parte de `CompiledScene`.
+
+**Convención de nombres en WGSL:**
+- Los conceptos referencian sus params como `matParams.<conceptId>_<paramName>`.
+- Ej: `let r = matParams.metal_dorado_pulido_roughness;`.
+- Underscore separator porque `.` no es válido en identificadores WGSL.
+
+**Tests** — `packages/runtime/src/compiler/__tests__/compiler-params.test.ts` con **8 tests**:
+
+Usando `vi.mock('@m13/synth')` para inyectar conceptos sintéticos con `paramsSchema`:
+
+1. Escena sin params: `matParams.totalFloats === 0`, WGSL sin struct.
+2. Concepto con paramsSchema usado sin user params → **defaults aplicados al layout**.
+3. User params válidos → **overrides los defaults** (roughness 0.8 en lugar de 0.3).
+4. WGSL incluye `struct MatParams` con todos los campos esperados.
+5. Params para concepto SIN paramsSchema → **error claro** "no declara paramsSchema".
+6. Params que no validan contra Zod → **error con path** "params inválidos para concepto".
+7. Layout es determinista — slots ordenados por (conceptId asc, paramName asc).
+8. `matParams.values` es `Float32Array` de longitud `totalFloats`.
+
+### Verificaciones
+
+- ✅ `pnpm test` → **67/67 pass** (24 parser + 12+7+8 compiler + 6 engine + 10 synth).
+- ✅ `pnpm typecheck` limpio.
+- ✅ **Backward compat:** las 4 escenas demo del bootstrap siguen produciendo el mismo hash SHA-256 (determinismo intacto). Cómo: ninguno de los 8 conceptos declara paramsSchema, así que `totalFloats === 0` y el WGSL no cambia.
+- ✅ `pnpm dev` Vite ready 246ms.
+- ✅ Bundle: `pnpm --filter @m13/runtime size` → **50.63 KB gzipped** (+0.61 KB vs T-016, ~51% del budget de 100 KB).
+
+### Decisiones tomadas
+
+- **D-1301:** **No emitir `struct MatParams` cuando `totalFloats === 0`.** WGSL no permite structs vacíos. Más importante: backward compat con los 8 conceptos del bootstrap — sus escenas siguen produciendo el mismo bytecode.
+- **D-1302:** **Single-set-per-concept**. Si dos objects usan `metal_dorado_pulido` con params distintos, el primer object gana (silenciosamente). Razón: el SDF/raymarching evalúa el shader una vez por píxel, no per-instance. Per-object overrides requerirían instancing — overengineering para v0.1.
+- **D-1303:** **v0.1 solo soporta `number` (f32) en params.** Otros tipos (`boolean`, `vec3`, enum) → error explícito. Razón: alineación WGSL más simple, suficiente para 90% de los casos de uso de los conceptos planeados (T-025..T-034 con `roughness`, `shimmer`, `darkness`, etc.).
+- **D-1304:** **Conflictos de params silenciados sin warning.** Razón: emitir un warning rompería el determinismo de los tests SHA-256 (T-012). Si en el futuro hace falta diagnosticar conflictos, se puede agregar a `CompiledScene.warnings: string[]` sin afectar el hash del WGSL.
+- **D-1305:** Slots indexados desde 0 globalmente (no por concepto). El indice es secuencial en el orden determinista. Esto simplifica el layout del buffer.
+- **D-1306:** Defaults provienen exclusivamente de `concept.defaults` (Concept interface). NO se extraen automáticamente del Zod schema. Razón: cleaner API y menos magic — el author del concepto declara explícitamente los defaults.
+- **D-1307:** `MatParamsLayout.values` como `Float32Array` (no `number[]`). Razón: directamente pasable a `device.queue.writeBuffer()` en T-019 sin conversión.
+
+### Lo que tronó
+
+Nada. La rama de backward compat fue lo más delicado — verifiqué con el test de determinismo (T-012) que las 4 escenas siguen produciendo el mismo hash. Si hubiera emitido el struct MatParams aún con cero campos, todas las escenas hubieran cambiado hash y roto el caché.
+
+### Pendientes para próxima sesión
+
+- [ ] T-019 Renderer: crear segundo uniform buffer + bind group entry para MAT_PARAMS
+- [ ] T-020 Test E2E param de concept altera output visual
+- [ ] T-021 Compiler soporte `kind: concept` para conceptos geométricos
+- [ ] T-022 Manifest JSON con `zod-to-json-schema`
+- [ ] T-025..T-034 [PARALELIZABLES] catálogo de 14 conceptos
+
+### Reflexiones
+
+T-018 fue el primer "feature creep" del cluster D-3 que probaba la nueva arquitectura. La pieza más nontrivial fue diseñar el layout determinista — los slots se ordenan por (conceptId, paramName) ambos ASC. Esto significa que agregar un nuevo concepto al synth NO cambia los offsets de los demás (siempre que su id sea único). Solo el nuevo concepto introduce slots adicionales. Caché-friendly.
+
+El bundle subió 0.61 KB con la nueva lógica (validación Zod + struct generator + buildLayout). Si subimos ~3-5 KB por cada cluster grande de features, llegamos a Fase 1 cerrada con ~70-80 KB gzipped. Aún con margen.
+
+Decisión clave en producción: **defaults SIEMPRE se aplican** aunque el user no provea params. Esto significa que si un concepto declara `paramsSchema` con `defaults`, los conceptos ya están "configurados" desde la primera vez que se usan. El user solo necesita interactuar si quiere desviarse.
+
+Próxima: T-019 (renderer agrega el buffer) es la otra mitad de C-208. Con esos dos cerrados, los conceptos del T-025..T-034 pueden declarar paramsSchema sin que se rompa nada.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
