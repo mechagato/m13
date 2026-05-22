@@ -11,6 +11,7 @@
  */
 
 import type { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { paredYesoBlanco } from './concepts/pared_yeso_blanco.js';
 import { paredLadrilloViejo } from './concepts/pared_ladrillo_viejo.js';
@@ -68,9 +69,11 @@ export interface Concept {
 }
 
 /**
- * Metadata serializable de un concepto. La forma del paramsSchema queda como
- * Zod (no JSON Schema) por simplicidad — el caller convierte si necesita JSON.
- * T-022 agregará `paramsJsonSchema` con `zod-to-json-schema`.
+ * Metadata 100% JSON-serializable de un concepto. Apta para:
+ *   - Editor (D-4): mostrar UI dinámica de params, validar el .m13 generado por LLM
+ *   - LLM editor-time (T-051): inyectar como contexto del prompt sistema
+ *   - Telemetría (T-056): catálogo de uso por concepto
+ *   - Bundling/export (T-055): incluir en zips de escena standalone
  */
 export interface ConceptManifest {
   id: string;
@@ -81,6 +84,12 @@ export interface ConceptManifest {
   /** true si el concepto acepta parámetros editables */
   hasParams: boolean;
   defaults?: Record<string, unknown>;
+  /**
+   * JSON Schema (draft-07) de los params editables. Solo presente cuando el
+   * concepto declara `paramsSchema`. Convertido desde Zod con `zod-to-json-schema`.
+   * Cuando esto está, `hasParams === true`.
+   */
+  paramsJsonSchema?: Record<string, unknown>;
 }
 
 // ============================================================
@@ -104,6 +113,16 @@ const RAW_CONCEPTS: Concept[] = [
  * (data-only) y el registry agrega el comportamiento.
  */
 function attachManifest(raw: Concept): Concept {
+  // Pre-computamos el JSON Schema una vez al registrar (el Zod schema es inmutable).
+  // Si raw.paramsSchema es undefined, paramsJsonSchema queda undefined.
+  const paramsJsonSchema = raw.paramsSchema
+    ? (zodToJsonSchema(raw.paramsSchema, {
+        name: `${raw.id}_params`,
+        target: 'jsonSchema7',
+        $refStrategy: 'none',
+      }) as Record<string, unknown>)
+    : undefined;
+
   return {
     ...raw,
     manifest: () => ({
@@ -113,6 +132,7 @@ function attachManifest(raw: Concept): Concept {
       hasGeometricSDF: raw.wgslSdf !== undefined,
       hasParams: raw.paramsSchema !== undefined,
       defaults: raw.defaults,
+      paramsJsonSchema,
     }),
   };
 }
