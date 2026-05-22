@@ -429,6 +429,73 @@ Cluster D-2 lleva 36 tests verdes y los dos archivos centrales (parser, compiler
 
 ---
 
+## Entrada 008 · 2026-05-21 · T-011 Compiler determinism + bug fix
+
+**Duración:** ~12 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+T-011 es el [BLOQUEADOR] del cluster D-2: hace el compiler determinista byte-por-byte para que T-012 (test 100 corridas mismo SHA-256) y T-013 (caché de shaders por hash) puedan funcionar. Cambio quirúrgico en `packages/runtime/src/compiler/index.ts`.
+
+### Lo que se hizo
+
+**Refactor `compiler/index.ts`:**
+
+1. **Helper `f(n: number): string`** — formatea todo número como literal float WGSL con 6 decimales fijos. Reemplaza ruido tipo `0.300000000004` por `0.300000` estable.
+2. **`collectConceptIds()` ordenado lexicográficamente** con `[...set].sort()`. Antes dependía del orden de inserción al Set (walls/floor/ceiling/objects). Ahora `marmol < metal < pared < piedra` siempre.
+3. **`generateMapFunction`**: `bx/by/bz` del bound, `wx/wy/wz` + `sx/sy/sz` del window — todos vía `f()`.
+4. **`generateObjectSdf`**: `px/py/pz` posición, `sx/sy/sz` escala, `r` radio, `speed` y `amplitude` de animate — todos vía `f()`.
+5. **`generateMaterialFunction`**: `by * 0.83` threshold del piso, `px/py/pz` y `r = scale * 1.4` por objeto — todos vía `f()`.
+6. **Refactor del yOffset**: ahora se construye con array `yOffsetParts` que se joinea con `' + '`. Funciona en las 4 combinaciones (sin nada, bob solo, audio solo, bob+audio).
+
+**Bug fix pre-existente atrapado y corregido:**
+
+- Antes: para esfera NO audio-reactiva, output era `sdSphere(..., 0.45 0.0)` — dos floats con espacio sin operador → **WGSL inválido**. Probablemente fallaba silenciosamente al cargar la galería (la esfera no animada `escultura_esfera`).
+- Después: default de `extraR` cambió de `'0.0'` a `'+ 0.0'` → output `sdSphere(..., 0.450000 + 0.0)` → válido y semánticamente idéntico al deseado.
+- Verificado en `galeria_minimal` que la esfera ahora compila correctamente.
+
+**Test ajustado (T-010):**
+
+- Una assertion que verificaba `sin(u.time * 2.5) * 0.3` ahora valida `sin(u.time * 2.500000) * 0.300000` (formato determinista).
+
+### Verificaciones
+
+- ✅ `pnpm test` → **36/36 pass** (24 parser + 12 compiler).
+- ✅ Smoke de determinismo manual: 10 compileScene de `sala_basica.m13` → **1 hash SHA-256 único** (`247dd359...`). Confirma que T-011 cumple su contrato.
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm dev` Vite ready 259ms.
+- ✅ Inspección visual del WGSL de `galeria_minimal.m13` muestra `0.450000 + 0.0` en lugar del antiguo `0.45 0.0` roto.
+
+### Decisiones tomadas
+
+- **D-701:** `n.toFixed(6)` es el formato canónico para todos los float WGSL generados por el compiler. 6 decimales suficiente para precisión perceptual + estabilidad ante ruido binario de IEEE 754.
+- **D-702:** Floats hardcodeados en el codegen (audio constants `0.05`, `0.1`, AO radius `0.05` del roundbox) se dejan como literales — son código fuente, no datos dinámicos. Su determinismo viene de que están en el código TS estático.
+- **D-703:** El bug de la esfera no-audio-reactiva era PRE-EXISTENTE del bootstrap. Se documenta como fix incidental (no inventado por T-011). Ahora la galería renderea su `escultura_esfera` correctamente.
+- **D-704:** Refactor del `yOffset` a array+join elimina la duplicación del case "bob + audio" donde se hacía `${yOffset} + u.audioAmp * 0.1` con string concat manual. La nueva forma es más legible y a prueba de futuros modes (rotate, pulse).
+
+### Lo que tronó
+
+Un solo test rompió como esperado (la regex literal de `2.5` y `0.3` antes del `.toFixed(6)`). Se actualizó la regex a la versión determinista. Comportamiento esperado del refactor — no es un "rompimiento" real, es contrato actualizado.
+
+### Pendientes para próxima sesión
+
+- [ ] T-012 test compiler determinismo 100 corridas (paralelizable, ya tengo el patrón del smoke manual)
+- [ ] T-013 caché de shaders en M13Engine por hash SHA-256 (depende de T-012)
+- [ ] T-014 benchmark compile-time
+- [ ] T-015/T-016 bundle size budget
+
+### Reflexiones
+
+T-011 cayó rápido porque el codegen era pequeño. El bug del `extraR = '0.0'` fue una sorpresa agradable — lo encontré porque al planear el refactor inspeccioné el output con un script efímero. Si no hubiese hecho esa inspección, habría aplicado `f()` mecánicamente y el bug habría sobrevivido (porque `f(0.0)` = `'0.000000'`, sigue siendo dos floats sin operador entre).
+
+Moraleja para futuros refactors del compiler: **siempre inspeccionar el output WGSL antes y después del cambio**, no solo confiar en que los tests pasen. Los tests actuales validan presencia de substrings, no validez sintáctica de WGSL.
+
+La opción T-073 del task breakdown (snapshot tests visuales con Playwright) ahora suena mejor porque atraparía bugs como éste — el shader inválido haría que el render falle. Para Fase 1 sigue siendo OPCIONAL pero subo su prioridad.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
