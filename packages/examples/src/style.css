@@ -122,3 +122,37 @@ canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
 }
 .error-screen p { color: var(--text); font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
 .audio-status.active { color: var(--signal) !important; }
+
+/* ============================================
+   QR panel — esquina inferior derecha
+   ============================================ */
+.qr-panel {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 30;
+  padding: 8px;
+  background: rgba(10, 9, 8, 0.85);
+  border: 1px solid var(--accent);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s, transform 0.2s;
+  opacity: 0.75;
+}
+.qr-panel:hover { opacity: 1; transform: scale(1.04); }
+.qr-panel img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+.qr-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
