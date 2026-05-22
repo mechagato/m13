@@ -10,10 +10,13 @@
     "build": "pnpm -r build",
     "dev": "pnpm --filter @m13/examples dev",
     "typecheck": "pnpm -r typecheck",
+    "gen:schema": "tsx tools/gen-json-schema.ts",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "typescript": "^5.4.5"
+    "tsx": "^4.22.3",
+    "typescript": "^5.4.5",
+    "zod-to-json-schema": "^3.25.2"
   },
   "packageManager": "pnpm@8.15.5",
   "engines": {

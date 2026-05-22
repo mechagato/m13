@@ -1,0 +1,277 @@
+{
+  "$ref": "#/definitions/M13Scene",
+  "definitions": {
+    "M13Scene": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "default": "0.1"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bounds": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "default": [
+            5,
+            3,
+            5
+          ]
+        },
+        "spawn": {
+          "$ref": "#/definitions/M13Scene/properties/bounds",
+          "default": [
+            0,
+            0,
+            -3.5
+          ]
+        },
+        "ambient": {
+          "type": "object",
+          "properties": {
+            "background": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "default": [
+                0.05,
+                0.045,
+                0.04
+              ]
+            },
+            "ambientColor": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
+              "default": [
+                0.08,
+                0.075,
+                0.07
+              ]
+            },
+            "tint": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
+              "default": [
+                1,
+                1,
+                1
+              ]
+            },
+            "fogColor": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
+              "default": [
+                0.05,
+                0.045,
+                0.04
+              ]
+            },
+            "fogDensity": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.015
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "light": {
+          "type": "object",
+          "properties": {
+            "position": {
+              "$ref": "#/definitions/M13Scene/properties/bounds",
+              "default": [
+                0,
+                2.5,
+                0
+              ]
+            },
+            "color": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
+              "default": [
+                1,
+                0.92,
+                0.78
+              ]
+            },
+            "intensity": {
+              "type": "number",
+              "default": 1
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "walls": {
+          "type": "object",
+          "properties": {
+            "concept": {
+              "type": "string"
+            },
+            "params": {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "concept"
+          ],
+          "additionalProperties": false
+        },
+        "floor": {
+          "$ref": "#/definitions/M13Scene/properties/walls"
+        },
+        "ceiling": {
+          "$ref": "#/definitions/M13Scene/properties/walls"
+        },
+        "window": {
+          "type": "object",
+          "properties": {
+            "position": {
+              "$ref": "#/definitions/M13Scene/properties/bounds"
+            },
+            "size": {
+              "$ref": "#/definitions/M13Scene/properties/bounds"
+            }
+          },
+          "required": [
+            "position",
+            "size"
+          ],
+          "additionalProperties": false
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "sphere",
+                  "box",
+                  "round_box",
+                  "cylinder",
+                  "torus"
+                ]
+              },
+              "position": {
+                "$ref": "#/definitions/M13Scene/properties/bounds"
+              },
+              "rotation": {
+                "$ref": "#/definitions/M13Scene/properties/bounds"
+              },
+              "scale": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "$ref": "#/definitions/M13Scene/properties/bounds"
+                  }
+                ],
+                "default": 1
+              },
+              "material": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "params": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": [
+                      "concept"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "audio_reactive": {
+                "type": "boolean",
+                "default": false
+              },
+              "animate": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "bob",
+                      "rotate",
+                      "pulse"
+                    ]
+                  },
+                  "speed": {
+                    "type": "number",
+                    "default": 1
+                  },
+                  "amplitude": {
+                    "type": "number",
+                    "default": 0.1
+                  }
+                },
+                "required": [
+                  "mode"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "position",
+              "material"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "name",
+        "walls",
+        "floor",
+        "ceiling"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
