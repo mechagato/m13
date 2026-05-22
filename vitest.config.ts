@@ -23,7 +23,8 @@ export default defineConfig({
       exclude: [
         '**/*.test.ts',
         '**/__tests__/**',
-        '**/index.ts',
+        'packages/runtime/src/index.ts',
+        'packages/synth/src/index.ts',
         '**/types.ts',
         'packages/**/dist/**',
       ],
