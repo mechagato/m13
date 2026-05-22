@@ -34,8 +34,8 @@ function hashWgsl(yamlText: string): string {
 }
 
 describe('compiler — determinismo (T-012)', () => {
-  it('100 corridas de sala_basica producen exactamente 1 hash SHA-256', () => {
-    const yaml = loadScene('sala_basica.m13');
+  it('100 corridas de sala_galeria producen exactamente 1 hash SHA-256', () => {
+    const yaml = loadScene('sala_galeria.m13');
     const hashes = new Set<string>();
     for (let i = 0; i < 100; i++) {
       hashes.add(hashWgsl(yaml));
@@ -45,9 +45,9 @@ describe('compiler — determinismo (T-012)', () => {
 
   it('100 corridas de cada una de las 4 escenas demo: 1 hash único por escena', () => {
     const scenes = [
-      'sala_basica.m13',
-      'galeria_minimal.m13',
-      'loft_industrial.m13',
+      'sala_galeria.m13',
+      'cocina_industrial.m13',
+      'oficina_neonodos.m13',
       'templo_mexica.m13',
     ];
     for (const scene of scenes) {
@@ -62,9 +62,9 @@ describe('compiler — determinismo (T-012)', () => {
 
   it('escenas distintas producen hashes distintos (control)', () => {
     const hashes = [
-      hashWgsl(loadScene('sala_basica.m13')),
-      hashWgsl(loadScene('galeria_minimal.m13')),
-      hashWgsl(loadScene('loft_industrial.m13')),
+      hashWgsl(loadScene('sala_galeria.m13')),
+      hashWgsl(loadScene('cocina_industrial.m13')),
+      hashWgsl(loadScene('oficina_neonodos.m13')),
       hashWgsl(loadScene('templo_mexica.m13')),
     ];
     // Los 4 hashes deben ser todos distintos entre sí
@@ -72,7 +72,7 @@ describe('compiler — determinismo (T-012)', () => {
   });
 
   it('conceptsUsed siempre ordenado lexicográficamente', () => {
-    const yaml = loadScene('loft_industrial.m13');
+    const yaml = loadScene('oficina_neonodos.m13');
     for (let i = 0; i < 20; i++) {
       const scene = parseScene(yaml, { silent: true });
       const compiled = compileScene(scene);

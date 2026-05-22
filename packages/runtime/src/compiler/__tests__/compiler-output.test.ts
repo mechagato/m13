@@ -25,8 +25,8 @@ function loadScene(filename: string): string {
 }
 
 describe('compiler — estructura del WGSL output', () => {
-  it('sala_basica: WGSL contiene los 5 conceptos referenciados + map + material', () => {
-    const scene = parseScene(loadScene('sala_basica.m13'));
+  it('sala_galeria: WGSL contiene fn map/material/vs/fs + conceptos referenciados', () => {
+    const scene = parseScene(loadScene('sala_galeria.m13'));
     const compiled = compileScene(scene);
 
     // Funciones base del shader
@@ -35,54 +35,25 @@ describe('compiler — estructura del WGSL output', () => {
     expect(compiled.wgsl).toContain('fn map(p: vec3<f32>)');
     expect(compiled.wgsl).toContain('fn material(p: vec3<f32>, n: vec3<f32>)');
 
-    // Una función mat_<id> por concept
+    // Cada concept usado tiene su fn mat_<id> inyectada
     const expected = [
-      'mat_pared_ladrillo_viejo',
-      'mat_piso_madera_envejecida',
       'mat_pared_yeso_blanco',
+      'mat_piso_marmol_blanco',
+      'mat_pedestal_marmol',
+      'mat_esfera_decorativa',
+      'mat_metal_bronce_pulido',
       'mat_marmol_blanco_vetas',
-      'mat_metal_dorado_pulido',
     ];
     for (const fnName of expected) {
       expect(compiled.wgsl).toContain(`fn ${fnName}(`);
     }
 
-    // conceptsUsed
-    expect(compiled.conceptsUsed.sort()).toEqual(
-      [
-        'pared_ladrillo_viejo',
-        'piso_madera_envejecida',
-        'pared_yeso_blanco',
-        'marmol_blanco_vetas',
-        'metal_dorado_pulido',
-      ].sort(),
-    );
-
-    // La escena resultante coincide con la cargada
-    expect(compiled.scene.name).toBe('sala_basica');
+    expect(compiled.conceptsUsed.sort()).toEqual([...expected].map((s) => s.replace('mat_', '')).sort());
+    expect(compiled.scene.name).toBe('sala_galeria');
   });
 
-  it('galeria_minimal: dedupe de conceptos repetidos (yeso ceiling/walls)', () => {
-    const scene = parseScene(loadScene('galeria_minimal.m13'));
-    const compiled = compileScene(scene);
-
-    // Sólo 4 conceptos únicos aunque varios objetos comparten material
-    expect(compiled.conceptsUsed.sort()).toEqual(
-      [
-        'pared_yeso_blanco',
-        'marmol_blanco_vetas',
-        'piedra_volcanica',
-        'metal_dorado_pulido',
-      ].sort(),
-    );
-
-    // Cada fn aparece exactamente una vez (no duplicada por ceiling+walls share)
-    const yesoMatches = compiled.wgsl.match(/fn mat_pared_yeso_blanco\(/g) ?? [];
-    expect(yesoMatches).toHaveLength(1);
-  });
-
-  it('loft_industrial: 6 conceptos únicos incluyendo cuero', () => {
-    const scene = parseScene(loadScene('loft_industrial.m13'));
+  it('cocina_industrial: 8 conceptos únicos incluyendo geo lampara_colgante', () => {
+    const scene = parseScene(loadScene('cocina_industrial.m13'));
     const compiled = compileScene(scene);
 
     expect(compiled.conceptsUsed.sort()).toEqual(
@@ -90,14 +61,38 @@ describe('compiler — estructura del WGSL output', () => {
         'pared_ladrillo_viejo',
         'piso_concreto_industrial',
         'pared_yeso_blanco',
-        'metal_dorado_pulido',
+        'lampara_colgante',
+        'pared_madera_oscura',
+        'metal_bronce_pulido',
         'cuero_vintage',
-        'piso_madera_envejecida',
+        'metal_oxidado',
       ].sort(),
     );
 
-    // cuero solo aparece en un object (butaca) — debe estar inyectado
-    expect(compiled.wgsl).toContain('fn mat_cuero_vintage(');
+    // El concepto geométrico debe estar inyectado con su SDF
+    expect(compiled.wgsl).toContain('fn sdf_lampara_colgante(');
+    expect(compiled.wgsl).toContain('fn mat_lampara_colgante(');
+  });
+
+  it('oficina_neonodos: dedupe de pared_yeso_blanco (walls + ceiling) + 7 únicos', () => {
+    const scene = parseScene(loadScene('oficina_neonodos.m13'));
+    const compiled = compileScene(scene);
+
+    expect(compiled.conceptsUsed.sort()).toEqual(
+      [
+        'pared_yeso_blanco',
+        'pared_madera_oscura',
+        'pedestal_marmol',
+        'metal_dorado_pulido',
+        'metal_bronce_pulido',
+        'lampara_colgante',
+        'vidrio_esmerilado',
+      ].sort(),
+    );
+
+    // yeso aparece en walls + ceiling, pero solo una fn
+    const yesoMatches = compiled.wgsl.match(/fn mat_pared_yeso_blanco\(/g) ?? [];
+    expect(yesoMatches).toHaveLength(1);
   });
 
   it('templo_mexica: solo 2 conceptos únicos pese a 6 referencias', () => {
@@ -127,9 +122,9 @@ ceiling: { concept: pared_yeso_blanco }
   });
 
   it('window cut: WGSL incluye opSub para recortar la pared', () => {
-    const scene = parseScene(loadScene('sala_basica.m13'));
+    const scene = parseScene(loadScene('oficina_neonodos.m13'));
     const compiled = compileScene(scene);
-    // sala_basica tiene window definida
+    // oficina_neonodos tiene window definida (única de las 3 nuevas con window)
     expect(scene.window).toBeDefined();
     expect(compiled.wgsl).toContain('opSub(room, windowCut)');
   });
@@ -194,7 +189,7 @@ ceiling: { concept: pared_yeso_blanco }
   });
 
   it('shader output incluye los bloques canónicos (común + raymarch)', () => {
-    const scene = parseScene(loadScene('sala_basica.m13'));
+    const scene = parseScene(loadScene('oficina_neonodos.m13'));
     const compiled = compileScene(scene);
 
     // De COMMON_WGSL
@@ -211,7 +206,7 @@ ceiling: { concept: pared_yeso_blanco }
   });
 
   it('WGSL total > 4 KB para una escena con varios conceptos', () => {
-    const scene = parseScene(loadScene('sala_basica.m13'));
+    const scene = parseScene(loadScene('oficina_neonodos.m13'));
     const compiled = compileScene(scene);
     expect(compiled.wgsl.length).toBeGreaterThan(4096);
   });

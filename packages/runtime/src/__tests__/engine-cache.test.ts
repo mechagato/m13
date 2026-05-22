@@ -46,7 +46,7 @@ describe('M13Engine — shader cache (T-013)', () => {
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
-    await engine.loadScene(loadScene('sala_basica.m13'));
+    await engine.loadScene(loadScene('sala_galeria.m13'));
 
     expect(initRenderer).toHaveBeenCalledTimes(1);
     const info = engine.getLastLoadInfo();
@@ -61,11 +61,12 @@ describe('M13Engine — shader cache (T-013)', () => {
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
-    const yaml = loadScene('sala_basica.m13');
+    const yaml = loadScene('sala_galeria.m13');
     await engine.loadScene(yaml);
     const firstHash = engine.getWgslHash();
 
     await engine.loadScene(yaml);
+    // (vista cliente — la misma carga produce cache hit)
 
     expect(initRenderer).toHaveBeenCalledTimes(1);
     const info = engine.getLastLoadInfo();
@@ -79,7 +80,7 @@ describe('M13Engine — shader cache (T-013)', () => {
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
-    await engine.loadScene(loadScene('sala_basica.m13'));
+    await engine.loadScene(loadScene('sala_galeria.m13'));
     const firstHash = engine.getWgslHash();
 
     await engine.loadScene(loadScene('templo_mexica.m13'));
@@ -96,8 +97,8 @@ describe('M13Engine — shader cache (T-013)', () => {
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
-    const yamlA = loadScene('sala_basica.m13');
-    const yamlB = loadScene('loft_industrial.m13');
+    const yamlA = loadScene('sala_galeria.m13');
+    const yamlB = loadScene('oficina_neonodos.m13');
 
     await engine.loadScene(yamlA); // miss → 1 init
     await engine.loadScene(yamlB); // miss → 2 init
@@ -113,7 +114,7 @@ describe('M13Engine — shader cache (T-013)', () => {
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
-    const yaml = loadScene('galeria_minimal.m13');
+    const yaml = loadScene('cocina_industrial.m13');
     for (let i = 0; i < 10; i++) {
       await engine.loadScene(yaml);
     }
