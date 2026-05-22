@@ -1,0 +1,20 @@
+# Cloudflare Pages — headers configuration for m13 demo
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# JS/CSS chunks tienen hash en filename — cache agresivo
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Escenas .m13 son editables sin invalidate del bundle — cache moderado
+/scenes/*
+  Cache-Control: public, max-age=3600, must-revalidate
+  Content-Type: text/yaml; charset=utf-8
+
+# QR PNG estático
+/qr.png
+  Cache-Control: public, max-age=86400
