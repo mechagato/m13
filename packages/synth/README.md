@@ -21,7 +21,9 @@ Concepts are pure data + WGSL strings. The `@m13/runtime` compiler stitches them
 
 ---
 
-## Bootstrap catalog (v0.1 — 8 concepts)
+## Phase 1 catalog (18 concepts)
+
+### Bootstrap — 8 originals (no params, no SDF — backward compat baseline)
 
 | ID | Category | Description |
 |---|---|---|
@@ -33,6 +35,30 @@ Concepts are pure data + WGSL strings. The `@m13/runtime` compiler stitches them
 | `piedra_volcanica` | universal | Dark volcanic stone (Aztec/temple aesthetic) |
 | `metal_dorado_pulido` | object | Polished matte gold (audio-reactive shimmer) |
 | `cuero_vintage` | object | Aged leather with pores and crackling |
+
+### D-3 / Phase 1 — 6 new materials (all parametrizable)
+
+| ID | Category | Params (with defaults) | Description |
+|---|---|---|---|
+| `pared_concreto_pulido` | wall | `darkness=0.5`, `roughness=0.3` | Industrial polished concrete |
+| `pared_madera_oscura` | wall | `darkness=0.6`, `grainScale=8` | Dark wood paneling (boiserie) |
+| `piso_marmol_blanco` | floor | `veinIntensity=0.3` | Floor-optimized white marble |
+| `metal_oxidado` | object | `rustAmount=0.5` | Metal with orange oxidation patches |
+| `metal_bronce_pulido` | object | `shimmer=0.5` | Polished bronze with animated shimmer |
+| `vidrio_esmerilado` | object | `clarity=0.5` | Frosted glass (emulated — no real transmission in v0.1) |
+
+### D-3 / Phase 1 — 4 geometric concepts (`kind: concept`)
+
+| ID | Category | Params (with defaults) | Notes |
+|---|---|---|---|
+| `pedestal_marmol` | object_geo | `cornerRadius=0.05` | Rounded-edge marble pedestal |
+| `lampara_colgante` | object_geo | `glowIntensity=0.8`, `length=0.4` | Hanging lamp with emission inline |
+| `esfera_decorativa` | object_geo | — | Plain decorative sphere (no params; radius from `scale.x`) |
+| `cubo_basico` | object_geo | — | Generic grey cube (uses object `scale` directly) |
+
+### Showcase scene
+
+The bundled `_concepts_showcase.m13` (in `packages/examples/public/scenes/`) references all 18 concepts in a single scene for visual validation. Open the examples demo and hit the **showcase** button.
 
 ---
 
@@ -245,14 +271,16 @@ This feeds:
 
 ---
 
-## Catalog roadmap (Phase 1)
+## Catalog roadmap
 
-After the current 8, we'll add 6 more materials and 4 geometric concepts:
+**Phase 1 catalog complete** (18 concepts — see tables above). All registered.
 
-- **Materials:** `pared_concreto_pulido`, `pared_madera_oscura`, `piso_marmol_blanco`, `metal_oxidado`, `metal_bronce_pulido`, `vidrio_esmerilado`
-- **Geo:** `pedestal_marmol`, `lampara_colgante`, `esfera_decorativa`, `cubo_basico`
+Future phases will add:
+- **Phase 2** — `vidrio_traslucido` (real transmission via Gaussian Splatting hybrid?), `tela_lino`, `agua_quieta`, `papel_tapiz_geometrico`, `madera_clara`, `azulejo_talavera`.
+- **Phase 3** — neural-synthesized materials via ONNX (replaces hand-coded procedurals for high-fidelity textures).
+- **Phase 4** — Gaussian Splatting concepts (captured real-world objects).
 
-See `docs/tasks/phase-1-tasks.md` (T-025..T-034) for individual task breakdowns.
+Suggestions tracked in `docs/spec/phase-1-spec.md` §11 (and future phase specs).
 
 ---
 
