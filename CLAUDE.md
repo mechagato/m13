@@ -186,6 +186,44 @@ Cualquier decisión técnica nueva durante sesiones de Claude Code se agrega aqu
 
 ---
 
+## Ideas futuras (NO en scope de Fase 1)
+
+Estas surgieron en conversaciones con Gato. No están en el plan de Fase 1 actual y NO se trabajan hasta que se acuerden explícitamente. Documentadas aquí solo para no perderlas.
+
+### Idea 1 — PWA instalable (Fase 2 candidato)
+
+**Origen:** sesión 2026-05-21, BITACORA entrada 015 + 016.
+**Costo estimado:** 2 días de trabajo.
+**Beneficio:** los diseñadores industriales pueden "instalar" m13 como app desktop desde el navegador. Ícono en escritorio/dock, ventana standalone sin barra del browser, funciona offline después de primera carga.
+**Qué incluye:**
+- `packages/examples/public/manifest.json` con icons + theme color + display=standalone
+- Service worker que cachea el bundle + escenas .m13 para offline
+- Botón "Install app" detectado por Chrome
+**Cuándo:** primera tarea de Fase 2, después de cerrar Fase 1.
+
+### Idea 2 — m13-platform (POST-éxito de Fase 1-5, NO comprometido a fecha)
+
+**Origen:** Gato preguntó si m13 puede ser base de un "nuevo Roblox" con agentic systems estilo GTA 6.
+**Confirmado por Gato (2026-05-21):** se evalúa SOLO después de que m13 con su alcance actual demuestre éxito comercial. No es Fase 1-5.
+**Hipótesis:** m13 como motor de plataforma para experiencias multiplayer con NPCs LLM-powered.
+**Qué requeriría:**
+- Proyecto hermano `m13-platform` (repo separado)
+- Netcode (WebRTC + estado distribuido)
+- Physics (Rapier o Cannon)
+- Avatares + animación + lipsync
+- LLM local en runtime (ONNX + Llama 3 8B quantizado para Quest 3 + RTX consumer)
+- Resolución explícita de Constitution §3.5 (determinismo runtime) vs LLM en NPCs
+**Por qué post-éxito:**
+- Costo ~18-24 meses de trabajo en paralelo a Fase 4-5
+- Necesita validación comercial de m13 actual primero (PLANVR, Cocinas Domus, otros B2B)
+- Mercado actual saturado (Roblox, Inworld, Convai, Project Athena rumor) — entrar requiere ventaja clara
+**Caminos comerciales intermedios** (Fase 4-5, no requieren m13-platform):
+- PLANVR + asistente IA (LLM editor-time genera mundos por descripción, runtime determinista)
+- Cocinas Domus con voz (cliente describe cocina, m13 sintetiza)
+- Educativas para niños (tutor IA en mundo 3D)
+
+---
+
 ## Si te desvías o te pierdes
 
 Si en algún punto pierdes contexto, no estás seguro de qué hacer, o el usuario te pide algo que parece contradecir este documento:
