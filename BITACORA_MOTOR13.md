@@ -1203,6 +1203,121 @@ Ambas son trabajos NUEVOS — no van a Fase 1. Registradas para futuro (BITACORA
 
 ---
 
+## Entrada 017 · 2026-05-21 · T-021..T-024 + ideas futuras
+
+**Duración:** ~25 min Claude (batch de 4 tasks + 2 Q&A largas con Gato)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Sesión muy productiva — Gato pidió "dale con todas tus recomendaciones" tras T-020. Cerré T-021, T-022, T-023, T-024 + documenté dos ideas futuras (PWA Fase 2 + m13-platform post-éxito) en CLAUDE.md por petición explícita de Gato.
+
+### Lo que se hizo
+
+**1. CLAUDE.md — Sección "Ideas futuras (NO en scope Fase 1)":**
+
+Documentadas dos ideas que NO están en plan actual pero merecen archivo:
+- **Idea 1: PWA installable** — Fase 2, 2 días de trabajo. Manifest + service worker. Beneficio: m13 se instala como app desktop desde browser.
+- **Idea 2: m13-platform (Roblox-killer agentic)** — POST-éxito de Fase 1-5, no comprometido. Requiere multiplayer + physics + characters + LLM local + resolución del Constitution §3.5. Por confirmación de Gato: "solo después de que m13 con lo que ya hay en el alcance sea exitoso".
+
+**Caminos comerciales intermedios** registrados (no requieren m13-platform):
+- PLANVR + asistente IA
+- Cocinas Domus con voz
+- Educativas con tutor IA en mundo 3D
+
+**2. T-021 — Compiler `kind: concept` para conceptos geométricos:**
+
+- **Schema:** `objectKindSchema` extendido con `'concept'`. `material` ahora opcional. `concept?: string` nuevo. `.superRefine()` enforza: kind:'concept' requiere `concept`, otros kinds requieren `material`.
+- **Compiler:** nueva helper `effectiveConceptId(obj)` que resuelve el id según kind. `generateObjectSdf` ahora tiene case `'concept'` que delega a `sdf_<id>(localP, scale)`. WGSL output incluye sección "SDFs de conceptos geométricos" con todos los `wgslSdf` de los conceptos referenciados.
+- **buildMatParamsLayout** actualizado para iterar superficies y objects con `material` definido (filter para excluir kind:concept).
+- **Tests:** archivo nuevo `compiler-kind-concept.test.ts` con **9 tests** cubriendo: parser acepta kind:concept, rechaza sin concept, rechaza primitivo sin material, compiler genera sdf_<id>, incluye wgslSdf en output, usa material implícito del concept, conceptsUsed incluye el id, mix con primitivos, animate+audio_reactive funcionan.
+
+**3. T-022 — Manifest JSON exportable:**
+
+- Agregado `zod-to-json-schema@^3.23.0` como `dependency` de `@m13/synth`.
+- `ConceptManifest` extendido con campo `paramsJsonSchema?: Record<string, unknown>` (JSON Schema draft-07).
+- `attachManifest()` pre-computa el JSON Schema una vez al registrar (Zod schema inmutable).
+- Tests: 2 nuevos en `manifest.test.ts`:
+  - Conceptos sin paramsSchema NO incluyen paramsJsonSchema ni hasParams
+  - `zodToJsonSchema` produce output serializable con los campos correctos
+
+**4. T-023 — README `@m13/runtime`:**
+
+Doc inglés, ~200 líneas. Cubre:
+- Quick start con ejemplo de 4 líneas
+- API completa: M13Engine class, parseScene, compileScene, hashWgsl, FlyCamera, MicAudioInput, writeMatParams
+- Shader cache + determinism
+- Architecture diagram (ASCII)
+- Lo que NO hace v0.1 (polígonos, multiplayer, físicas)
+- Bundle size: 50KB (pre-T-022) — ahora 56.79KB tras T-022
+
+**5. T-024 — README `@m13/synth`:**
+
+Doc inglés, ~250 líneas. Cubre:
+- Catálogo bootstrap (8 conceptos) + categorías
+- Tutorial paso-a-paso: crear nuevo concepto material en ≤ 30 min
+  - Crear archivo + WGSL fn material
+  - Registrar en index.ts
+  - Usar en escena
+  - Hacerlo parametrizable con paramsSchema
+- Tutorial: crear concepto geométrico con `wgslSdf`
+- Reglas del WGSL function (signature, pureza, lighting)
+- API del manifest() y para qué sirve (editor UI, LLM context, exports, telemetría)
+- Best practices (noise helpers, FBM ≤ 4 octaves, multi-scene testing, etc)
+- Catalog roadmap Fase 1 (T-025..T-034)
+
+### Verificaciones
+
+- ✅ `pnpm typecheck` limpio en los 3 packages.
+- ✅ `pnpm test` → **83/83 pass** (+ 11 nuevos vs T-020: 9 kind:concept + 2 manifest JSON Schema).
+- ✅ Backward compat: 4 escenas demo siguen produciendo el mismo hash SHA-256.
+- ✅ `pnpm --filter @m13/runtime build` → 1.25s, 281 KB raw.
+- ✅ `pnpm --filter @m13/runtime size` → **56.79 KB gzipped** (+5.92 KB vs T-019 por `zod-to-json-schema`, ~57% del budget de 100 KB).
+
+### Decisiones tomadas
+
+- **D-1601:** Schema usa `superRefine()` con `addIssue()` para validación cruzada (kind:concept ↔ concept field). Más flexible que `refine()` simple porque permite diferenciar mensajes por kind.
+- **D-1602:** Material `optional` en object schema. Type inference pierde precisión (M13Object ahora tiene material?), consumers deben checkear kind primero. Aceptable: la `superRefine` garantiza que en runtime el campo correcto siempre está presente.
+- **D-1603:** `wgslSdf` signature acordada: `fn sdf_<id>(p: vec3<f32>, scale: vec3<f32>) -> f32`. Compiler hace la translación de posición y animación externamente vía `localP`. Si futuras animaciones afectan la forma (no solo posición), agregar params adicionales en v0.2.
+- **D-1604:** Material implícito en `kind: 'concept'` — el concept geo provee su propio `mat_<id>()`. Si el user quiere override, sería un campo `material` futuro (no en v0.1). Mantenemos KISS.
+- **D-1605:** `paramsJsonSchema` se PRE-COMPUTA al registrar el concept (en `attachManifest`), no por cada llamada a `manifest()`. Razón: Zod schema es inmutable; conversión es costosa (~ms); cache amortiza.
+- **D-1606:** `zod-to-json-schema` agregado como **dependency** de synth (runtime). El bundle subió 5.92 KB. Justified porque es el camino crítico del editor LLM (T-051).
+- **D-1607:** READMEs en inglés (Constitution §3.8). El audiencia objetivo es internacional (research papers, contribuidores externos en Fase 3+, publicación pública del demo).
+
+### Lo que tronó
+
+Nada. Cuatro tasks en cascada limpia. La parte más sutil fue el cambio de schema (material? opcional) — atajé verificando que todos los tests existentes pasaran (24 parser + 12+7+8+9+3 compiler + 12 manifest + 6+3 engine = 83 tests, todos verdes).
+
+### Pendientes para próxima sesión
+
+- [ ] T-020 ya cerrado en sesión anterior
+- [ ] T-025..T-034 [PARALELIZABLES] catálogo de 14 conceptos — listo para arrancar
+- [ ] T-035 smoke test visual de los 14 conceptos
+- [ ] T-036 update synth README con catálogo final
+
+### Reflexiones
+
+**Cluster D-3 base completo.** Las 6 tasks core de infraestructura para conceptos están cerradas:
+- T-017 Concept interface extendida
+- T-018 compiler propaga params
+- T-019 renderer MAT_PARAMS buffer
+- T-020 E2E + bug fix
+- T-021 kind:concept para geos
+- T-022 manifest JSON exportable
+- T-023 README runtime
+- T-024 README synth
+
+Lo que queda de D-3 son los conceptos en sí (T-025..T-034) — 10 archivos pequeños, paralelizables. Cada uno ~30-60 min según complejidad. La estructura está lista para que se agreguen sin tocar el motor.
+
+**Sobre las ideas futuras documentadas:**
+
+Bueno tenerlas en CLAUDE.md aunque NO se trabajen. Sirven como antídoto contra scope creep: si en una sesión futura yo (o cualquier agente) inventa rocketship features fuera de plan, basta con apuntar al doc y decir "eso está documentado pero está fuera de Fase 1". El PWA en particular está medio actionable — cuando llegue Fase 2 ya tenemos la primera idea sobre la mesa sin necesidad de re-pensar.
+
+**Pregunta abierta para Gato:** T-025..T-034 son 10 tasks independientes (6 materiales + 4 geos). Se pueden lanzar con subagent-driven-development en paralelo (cada task = un subagent, hasta 4 a la vez para no saturar). ¿Quieres que arranque la paralelización en próxima sesión, o seguimos secuencialmente uno a uno?
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
