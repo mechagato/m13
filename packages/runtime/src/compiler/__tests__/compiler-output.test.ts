@@ -154,8 +154,8 @@ objects:
 `;
     const scene = parseScene(yaml);
     const compiled = compileScene(scene);
-    // codegen actual usa "sin(u.time * <speed>) * <amplitude>"
-    expect(compiled.wgsl).toMatch(/sin\(u\.time \* 2\.5\) \* 0\.3/);
+    // codegen genera floats con 6 decimales fijos (determinismo T-011)
+    expect(compiled.wgsl).toMatch(/sin\(u\.time \* 2\.500000\) \* 0\.300000/);
   });
 
   it('objeto con audio_reactive: WGSL inyecta u.audioAmp en el radio y posicion', () => {
