@@ -1,0 +1,31 @@
+import { z } from 'zod';
+import type { Concept } from '../index.js';
+
+/**
+ * T-028 — Metal con óxido naranja sobre base gris.
+ *
+ * Mancha procedural FBM controla la cantidad de óxido visible.
+ * Para esculturas industriales, fierros viejos, ambientes post-apocalípticos.
+ *
+ * Params:
+ *   - rustAmount (0..1): cuánto del metal está oxidado. Default 0.5.
+ */
+export const metalOxidado: Concept = {
+  id: 'metal_oxidado',
+  category: 'object',
+  description: 'Metal con óxido naranja — esculturas industriales, fierros viejos, ambientes rústicos.',
+  paramsSchema: z.object({
+    rustAmount: z.number().min(0).max(1),
+  }),
+  defaults: { rustAmount: 0.5 },
+  wgsl: /* wgsl */ `
+fn mat_metal_oxidado(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
+  let rustAmount = matParams.metal_oxidado_rustAmount;
+  let rust = smoothstep(0.4, 0.7, fbm(p * 6.0, 4));
+  let metal = vec3<f32>(0.55, 0.55, 0.55);
+  let rustColor = vec3<f32>(0.62, 0.30, 0.13);
+  let speckle = noise3(p * 70.0) * 0.05;
+  return mix(metal, rustColor, rust * rustAmount) - vec3<f32>(speckle);
+}
+`,
+};
