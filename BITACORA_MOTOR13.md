@@ -845,6 +845,99 @@ Próximo paso recomendado: **T-017** — abre el cluster D-3 (síntesis material
 
 ---
 
+## Entrada 013 · 2026-05-21 · T-017 Concept interface extendida + manifest
+
+**Duración:** ~10 min Claude (+ desvío para explicar a Gato sobre Quest 3 scanning)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Primera task del cluster D-3 y BLOQUEADOR del cluster: extender `Concept` interface para soportar parámetros editables (D-101) y conceptos geométricos (`object_geo`). Sin esto los 6 materiales y 4 geos faltantes (T-025..T-034) no pueden agregarse con su API completa.
+
+Durante esta sesión Gato preguntó si el Quest 3 puede leer/escanear objetos (incluso una bodega) y rendererarlos en m13. Respondí con análisis honesto: sí pero NO en Fase 1 — alineable con Fase 4 (Gaussian Splatting) o Fase 5 (WebXR completo). El Quest 3 puede mapear espacios con Scene Mesh API pero resolución decimétrica, no LiDAR-grade. Recomendé mantener plan actual + considerar agregar conceptos `anaquel`, `rack`, `pasillo` al synth si surge requerimiento real de bodegas. Documentado en `respuesta-quest3` arriba (mensaje al usuario, no archivo).
+
+### Lo que se hizo
+
+**Extensiones a `packages/synth/src/index.ts`:**
+
+1. **`ConceptCategory` expandida** con `'object_geo'` (conceptos con SDF propia).
+2. **Interface `Concept`** agrega 4 campos opcionales:
+   - `wgslSdf?: string` — para conceptos geométricos (T-021 lo usará)
+   - `paramsSchema?: z.ZodObject<z.ZodRawShape>` — schema Zod de parámetros editables
+   - `defaults?: Record<string, unknown>` — valores por default
+   - `manifest?: () => ConceptManifest` — método adjuntado por el registry
+3. **Nuevo tipo `ConceptManifest`** — metadata serializable: `{id, category, description, hasGeometricSDF, hasParams, defaults?}`. Diseño deliberadamente sin paramsSchema (Zod no es JSON-serializable directo); T-022 agregará `paramsJsonSchema` con `zod-to-json-schema`.
+4. **`attachManifest()`** privado — wrapper que toma un concept raw y le adjunta el método `manifest()`. Permite que los 8 archivos de concepts queden como objetos planos sin tocar.
+5. **REGISTRY rebuilt:** `RAW_CONCEPTS: Concept[]` (array) → `Object.fromEntries(...map(attachManifest))` → record por id.
+6. **Nueva API pública `listManifests()`** — devuelve `ConceptManifest[]`.
+
+**Tests** — `packages/synth/src/__tests__/manifest.test.ts` con 10 tests:
+
+1. listConcepts retorna los 8 del bootstrap
+2. cada concepto tiene `manifest()` callable
+3. **criterio del task: `listConcepts().every(c => c.manifest) === true`** ✓
+4. manifest() retorna metadata consistente con el raw
+5. manifest es JSON-serializable
+6. listManifests() devuelve array completo
+7. los 8 del bootstrap NO declaran paramsSchema/defaults/wgslSdf (compat backward)
+8. type ConceptCategory acepta 'object_geo'
+9. listConceptsByCategory mantiene compat
+10. getConcept retorna undefined para id inexistente
+
+### Verificaciones
+
+- ✅ `pnpm test` → **59/59 pass** (24 parser + 12+7 compiler + 6 engine + 10 synth-manifest).
+- ✅ `pnpm typecheck` limpio en los 3 packages.
+- ✅ `pnpm dev` Vite ready 265ms (sin cambio visible en demo — los 8 conceptos siguen renderizando igual).
+- ✅ Los 8 archivos de `concepts/*.ts` quedaron sin tocar. Cero churn — todo el trabajo en `index.ts`.
+
+### Decisiones tomadas
+
+- **D-1201:** Los nuevos campos en `Concept` son **opcionales** (no required). Razón: backward compat con los 8 concepts existentes que no los declaran. Los concepts futuros (T-025..T-034) opt-in cuando los necesiten.
+- **D-1202:** `manifest()` adjuntado por el registry, NO escrito a mano en cada concept. Razón: DRY — el mapping de raw→manifest es 5 líneas; replicarlas en 8 archivos sería ceremonia inútil.
+- **D-1203:** `ConceptManifest` NO incluye `paramsSchema` (Zod). Razón: Zod no es JSON-serializable y queremos que el manifest se pueda mandar al editor LLM como context. T-022 agregará `paramsJsonSchema` con `zod-to-json-schema` (ya está como devDep del root).
+- **D-1204:** `zod@^3.23.4` agregado como `dependency` (no devDependency) del `@m13/synth`. Razón: cuando concepts futuros declaren `paramsSchema: z.object({...})`, necesitan Zod en runtime.
+- **D-1205:** `z.ZodObject<z.ZodRawShape>` como tipo del paramsSchema (no `z.ZodObject<any>`). Razón: más estricto, evita el ruido del `any` en strict mode. `ZodRawShape` permite cualquier shape concreto.
+- **D-1206:** El método `manifest` queda como `manifest?` (optional) en la interface. Razón: aunque el registry siempre lo adjunta, declarando obligatorio rompería el typecheck de los archivos de concepts (que devuelven objetos sin manifest). El compilador no lo usa, así que el optional es seguro.
+
+### Sobre la pregunta del Quest 3 scanning
+
+Gato preguntó si Quest 3 puede leer objetos / una bodega completa y renderizar. Respuesta:
+
+- **Quest 3 puede hacer:** passthrough video, Scene Understanding (planos), Scene Mesh (decimétrico, ~10cm), Spatial Anchors, hand/body tracking, WebXR Hit Test.
+- **No tiene LiDAR.** Captura inferior a iPhone Pro + Polycam.
+- **No encaja en Fase 1.** Sería Fase 4 (Gaussian Splatting híbrido) o Fase 5 (WebXR completo).
+- **Caminos prácticos AHORA:**
+  - Bodega abstracta configurable → agregar conceptos `anaquel`, `rack`, `pasillo`, `puerta` al synth (alineable con D-3 actual)
+  - Bodega real foto-realista → Polycam/iPhone LiDAR (fuera de m13)
+  - Captura aproximada in-situ → no es prioridad, mover a Fase 4-5
+
+Gato no decidió aún si reordenar T-025..T-034 para incluir conceptos de bodega. Sigo con el plan actual.
+
+### Lo que tronó
+
+Nada. La extensión de interface con campos opcionales fue no-breaking, los 8 concepts siguieron compilando sin modificación, y los 10 tests pasaron a la primera.
+
+### Pendientes para próxima sesión
+
+- [ ] T-018 Compiler: leer params del object.material y propagarlos (parte a de C-208)
+- [ ] T-019 Renderer: buffer MAT_PARAMS + struct WGSL (parte b)
+- [ ] T-020 Test E2E param de concept altera output
+- [ ] T-021 Compiler soporte `kind: concept` para conceptos geométricos
+- [ ] T-022 Manifest JSON exportable (zod-to-json-schema)
+- [ ] T-025..T-034 [PARALELIZABLES] los 14 conceptos del catálogo
+
+### Reflexiones
+
+T-017 fue el "ground work" típico antes de meter conceptos. El truco de adjuntar `manifest()` en el registry (vs. requerir que cada concept lo escriba) evitó tocar 8 archivos por 1 línea cada uno — ese tipo de cambios suele introducir bugs (typos, imports faltantes) y aquí no aplicaba.
+
+Una pregunta abierta para T-018/T-019: el budget de uniforms del WGSL ahora es de 160 bytes (UNIFORM_BYTES en renderer). Agregar un buffer MAT_PARAMS aparte (256 bytes propuestos) es la propuesta del plan. Alternativa más invasiva: mover los uniforms variables a storage buffers. Para v0.1 sigo con la propuesta del plan (segundo buffer uniform).
+
+El cluster D-3 ahora tiene su BLOQUEADOR (T-017) cerrado. Las próximas tasks T-018..T-022 son secuenciales (cada una depende de la anterior) y luego T-025..T-034 explotan en paralelo.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
