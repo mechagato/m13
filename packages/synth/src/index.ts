@@ -13,6 +13,7 @@
 import type { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+// ---- Bootstrap (8 conceptos originales) ----
 import { paredYesoBlanco } from './concepts/pared_yeso_blanco.js';
 import { paredLadrilloViejo } from './concepts/pared_ladrillo_viejo.js';
 import { pisoMaderaEnvejecida } from './concepts/piso_madera_envejecida.js';
@@ -21,6 +22,18 @@ import { metalDoradoPulido } from './concepts/metal_dorado_pulido.js';
 import { marmolBlancoVetas } from './concepts/marmol_blanco_vetas.js';
 import { piedraVolcanica } from './concepts/piedra_volcanica.js';
 import { cueroVintage } from './concepts/cuero_vintage.js';
+
+// ---- D-3 / Fase 1 (10 conceptos: 6 materiales + 4 geométricos) ----
+import { paredConcretoPulido } from './concepts/pared_concreto_pulido.js';
+import { paredMaderaOscura } from './concepts/pared_madera_oscura.js';
+import { pisoMarmolBlanco } from './concepts/piso_marmol_blanco.js';
+import { metalOxidado } from './concepts/metal_oxidado.js';
+import { metalBroncePulido } from './concepts/metal_bronce_pulido.js';
+import { vidrioEsmerilado } from './concepts/vidrio_esmerilado.js';
+import { pedestalMarmol } from './concepts/pedestal_marmol.js';
+import { lamparaColgante } from './concepts/lampara_colgante.js';
+import { esferaDecorativa } from './concepts/esfera_decorativa.js';
+import { cuboBasico } from './concepts/cubo_basico.js';
 
 /**
  * Categorías válidas de un concepto. `object_geo` aplica a conceptos que
@@ -97,6 +110,7 @@ export interface ConceptManifest {
 // ============================================================
 
 const RAW_CONCEPTS: Concept[] = [
+  // Bootstrap (8)
   paredYesoBlanco,
   paredLadrilloViejo,
   pisoMaderaEnvejecida,
@@ -105,6 +119,18 @@ const RAW_CONCEPTS: Concept[] = [
   marmolBlancoVetas,
   piedraVolcanica,
   cueroVintage,
+  // D-3 Fase 1 — materiales (6)
+  paredConcretoPulido,
+  paredMaderaOscura,
+  pisoMarmolBlanco,
+  metalOxidado,
+  metalBroncePulido,
+  vidrioEsmerilado,
+  // D-3 Fase 1 — geométricos (4)
+  pedestalMarmol,
+  lamparaColgante,
+  esferaDecorativa,
+  cuboBasico,
 ];
 
 /**
