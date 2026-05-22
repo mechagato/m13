@@ -747,6 +747,104 @@ Cluster D-2 está a un paso de cerrar — solo falta T-015/T-016 (bundle) y abri
 
 ---
 
+## Entrada 012 · 2026-05-21 · T-015 + T-016 Library build + bundle budget
+
+**Duración:** ~10 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cierre del cluster D-2: producir un bundle distribuible del runtime y verificar el budget de tamaño del NFR-3 (<100KB gzipped). T-015 (build pipeline) y T-016 (validación) se ejecutan juntos porque la métrica del bundle resulta dentro del budget en el primer try — no hay "ajuste" que hacer.
+
+### Lo que se hizo
+
+**1. `packages/runtime/vite.config.ts`** — Vite library mode:
+- Entry: `src/index.ts`
+- Output: `dist/m13-runtime.js` (ESM único)
+- Format: ES module, target es2022
+- Minify: esbuild
+- Source map: generado pero no contado en el budget
+- Alias workspace: `@m13/synth` → ruta relativa al source (Vite no resuelve workspace symlinks automáticamente en lib mode fuera del root)
+- Externals: **ninguno** — el bundle incluye `@m13/synth`, `yaml`, `zod` (decisión D-1101)
+
+**2. Scripts en `runtime/package.json`:**
+- `build`: ahora `vite build` (antes `tsc`)
+- `build:types`: separado para emitir `.d.ts` cuando se necesite (Fase 2+ al publicar a npm)
+- `size`: `size-limit` (nuevo)
+
+**3. `size-limit` instalado** como devDep del runtime + `@size-limit/preset-small-lib`. Configuración en `runtime/package.json`:
+```json
+"size-limit": [
+  {
+    "name": "@m13/runtime (ESM bundle, gzipped)",
+    "path": "dist/m13-runtime.js",
+    "limit": "100 KB",
+    "gzip": true
+  }
+]
+```
+
+**4. `vite@^5.4.0`** agregado como devDep del runtime (no estaba presente como dep directa; venía como transitive de vitest).
+
+### Resultados del bundle
+
+| Métrica | Valor |
+|---|---|
+| Source TS bruto (runtime + synth) | ~25 KB |
+| Bundle `dist/m13-runtime.js` (sin min) | **249.09 KB** |
+| Bundle gzipped (vite report) | 61.23 KB |
+| Bundle gzipped (size-limit, "with all deps") | **50.02 KB** |
+| Budget NFR-3 | < 100 KB |
+| **Headroom** | **50 KB libres** |
+| Source map (no shipped) | 731 KB |
+
+Tiempo de build: 1.14s.
+
+### Verificaciones
+
+- ✅ `pnpm --filter @m13/runtime build` → produce `dist/m13-runtime.js` (T-015 done).
+- ✅ `pnpm --filter @m13/runtime size` → reporta 50.02 KB con dependencias, **DENTRO del budget** (T-016 done).
+- ✅ `pnpm test` → 49/49 pass (sin regresiones).
+- ✅ `pnpm typecheck` limpio en los 3 packages.
+- ✅ `pnpm dev` Vite ready 259ms (sin impacto del nuevo vite.config en runtime — examples sigue usando el suyo).
+- ✅ `dist/` ya está en `.gitignore` (no se commitean artefactos de build).
+
+### Decisiones tomadas
+
+- **D-1101:** **Bundle todo, no externalizar.** zod (~12 KB gz) + yaml (~20 KB gz tras tree-shaking de `parse`) + synth + runtime caben holgadamente en el budget. Externalizar obligaría al consumidor a instalar deps manualmente — rompe el principio "drop-in" del runtime y contradice §3.3 del Constitution (semantic-first, asset-light).
+- **D-1102:** Build con Vite (no rollup directo ni tsup). Razón: Vite ya está en el stack, esbuild minify es rápido (1.14s para todo el bundle), alias config natural, source maps gratis.
+- **D-1103:** `.d.ts` no se generan en el bundle output por ahora. El campo `types` del package.json sigue apuntando a `src/index.ts` y los workspace consumers (examples, editor en D-4) leen el TS source vía symlink. Cuando publiquemos a npm (Fase 3+), `build:types` genera `dist/types/*.d.ts` y se ajustan `main`/`types` del package.
+- **D-1104:** Bundle minificado en producción con `esbuild`. No `terser`. Razón: esbuild es ~10× más rápido y la diferencia de tamaño final es marginal (<2%).
+- **D-1105:** Source maps generados (`sourcemap: true`) y en `dist/` pero **no incluidos en el size budget**. Razón: son devtools, no van al runtime real. El consumidor que quiera debugear puede pedirlos por separado.
+
+### Lo que tronó
+
+Nada. El build pasó en el primer try, el size-limit reportó verde a la primera. Vite la levantó sin problemas tras el alias del `@m13/synth` (anticipé que el resolver no encontraría el workspace link en lib mode).
+
+### Pendientes para próxima sesión (cierre del cluster D-2 + abrir D-3)
+
+- [x] T-007..T-016 ✅ cluster D-2 completo
+- [ ] **T-017 [BLOQUEADOR]** extender `Concept` interface con `paramsSchema` + `manifest()` (abre D-3 conceptos)
+- [ ] T-018..T-022 propagación de params + soporte `kind: concept`
+
+### Reflexiones
+
+**Cluster D-2 cerrado.** Resumen del runtime:
+- Parser: 100% cubierto, 24 tests
+- Compiler: 100% cubierto, 12+7 tests, determinista byte-por-byte
+- Engine: caché de pipeline GPU (49 tests total con renderer mockeado)
+- Bench: parse+compile p95 = 21ms para 50 objetos (~10× bajo budget de 200ms)
+- Bundle: 50KB gzipped (50% del budget de 100KB)
+
+El runtime está listo para que D-3 (14 conceptos materiales + geométricos) y D-4 (editor) se construyan encima con confianza. La parte que NO está cubierta es el rendering real (renderer + camera + audio) — eso necesita WebGPU en navegador y se valida con T-073 (snapshot tests Playwright, scope-cut candidate) y manualmente con `pnpm dev` + abrir browser.
+
+50KB gzipped es un número que vende fácil: una landing típica de Next.js sin SSR pesa más que el motor entero. Si T-066 (spec Fase 2) o T-064 (benchmark report) necesita un soundbite, este es bueno.
+
+Próximo paso recomendado: **T-017** — abre el cluster D-3 (síntesis material). Es BLOQUEADOR porque sin paramsSchema en el Concept interface, no se pueden agregar los conceptos parametrizables de v0.1 (D-101).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
