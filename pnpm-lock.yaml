@@ -72,6 +72,10 @@ importers:
         version: 5.4.21
 
   packages/synth:
+    dependencies:
+      zod:
+        specifier: ^3.23.4
+        version: 3.25.76
     devDependencies:
       '@webgpu/types':
         specifier: ^0.1.40

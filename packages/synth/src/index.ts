@@ -1,9 +1,16 @@
 /**
- * @m13/synth — librería de conceptos materiales procedurales.
+ * @m13/synth — librería de conceptos materiales y geométricos procedurales.
  *
- * Cada concepto exporta una función WGSL `mat_<id>(p, n, audioAmp) -> vec3<f32>`
- * más metadatos. El registry permite que el compilador resuelva conceptos por id.
+ * Cada concepto exporta:
+ *  - una función WGSL `mat_<id>(p, n, audioAmp) -> vec3<f32>` para color material
+ *  - opcionalmente una función WGSL `sdf_<id>(p, params)` cuando es geométrico
+ *  - opcionalmente un Zod schema con sus parámetros editables
+ *
+ * El registry permite que el compilador resuelva conceptos por id, y que el
+ * editor (D-4) introspecte sus manifests para mostrar UI de edición.
  */
+
+import type { z } from 'zod';
 
 import { paredYesoBlanco } from './concepts/pared_yeso_blanco.js';
 import { paredLadrilloViejo } from './concepts/pared_ladrillo_viejo.js';
@@ -14,29 +21,109 @@ import { marmolBlancoVetas } from './concepts/marmol_blanco_vetas.js';
 import { piedraVolcanica } from './concepts/piedra_volcanica.js';
 import { cueroVintage } from './concepts/cuero_vintage.js';
 
+/**
+ * Categorías válidas de un concepto. `object_geo` aplica a conceptos que
+ * declaran su propia geometría SDF (vs. usar un primitivo + material).
+ */
+export type ConceptCategory =
+  | 'wall'
+  | 'floor'
+  | 'ceiling'
+  | 'object'
+  | 'universal'
+  | 'object_geo';
+
+/**
+ * Concepto: unidad reutilizable de síntesis material o geométrica.
+ *
+ * Los conceptos básicos (los 8 del bootstrap) sólo declaran `wgsl` material.
+ * Los conceptos extendidos pueden declarar:
+ *  - `wgslSdf` para conceptos geométricos (T-021, kind: 'concept')
+ *  - `paramsSchema` para parámetros editables validados por Zod
+ *  - `defaults` para valores iniciales de los parámetros
+ *
+ * El `manifest()` está siempre presente — lo adjunta el registry al registrar
+ * cada concepto crudo. Devuelve metadata serializable para el editor.
+ */
 export interface Concept {
   /** Identificador único, usado en .m13 */
   id: string;
-  /** Categoría: 'wall', 'floor', 'ceiling', 'object', 'universal' */
+  /** Categoría del concepto */
   category: ConceptCategory;
   /** Descripción legible para humanos */
   description: string;
   /** Fragmento WGSL que define `fn mat_<id>(p, n, audioAmp) -> vec3<f32>` */
   wgsl: string;
+  /** Fragmento WGSL opcional que define `fn sdf_<id>(p, ...) -> f32` (solo conceptos geométricos) */
+  wgslSdf?: string;
+  /** Schema Zod para validar `params` que el `.m13` puede pasar al concepto */
+  paramsSchema?: z.ZodObject<z.ZodRawShape>;
+  /** Valores por default de los parámetros (deben validar contra paramsSchema) */
+  defaults?: Record<string, unknown>;
+  /**
+   * Manifest serializable del concepto. Adjuntado por el registry al cargar.
+   * Para el editor (D-4) y telemetría.
+   */
+  manifest?: () => ConceptManifest;
 }
 
-export type ConceptCategory = 'wall' | 'floor' | 'ceiling' | 'object' | 'universal';
+/**
+ * Metadata serializable de un concepto. La forma del paramsSchema queda como
+ * Zod (no JSON Schema) por simplicidad — el caller convierte si necesita JSON.
+ * T-022 agregará `paramsJsonSchema` con `zod-to-json-schema`.
+ */
+export interface ConceptManifest {
+  id: string;
+  category: ConceptCategory;
+  description: string;
+  /** true si el concepto declara su propio SDF geométrico (no solo material) */
+  hasGeometricSDF: boolean;
+  /** true si el concepto acepta parámetros editables */
+  hasParams: boolean;
+  defaults?: Record<string, unknown>;
+}
 
-const REGISTRY: Record<string, Concept> = {
-  pared_yeso_blanco: paredYesoBlanco,
-  pared_ladrillo_viejo: paredLadrilloViejo,
-  piso_madera_envejecida: pisoMaderaEnvejecida,
-  piso_concreto_industrial: pisoConcretoIndustrial,
-  metal_dorado_pulido: metalDoradoPulido,
-  marmol_blanco_vetas: marmolBlancoVetas,
-  piedra_volcanica: piedraVolcanica,
-  cuero_vintage: cueroVintage,
-};
+// ============================================================
+// Registry
+// ============================================================
+
+const RAW_CONCEPTS: Concept[] = [
+  paredYesoBlanco,
+  paredLadrilloViejo,
+  pisoMaderaEnvejecida,
+  pisoConcretoIndustrial,
+  metalDoradoPulido,
+  marmolBlancoVetas,
+  piedraVolcanica,
+  cueroVintage,
+];
+
+/**
+ * Envuelve un concepto raw con el método `manifest()` al registrarlo.
+ * Esto permite que los archivos de concepts queden como objetos planos
+ * (data-only) y el registry agrega el comportamiento.
+ */
+function attachManifest(raw: Concept): Concept {
+  return {
+    ...raw,
+    manifest: () => ({
+      id: raw.id,
+      category: raw.category,
+      description: raw.description,
+      hasGeometricSDF: raw.wgslSdf !== undefined,
+      hasParams: raw.paramsSchema !== undefined,
+      defaults: raw.defaults,
+    }),
+  };
+}
+
+const REGISTRY: Record<string, Concept> = Object.fromEntries(
+  RAW_CONCEPTS.map((raw) => [raw.id, attachManifest(raw)]),
+);
+
+// ============================================================
+// API pública
+// ============================================================
 
 export function getConcept(id: string): Concept | undefined {
   return REGISTRY[id];
@@ -48,4 +135,12 @@ export function listConcepts(): Concept[] {
 
 export function listConceptsByCategory(category: ConceptCategory): Concept[] {
   return listConcepts().filter((c) => c.category === category || c.category === 'universal');
+}
+
+/**
+ * Lista todos los manifests del registry. Útil para que el editor
+ * presente un catálogo, o para telemetría de uso de conceptos.
+ */
+export function listManifests(): ConceptManifest[] {
+  return listConcepts().map((c) => c.manifest!());
 }
