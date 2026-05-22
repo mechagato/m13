@@ -21,11 +21,13 @@ vi.mock('../renderer/index.js', () => ({
     format: 'bgra8unorm' as GPUTextureFormat,
     pipeline: {} as GPURenderPipeline,
     uniformBuffer: {} as GPUBuffer,
+    matParamsBuffer: null,
     bindGroup: {} as GPUBindGroup,
     canvas: {} as HTMLCanvasElement,
   })),
   renderFrame: vi.fn(),
   writeUniforms: vi.fn(),
+  writeMatParams: vi.fn(),
 }));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
