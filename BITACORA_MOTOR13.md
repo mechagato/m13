@@ -301,6 +301,64 @@ T-008 cayó en mucho menos tiempo que el estimado (60 min → ~10 min). Cubrir 1
 
 ---
 
+## Entrada 006 · 2026-05-21 · T-009 Tests parser errores
+
+**Duración:** ~8 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cluster D-2 sigue avanzando. Tras T-008 (11 tests felices, parser 100% coverage), T-009 cubre los errores: YAML roto, versionado, schema, mensajes con path.
+
+### Lo que se hizo
+
+Creado `packages/runtime/src/parser/__tests__/parser-errors.test.ts` con **13 tests** (>6 requeridos):
+
+1. YAML sintácticamente inválido → prefijo `[m13/parser] YAML inválido`
+2. `version: "0.2"` → mensaje específico con la versión
+3. `version: "1.0"` → mismo formato con número distinto
+4. `name` faltante → error con path `name`
+5. `walls` faltante → path `walls`
+6. `bounds: [1, 2]` (solo 2 elementos) → path `bounds`
+7. `objects[0]` sin `position` → path `objects.0.position`
+8. `kind: tetraedro_inventado` (fuera de enum) → path `objects.0.kind`
+9. `light.intensity: "muy fuerte"` (string en vez de número) → path `light.intensity`
+10. `animate.mode: girar_estilo_libre` → path `objects.0.animate.mode`
+11. Múltiples errores reportados juntos con bullets `· path — message`
+12. `validateScene` rechaza objeto JS directo sin pasar por YAML
+13. `validateScene(null)` no crashea, lanza error de schema
+
+### Verificaciones
+
+- ✅ `pnpm test` → **24/24 pass** (11 T-008 + 13 T-009), 568ms.
+- ✅ Coverage parser: **100% mantenido** (líneas/branches/funciones/statements).
+- ✅ `pnpm typecheck` limpio.
+
+### Decisiones tomadas
+
+- **D-501:** Tests con `expect(() => parseScene(yaml)).toThrow(/regex/)` para validación rápida del mensaje. Tests con `try/catch + expect(msg).toMatch()` cuando se valida estructura del mensaje (múltiples paths).
+- **D-502:** No se testea "concept inexistente al material" porque eso es responsabilidad del **compiler**, no del parser. La task original lo mencionaba — se ajusta a la realidad del código y se documentará en el test del compiler (T-010).
+- **D-503:** No se testea `intensity` negativa porque el schema NO tiene `min(0)` — un `intensity: -1` es VÁLIDO. Sería un cambio de schema, no de tests. Si Gato quiere restringir, abrir issue para v0.2.
+
+### Lo que tronó
+
+Nada. 13/13 en la primera corrida. Los path assertions con regex (`objects\.0\.position`) requirieron escape correcto del punto — atrapado al escribir, no en runtime.
+
+### Pendientes para próxima sesión
+
+- [ ] T-010 tests compiler output (verificar fn map, fn material, fn mat_<id>, conceptsUsed)
+- [ ] T-011 determinismo formal del compiler (sort + floats fijos)
+- [ ] T-012 determinismo 100 corridas SHA-256
+
+### Reflexiones
+
+T-009 confirmó tres cosas: (1) el parser cumple su contrato — todos los errores tienen path y prefijo. (2) la separación versión-antes-de-Zod del T-006 funciona porque los tests de versionado pasan limpios. (3) el agregador de bullets `· path — message` es legible para humanos y greppable por tests.
+
+Con 24 tests verdes y parser 100% cubierto, el cluster D-2 puede pasar al compiler con confianza de que el upstream está sólido.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
