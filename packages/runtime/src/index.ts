@@ -9,7 +9,8 @@
 export { M13Engine } from './engine.js';
 export type { M13EngineOptions } from './engine.js';
 
-export { parseScene, validateScene } from './parser/index.js';
+export { parseScene, validateScene, SUPPORTED_VERSION } from './parser/index.js';
+export type { ParseOptions } from './parser/index.js';
 export type { M13Scene, M13Object, M13Material, M13Light } from './parser/schema.js';
 
 export { compileScene } from './compiler/index.js';
