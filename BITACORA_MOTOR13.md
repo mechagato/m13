@@ -1573,6 +1573,126 @@ Si Gato apruebra orden: D-7 next (demo público accesible) → D-4 (editor — l
 
 ---
 
+## Entrada 020 · 2026-05-21 · D-7 parcial — Build prod + QR + docs deploy
+
+**Duración:** ~12 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cluster D-7 (demo público + Quest 3). De las 4 tasks, YO puedo cerrar 2 (T-058 build prod, T-060 QR). Las otras 2 requieren ACCIÓN DE GATO: T-059 deploy a Cloudflare Pages (dashboard externo + DNS), T-061 test en Quest 3 (hardware físico). Para no detenernos, dejo TODO listo + doc step-by-step en `docs/DEPLOY.md`.
+
+### Lo que se hizo
+
+**T-058 — Build prod optimizado:**
+
+`packages/examples/vite.config.ts` actualizado con:
+- `sourcemap: false` (off en prod, devs tienen en dev)
+- `minify: 'esbuild'`
+- `cssCodeSplit: true`
+- `reportCompressedSize: true`
+- `manualChunks`: separa `m13-runtime` (runtime+synth) de `vendor` (yaml+zod+zod-to-json-schema). El runtime tiene su propio hash → cache-friendly entre versiones del HTML.
+
+Resultado:
+```
+dist/index.html                        3.62 kB │ gzip:  1.16 kB
+dist/assets/index-DnqSU5rw.css         5.42 kB │ gzip:  1.75 kB
+dist/assets/index-Csh-J3wt.js          4.24 kB │ gzip:  2.08 kB
+dist/assets/m13-runtime-CDovUcpl.js   33.30 kB │ gzip: 11.09 kB
+dist/assets/vendor-CMOn5UCI.js       171.54 kB │ gzip: 48.00 kB
++ scenes/ (5 archivos .m13, ~12 KB)
++ qr.png (2.4 KB)
++ _headers (config Cloudflare)
+─────────────────────────────────────
+Total: 264 KB descomprimido / ~64 KB gzipped
+```
+
+**Budget T-058 spec: < 500 KB.** Cumplido con holgura ~2×.
+
+Smoke test: `python3 -m http.server 8765` sobre `dist/` → HTTP 200 en `/`, `/scenes/sala_galeria.m13` y `/assets/m13-runtime-*.js`.
+
+**T-060 — QR + integración HUD:**
+
+- Instalado `qrcode` + `@types/qrcode` como devDeps del root (one-time tool, no se ship al runtime).
+- `tools/gen-qr.ts` genera el QR PNG con colores del HUD m13 (#0e1014 dark / #f5f1e8 cream), 320×320, error correction nivel M.
+- Script `pnpm gen:qr` (opcionalmente `--url https://otra.url` para regenerar con otra URL).
+- Output: `packages/examples/public/qr.png` (2.4 KB).
+- Integrado en `index.html`: panel esquina inferior derecha con `<a href>` al destino + tooltip "Escanéame — abre este demo en tu móvil o Quest 3".
+- Estilos en `style.css`: posición fixed bottom/right, opacity 0.75 default → 1 + scale 1.04 en hover, border accent dorado.
+
+**Cloudflare _headers** preconfig:
+- Headers de seguridad: nosniff, frame-deny, referrer-policy.
+- `/assets/*` → `max-age=31536000, immutable` (cache permanente — los chunks tienen hash en filename).
+- `/scenes/*` → `max-age=3600, must-revalidate` (editable sin invalidate).
+
+**T-059 + T-061 → diferidos con doc:** `docs/DEPLOY.md` (200 líneas) con:
+- 2 opciones de deploy a Cloudflare Pages (wrangler CLI directo vs GitHub CI/CD continuous)
+- Comandos exactos copy-paste-able
+- Headers recomendados (ya están en `_headers`)
+- Setup Quest 3 (Tailscale APK sideload + Horizon OS v62+ check)
+- Test desde URL pública vs URL local (vía Tailscale)
+- Criterio de éxito (FPS ≥72 en sala_galeria)
+- Mitigaciones si FPS bajo (reducir octaves FBM, pixelRatio:1, raymarch steps 128→96)
+- Template de BITACORA entry para registrar el resultado del test
+- Script `tools/smoke-deploy.sh` para cron post-deploy
+
+### Verificaciones
+
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm test` → 86/86 pass.
+- ✅ `pnpm --filter @m13/examples build` → 264 KB total, 1.28s.
+- ✅ `python3 -m http.server` sobre `dist/` → todos los endpoints HTTP 200.
+- ✅ `pnpm dev` sirve `qr.png` correctamente (2380 bytes en dev por Vite middleware diferente al producción).
+- ✅ El QR se ve y enlaza a https://motor13.neonodos.com (placeholder hasta T-059).
+
+### Decisiones tomadas
+
+- **D-1901:** `qrcode` + `@types/qrcode` como **devDependency** del root (no del runtime). Razón: se usa SOLO al regenerar el QR, no se ship al runtime/examples final.
+- **D-1902:** El QR usa los colores del HUD m13 (dark/cream) en lugar de B&W puro. Razón: identidad visual consistente — al imprimirlo en un poster del demo, va con la paleta de la app.
+- **D-1903:** Error correction nivel `M` (15% redundancia) en el QR. Suficiente para impresión decente sin que el código se vea muy denso. Si planeas imprimirlo en tamaño pequeño (<2cm), subir a `H` (30%).
+- **D-1904:** `manualChunks` separa `m13-runtime` de `vendor`. Razón: cuando publiques v0.2 con runtime cambiado pero las deps externas iguales, el browser reusa el chunk `vendor` desde caché → segunda visita 50% más rápida.
+- **D-1905:** Headers `_headers` documentados en el codebase. Cloudflare Pages los aplica automáticamente al detectarlos en `public/`. Cero config externo necesario.
+- **D-1906:** T-059 y T-061 quedan en `docs/DEPLOY.md` como instrucciones para Gato. Razón: requieren acceso a Cloudflare dashboard + Quest 3 físico, fuera del alcance del runtime de Claude. La doc deja TODO copy-paste-able.
+- **D-1907:** Decidido NO automatizar el deploy desde Claude. Riesgo: Cloudflare Pages no tiene API CLI puramente headless desde dentro de un script — `wrangler login` abre browser. Hacerlo desde Gato es el path correcto.
+
+### Lo que tronó
+
+Nada. Build prod limpio a la primera. QR generado a la primera con el primer `pnpm gen:qr`.
+
+### Pendientes para Gato (acciones manuales)
+
+- [ ] **T-059** — Ejecutar `wrangler pages deploy dist` desde `packages/examples/` (instrucciones en `docs/DEPLOY.md` §T-059)
+- [ ] Verificar `https://motor13.neonodos.com` responde 200
+- [ ] **T-061** — Abrir el demo en Quest 3 (via Tailscale o WAN), correr las 5 escenas 30s cada una, screenshot del FPS counter
+- [ ] Si FPS < 72: aplicar mitigaciones del doc (reducir octaves FBM)
+- [ ] Registrar resultados en BITACORA con template del doc
+
+### Pendientes para próxima sesión Claude
+
+- [ ] Re-generar QR con la URL real si T-059 termina en otro dominio (`pnpm gen:qr -- --url https://...`)
+- [ ] T-077 smoke test cron (opcional, post-deploy)
+- [ ] **D-4 editor** (el monstruo — siguiente prioridad lógica)
+- [ ] D-6 benchmark vs Three.js
+- [ ] D-8 cierre + spec Fase 2
+
+### Reflexiones
+
+**D-7 al 50%.** Las 2 tasks "mecánicas" están listas (build + QR). Las 2 "infra" (deploy + Quest) requieren mano humana de Gato. La doc `DEPLOY.md` está pensada para que esto tome ~15 min de trabajo de Gato:
+- 5 min: `wrangler login` + `wrangler pages deploy dist` + custom domain
+- 10 min: abrir Quest, navegar las 5 escenas, screenshot FPS
+
+**El demo es ahora un asset distribuible.** 264 KB total — entra completo en un email. Se sube a cualquier hosting estático (GitHub Pages, Vercel, Netlify, S3, Cloudflare R2) sin requerir backend. El runtime hace todo en el browser del cliente.
+
+**Próxima decisión estratégica:** ¿D-4 (editor) ya o un cluster auxiliar antes?
+- **Opción A — D-4 directo:** el monstruo. ~32-44h. Pero es el delivery más visible de Fase 1 (la promesa de "describes en lenguaje natural → ves la escena").
+- **Opción B — CI/lint/changelog (T-069..T-072) primero:** ~3-4h. Más higiene pero el editor sigue pendiente.
+- **Opción C — D-6 benchmark primero:** ~8-12h. Genera el material para el "vision paper" pero no es bloqueante.
+
+**Mi recomendación: D-4 directo.** El editor es el componente más impactante de Fase 1 y donde más riesgo hay (T-051 prompt engineering puede tomar iteraciones). Mejor empezar antes que después. Los auxiliares (CI, changelog) se pueden hacer en cualquier momento, incluso durante D-4 entre tasks.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
