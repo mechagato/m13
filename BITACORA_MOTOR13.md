@@ -244,6 +244,63 @@ T-007 fue ejecutado en menos de los 45 min estimados. El peer dep de Vitest fue 
 
 ---
 
+## Entrada 005 · 2026-05-21 · T-008 Tests parser válidos
+
+**Duración:** sesión muy corta (~10 min Claude)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Continuación del cluster D-2 tras T-007 (vitest baseline). T-008 escribe los primeros tests reales del parser, cubriendo casos válidos: minimal, completa, defaults, formas de material, scale, animate, silent option.
+
+### Lo que se hizo
+
+- Creado `packages/runtime/src/parser/__tests__/parser-valid.test.ts` con **11 tests** (excede los 6+ requeridos por la task):
+  1. escena minimal aplica defaults
+  2. defaults completos de `ambient`
+  3. defaults completos de `light`
+  4. escena completa con todos los campos opcionales
+  5. material como string corto vs objeto extendido (equivalencia datos)
+  6. scale como número uniforme vs vec3
+  7. animate + audio_reactive
+  8. campos opcionales no proporcionados quedan `undefined` / default
+  9. `validateScene` acepta objeto JS directo (sin YAML)
+  10. opción `{silent: true}` suprime warning
+  11. sin silent, campo desconocido al root emite warning con path
+
+- Spy de `console.warn` aislado por test con `beforeEach/afterEach`.
+- Test runs: 11 passed, 0 failed, 572ms total (43ms para los tests, resto es setup de Vitest).
+
+### Verificaciones
+
+- ✅ `pnpm test` → **11/11 pass**.
+- ✅ Coverage parser: **100% líneas / 100% branches / 100% funciones / 100% statements** (excede el ≥50% requerido por T-008 y ya cumple el ≥85% que pedía T-009 combinado).
+- ✅ `pnpm typecheck` limpio (tests excluidos por tsconfig.base `**/*.test.ts`).
+- ⚠️ T-009 (tests parser errores) sigue pendiente — aunque coverage ya está en 100%, los tests negativos validan el FORMATO de los mensajes de error, no sólo que las líneas se ejecuten. Sigue siendo valioso ejecutarlos.
+
+### Decisiones tomadas
+
+- **D-401:** Tests del parser se organizan en archivos por intención: `parser-valid.test.ts` (felices), `parser-errors.test.ts` (T-009). Razón: facilita lectura y permite correr selectivamente.
+- **D-402:** Usamos `vi.spyOn(console, 'warn')` en lugar de `console.warn = jest.fn()` style. Es el patrón Vitest canónico, ya con restore automático con `mockRestore()`.
+
+### Lo que tronó
+
+Nada. Test run limpio en la primera corrida.
+
+### Pendientes para próxima sesión (D-2 sigue)
+
+- [ ] T-009 tests parser errores (versión inválida, tipos rotos, YAML inválido, mensajes con path)
+- [ ] T-010 tests compiler output (WGSL contiene `fn map`, `fn material`, `fn mat_<id>`)
+- [ ] T-011 determinismo formal del compiler (orden + floats fijos)
+- [ ] T-012 determinismo en 100 corridas mismo SHA-256
+
+### Reflexiones
+
+T-008 cayó en mucho menos tiempo que el estimado (60 min → ~10 min). Cubrir 100% del parser con 11 tests sugiere que el parser está sano y bien tipado. La parte "lenta" de los siguientes tasks va a ser el compiler (más rama, más estado) y el setup de determinismo (T-011 requiere refactor del codegen para floats fijos + sort).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
