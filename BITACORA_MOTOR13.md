@@ -64,6 +64,69 @@ El audio reactivo en Fase 0 es un guiño literal a Carrillo. Si Gato lo usa con 
 
 ---
 
+## Entrada 002 · 2026-05-21 · Bootstrap aterrizado en Cerebro4 + plan Fase 1
+
+**Duración:** ~1 sesión Claude Code en Cerebro4
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Gato bajó el bootstrap tar.gz a `NeoNodos_System/m13/`, pidió arrancar el proyecto siguiendo los 4 prompts del workflow Spec Kit (read+validate → plan → tasks → implement). Esta sesión cubre Prompt #1 (lectura+validación) y Prompt #2 (generación del plan).
+
+### Lo que se hizo
+
+1. Extracción del bootstrap (`tar --strip-components=1`) directamente en `m13/`.
+2. `git init -b main` local + commit inicial `a34095e — feat: m13 v0.1.0 bootstrap`.
+3. Lectura completa de `CLAUDE.md`, `constitution.md`, `docs/spec/phase-1-spec.md`, `BITACORA_MOTOR13.md`, `GETTING_STARTED.md`, `README.md`.
+4. `pnpm install` ✅ (11s, 15 paquetes, pnpm 9.15.9, node 22, TS 5.9.3).
+5. `pnpm typecheck` ❌ inicial: 1 error en `@m13/synth` (falta `@webgpu/types` en devDeps) + 2 errores en `@m13/runtime` por TS 5.9+ más estricto que la versión asumida por el bootstrap.
+6. `pnpm dev` ✅ — Vite ready 315ms en `http://localhost:5173/`, transformación de runtime/synth/examples OK, scene .m13 servida 200 OK.
+7. **Chore T-000 — Fix typecheck baseline:**
+   - Agregar `@webgpu/types` a `packages/synth/package.json` devDependencies.
+   - Quitar `type Concept` no usado de `packages/runtime/src/compiler/index.ts` (noUnusedLocals).
+   - Tipar explícitamente `data: Uint8Array<ArrayBuffer> | null` y construir con `new Uint8Array(new ArrayBuffer(N))` en `packages/runtime/src/audio/mic-input.ts` para TS 5.7+ generic Uint8Array.
+   - `pnpm install` + `pnpm typecheck` → todo limpio. `pnpm dev` sigue arrancando OK.
+8. Audit read-only del código existente: parser/compiler/renderer/camera/audio/shaders/8 conceptos/4 escenas todo funcional — el bootstrap entregó un esqueleto sólido.
+9. **Plan Fase 1 generado** en `docs/plans/phase-1-plan.md` (~600 líneas):
+   - 8 deliverables D-1..D-8, 53 componentes técnicos C-XXX, 104-148h estimado
+   - Camino crítico identificado, paralelización marcada para subagent-driven-development
+   - 10 riesgos (5 del spec + 5 nuevos: R6..R10), 10 decisiones nuevas D-100..D-110
+   - Open Questions OQ-1..OQ-4 del spec resueltas con inclinaciones del Constitution
+   - Scope-cutting options priorizadas por si la fase amenaza deadline
+
+### Decisiones tomadas
+
+- **D-008:** TypeScript 5.9.3 es el baseline del runtime y synth. El bootstrap asumía 5.4 pero no había razón fuerte para pinear hacia atrás — los 2 errores se corrigieron forward-compatible.
+- **D-009:** `git init` quedó dentro de `NeoNodos_System/m13/` (repo anidado del monorepo neonodos-core). Pendiente decidir si subir como repo independiente `mechagato/motor-13` o convivir como subcarpeta.
+- **D-100 a D-110:** ver `docs/plans/phase-1-plan.md` §10.
+
+### Lo que tronó
+
+- TS 5.9.3 instalado por pnpm (semver `^5.4.5` lo permite) trajo 2 errores que el bootstrap original no veía. Se arreglaron sin pinear TS hacia atrás.
+- Si pnpm en futuro instala TS más nuevo con más reglas estrictas, podría volver a romper. Mitigación documentada en R7 del plan.
+
+### Pendientes para próxima sesión
+
+- [ ] Gato aprueba el plan tal cual o pide modificaciones (sección §12 del plan)
+- [ ] Si aprueba: ejecutar Prompt #3 — generar `docs/tasks/phase-1-tasks.md`
+- [ ] Decidir si subir como repo independiente o mantener anidado
+- [ ] Validación visual de las 4 escenas bootstrap en sesión interactiva (decision gate del spec §12, items 1-2)
+- [ ] Hosting: comprar/configurar subdomain `m13.neonodos.com` (no urgente, primero D-4)
+
+### Open questions abiertas
+
+- ¿Repo independiente o subcarpeta de `mechagato/neonodos`? El Constitution dice `mechagato/neonodos/motor-13`, lo que sugiere submódulo o subcarpeta. Confirmar con Gato.
+- ¿Test Quest 3 sí o no en Fase 1? NFR-7 lo requiere; si Gato no tiene el Quest disponible, mover a Fase 5.
+
+### Reflexiones
+
+El bootstrap está mejor de lo que esperaba — el compiler ya hace generación dinámica de WGSL deterministic-ish (falta C-204 para garantizarlo), el renderer ya tiene UNIFORM_BYTES correcto, el FlyCamera ya tiene bounds, el audio ya está conectado. Esto significa que la Fase 1 NO es "construir desde cero" sino **completar la spec** (D-1) + **multiplicar la librería** (D-3) + **agregar el editor** (D-4). El editor es el componente más pesado y más nuevo — 35% del esfuerzo total — y donde más riesgo hay (R10).
+
+Si Gato aprueba el plan, recomiendo arrancar Prompt #3 con orden de tasks: spec formal primero (D-1), luego tests del runtime (D-2 parser/compiler), luego conceptos faltantes (D-3) en paralelo con escenas (D-5), después editor (D-4) que ya depende de todo lo anterior, y cierre con benchmark+demo+docs (D-6, D-7, D-8).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
