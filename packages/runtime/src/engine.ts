@@ -5,6 +5,7 @@ import {
   initRenderer,
   renderFrame,
   writeUniforms,
+  writeMatParams,
   type RendererState,
 } from './renderer/index.js';
 import { FlyCamera, type FlyCameraOptions } from './camera/fly-camera.js';
@@ -81,6 +82,11 @@ export class M13Engine {
     if (!cacheHit) {
       this.renderer = await initRenderer(this.canvas, compiled);
       this.lastWgslHash = newHash;
+    } else if (this.renderer && compiled.matParams.totalFloats > 0) {
+      // Cache hit del shader pero los VALORES de matParams pueden haber cambiado
+      // (mismo concepto, params distintos → mismo WGSL, distinto Float32Array).
+      // Sin esto, cambiar params no surte efecto cuando hay shader cache hit.
+      writeMatParams(this.renderer, compiled.matParams.values);
     }
 
     this.compiled = compiled;
