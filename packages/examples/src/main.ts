@@ -12,25 +12,25 @@ interface SceneEntry {
 
 const SCENES: SceneEntry[] = [
   {
-    id: 'sala',
-    label: 'sala',
-    file: '/scenes/sala_basica.m13',
-    description:
-      'Sala residencial mexicana con ladrillo, madera y una esfera dorada audio-reactiva sobre pedestal. Escena fundacional .m13 v0.1.',
-  },
-  {
     id: 'galeria',
     label: 'galería',
-    file: '/scenes/galeria_minimal.m13',
+    file: '/scenes/sala_galeria.m13',
     description:
-      'Galería de arte minimalista. Paredes yeso, piso mármol, esfera blanca pulida sobre pedestal. Iluminación cenital fría.',
+      'Galería de arte minimalista. Pedestales de mármol + esfera escultórica con iridiscencia + torus de bronce. Atmósfera cool, luz cenital.',
   },
   {
-    id: 'loft',
-    label: 'loft',
-    file: '/scenes/loft_industrial.m13',
+    id: 'cocina',
+    label: 'cocina',
+    file: '/scenes/cocina_industrial.m13',
     description:
-      'Loft industrial mexicano. Paredes ladrillo, piso concreto, lámpara colgante dorada. Atmósfera cálida densa.',
+      'Cocina loft mexicano. Ladrillo expuesto + concreto pulido + lámpara colgante dorada + isla con tope de bronce + taburetes de cuero.',
+  },
+  {
+    id: 'oficina',
+    label: 'oficina',
+    file: '/scenes/oficina_neonodos.m13',
+    description:
+      'Oficina identidad NeoNodos. Tint terracota cálido + madera oscura + esfera dorada audio-reactiva central + vitrina de vidrio esmerilado.',
   },
   {
     id: 'templo',
