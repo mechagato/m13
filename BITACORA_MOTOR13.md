@@ -650,6 +650,103 @@ Cluster D-2 lleva 49 tests verdes, runtime con caché, baseline sólida. Falta b
 
 ---
 
+## Entrada 011 · 2026-05-21 · T-014 Benchmark compile-time
+
+**Duración:** ~10 min Claude (con 2 fixes intermedios de resolución de módulos)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Última pieza del runtime "saludable" antes de cerrar el cluster D-2: validar empíricamente la hipótesis H1.3 del spec — "el parser + compilador `.m13` → shader corre en <200ms para escenas de hasta 50 objetos". T-014 produce el script y mide.
+
+### Lo que se hizo
+
+**1. Script `tools/bench-compile.ts`:**
+
+- Genera escena sintética con N objetos random (mulberry32 PRNG sembrado para reproducibilidad).
+- Mix de los 5 kinds primitivos: sphere/box/round_box/cylinder/torus.
+- Materiales aleatorios del pool de conceptos `object` + `universal`.
+- ~20% audio_reactive, ~30% animate bob — distribución realista.
+- 5 warmup runs (descarta JIT cold start) + N mediciones (default 20).
+- Reporte: min / median / mean / p95 / max. Exit 0 si p95 < 200ms, 1 si excede.
+- CLI args: `--objects N`, `--runs M`, `--warmup K`.
+
+**2. Script `pnpm bench:compile`** en root package.json.
+
+**3. Workaround de YAML lib:** el bench se ejecuta desde root donde `yaml` no está como dep. Como YAML 1.2 es superset estricto de JSON, uso `JSON.stringify(scene, null, 2)` para producir input válido para parseScene. Cero deps nuevas.
+
+**4. Fix root package.json:** agregado `"type": "module"`. Sin esto, tsx interpretaba bench-compile.ts como CJS y fallaba al resolver `@m13/synth` (referenciado via cadena de imports desde compiler).
+
+### Resultados — Cerebro4 (i7-12700K, Ubuntu Server)
+
+**Default (50 objetos, 20 corridas, YAML 18.88 KB):**
+```
+min    12.68 ms
+median 15.72 ms
+mean   15.70 ms
+p95    21.18 ms   ← objetivo <200 ms
+max    21.18 ms
+```
+
+**Stress (100 objetos, 30 corridas, YAML 37.17 KB):**
+```
+min    25.66 ms
+median 27.33 ms
+mean   27.43 ms
+p95    29.02 ms
+max    32.67 ms
+```
+
+**Veredicto:** **~9.5× por debajo del budget de spec para 50 objetos**. Incluso al doblar a 100 objetos, p95 sigue ~7× bajo budget. **H1.3 validada con margen amplio.**
+
+### Verificaciones
+
+- ✅ `pnpm bench:compile` → ✅ DENTRO DEL BUDGET (p95=21.18ms vs budget 200ms).
+- ✅ `pnpm bench:compile -- --objects 100 --runs 30` → ✅ p95=29.02ms.
+- ✅ `pnpm gen:schema` sigue funcionando tras "type": "module" del root.
+- ✅ `pnpm test` → **49/49 pass** (sin regresiones).
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm dev` Vite ready 250ms.
+
+### Decisiones tomadas
+
+- **D-1001:** El bench mide **parse + compile combinados**, no por separado. Razón: `M13Engine.loadScene` los llama secuencialmente. Esa es la operación que el usuario percibe como "carga de escena".
+- **D-1002:** PRNG sembrado (`mulberry32` con seed 42) para que el bench sea reproducible entre corridas. Útil para comparar antes/después de refactors sin variar el input.
+- **D-1003:** YAML output con `JSON.stringify` en lugar de instalar `yaml` como dep del root. Razón: KISS, y aprovecha que YAML 1.2 ⊇ JSON. Documentado en el script.
+- **D-1004:** Root package.json es ahora `"type": "module"`. Razón: tsx requiere ESM para resolver workspace links de packages que son `"type": "module"` (caso de `@m13/synth`). El cambio NO afecta a otros packages (cada uno declara su propio `"type"`).
+- **D-1005:** Threshold del budget en `BUDGET_MS = 200` en el script. Si excediera, exit 1 (CI-friendly). Por ahora 9.5× margen.
+
+### Lo que tronó
+
+Dos errores de resolución mid-task:
+1. **CJS vs ESM**: tsx leía bench-compile.ts como CJS porque root package.json no tenía `"type": "module"`. Cadena `import { getConcept } from '@m13/synth'` (en compiler) fallaba con `ERR_PACKAGE_PATH_NOT_EXPORTED`. Fix: agregar `"type": "module"` al root.
+2. **yaml lib missing at root**: tras fix 1, `import { stringify } from 'yaml'` falló porque la lib está en runtime/synth pero no en root. Fix: usar JSON.stringify (superset YAML).
+
+Ambos atrapados en el mismo intento, fixes pequeños, ninguno llegó al commit.
+
+### Pendientes para próxima sesión (cierre del cluster D-2)
+
+- [ ] T-015 vite config para library build del runtime
+- [ ] T-016 size-limit + validar <100KB gzipped
+- [ ] T-017 [BLOQUEADOR] extender Concept con paramsSchema (abre D-3 conceptos)
+- [ ] T-018..T-022 propagación de params + manifest
+
+### Reflexiones
+
+H1.3 validada con margen amplio. El compiler es ~10× más rápido que el budget, lo que da espacio para:
+- Conceptos con WGSL más pesado (D-3 podría meter neural materials sin temer al budget de compile).
+- Crecimiento del codegen (D-3 agrega `kind: concept` con WGSL adicional, params propagation, etc).
+- Escenas más complejas (100 objetos siguen estando en <30ms, así que escenas residenciales/comerciales reales — típicamente <30 objetos — son triviales).
+
+El sub-bench de **100 objetos en 27ms median** sugiere que el cuello de botella futuro probablemente no es el compile, sino el shader compile en GPU (que NO medimos aquí; eso es del browser/driver y no nuestro). Cuando lleguemos a Quest 3 (T-061), ese sí será un dato relevante.
+
+Los dos errores de resolución que tropecé son útiles para futuros tools en `tools/`: cualquier script que use `@m13/<package>` desde root debe ser ESM (afortunadamente ya es default tras el fix). Documentado para futura yo / Gato.
+
+Cluster D-2 está a un paso de cerrar — solo falta T-015/T-016 (bundle) y abrir D-3.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
