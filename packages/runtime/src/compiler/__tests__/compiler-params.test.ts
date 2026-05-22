@@ -255,4 +255,87 @@ objects:
     expect(compiled.matParams.values).toBeInstanceOf(Float32Array);
     expect(compiled.matParams.values.length).toBe(compiled.matParams.totalFloats);
   });
+
+  // ============================================
+  // T-020 — Tests E2E del flow de params
+  // ============================================
+
+  it('T-020: misma estructura + params DISTINTOS → mismo WGSL, valores distintos', async () => {
+    const { parseScene } = await import('../../parser/index.js');
+    const { compileScene, hashWgsl } = await import('../index.js');
+
+    const yamlBase = (roughness: number, shimmer: number) => `
+version: "0.1"
+name: param_test
+walls: { concept: pared_yeso_blanco }
+floor: { concept: piso_madera_envejecida }
+ceiling: { concept: pared_yeso_blanco }
+objects:
+  - id: gold
+    kind: sphere
+    position: [0, 0, 0]
+    scale: 0.3
+    material:
+      concept: metal_dorado_pulido
+      params:
+        roughness: ${roughness}
+        shimmer: ${shimmer}
+`;
+    const compiledA = compileScene(parseScene(yamlBase(0.1, 0.2)));
+    const compiledB = compileScene(parseScene(yamlBase(0.9, 0.8)));
+
+    // El WGSL es idéntico — los valores viven en uniforms, no se hardcodean
+    expect(compiledA.wgsl).toBe(compiledB.wgsl);
+    // Y el hash también coincide → el caché de shaders es válido
+    const hashA = await hashWgsl(compiledA.wgsl);
+    const hashB = await hashWgsl(compiledB.wgsl);
+    expect(hashA).toBe(hashB);
+
+    // Pero los Float32Array son distintos
+    expect(compiledA.matParams.values[0]).toBeCloseTo(0.1);
+    expect(compiledB.matParams.values[0]).toBeCloseTo(0.9);
+    expect(compiledA.matParams.values[1]).toBeCloseTo(0.2);
+    expect(compiledB.matParams.values[1]).toBeCloseTo(0.8);
+  });
+
+  it('T-020: params en wall/floor/ceiling también se propagan (no solo objects)', async () => {
+    // Caso edge: si la pared usa material parametrizable (no en bootstrap, pero arquitectónicamente válido).
+    // Para esto re-mockeamos el concepto del wall para que tenga paramsSchema.
+    vi.resetModules();
+    const wallWithParams: Concept = {
+      ...plainConcept,
+      paramsSchema: z.object({ tint: z.number().min(0).max(1) }),
+      defaults: { tint: 0.5 },
+    };
+    vi.doMock('@m13/synth', () => ({
+      getConcept: (id: string) =>
+        id === 'pared_yeso_blanco'
+          ? wallWithParams
+          : id === 'piso_madera_envejecida'
+            ? floorConcept
+            : id === 'metal_dorado_pulido'
+              ? goldMetalConcept
+              : undefined,
+      listConcepts: () => [wallWithParams, floorConcept, goldMetalConcept],
+    }));
+
+    const { parseScene } = await import('../../parser/index.js');
+    const { compileScene } = await import('../index.js');
+
+    const yaml = `
+version: "0.1"
+name: wall_params
+walls:
+  concept: pared_yeso_blanco
+  params:
+    tint: 0.85
+floor: { concept: piso_madera_envejecida }
+ceiling: { concept: pared_yeso_blanco }
+`;
+    const compiled = compileScene(parseScene(yaml));
+    expect(compiled.matParams.byKey['pared_yeso_blanco']).toBeDefined();
+    expect(compiled.matParams.byKey['pared_yeso_blanco']?.tint).toBeDefined();
+    const tintIdx = compiled.matParams.byKey['pared_yeso_blanco']!.tint!;
+    expect(compiled.matParams.values[tintIdx]).toBeCloseTo(0.85);
+  });
 });
