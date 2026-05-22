@@ -54,24 +54,48 @@ const objectKindSchema = z.enum([
   'round_box',
   'cylinder',
   'torus',
+  'concept', // T-021: delega geometría al SDF del concept (category 'object_geo')
 ]);
 
-const objectSchema = z.object({
-  id: z.string(),
-  kind: objectKindSchema,
-  position: vec3,
-  rotation: vec3.optional(),
-  scale: z.union([z.number(), vec3]).default(1),
-  material: materialSchema,
-  audio_reactive: z.boolean().default(false),
-  animate: z
-    .object({
-      mode: z.enum(['bob', 'rotate', 'pulse']),
-      speed: z.number().default(1.0),
-      amplitude: z.number().default(0.1),
-    })
-    .optional(),
-});
+const objectSchema = z
+  .object({
+    id: z.string(),
+    kind: objectKindSchema,
+    /** Solo válido (y requerido) cuando `kind === 'concept'`. Id del concepto geométrico. */
+    concept: z.string().optional(),
+    position: vec3,
+    rotation: vec3.optional(),
+    scale: z.union([z.number(), vec3]).default(1),
+    /** Requerido cuando kind ≠ 'concept'. Para kind:'concept' el material viene del concept. */
+    material: materialSchema.optional(),
+    audio_reactive: z.boolean().default(false),
+    animate: z
+      .object({
+        mode: z.enum(['bob', 'rotate', 'pulse']),
+        speed: z.number().default(1.0),
+        amplitude: z.number().default(0.1),
+      })
+      .optional(),
+  })
+  .superRefine((obj, ctx) => {
+    if (obj.kind === 'concept') {
+      if (obj.concept === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'kind: "concept" requiere el campo `concept` (id del concepto geométrico)',
+          path: ['concept'],
+        });
+      }
+    } else {
+      if (obj.material === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `kind: "${obj.kind}" requiere el campo \`material\``,
+          path: ['material'],
+        });
+      }
+    }
+  });
 
 // ---------- escena raíz ----------
 

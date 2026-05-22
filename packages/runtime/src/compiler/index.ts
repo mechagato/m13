@@ -71,11 +71,18 @@ export function compileScene(scene: M13Scene): CompiledScene {
   const matParamsBlock =
     matParams.totalFloats > 0 ? `\n${generateMatParamsStruct(matParams)}\n` : '';
 
+  // Filtrar conceptos geométricos (los que exponen wgslSdf). T-021.
+  const sdfBlocks = concepts.filter((c) => c.wgslSdf).map((c) => c.wgslSdf!);
+  const sdfSection = sdfBlocks.length > 0
+    ? '\n// ===== SDFs de conceptos geométricos =====\n' + sdfBlocks.join('\n')
+    : '';
+
   const wgsl = [
     COMMON_WGSL,
     matParamsBlock,
     '\n// ===== conceptos materiales =====\n',
     ...concepts.map((c) => c.wgsl),
+    sdfSection,
     '\n// ===== map() generada =====\n',
     generateMapFunction(scene),
     '\n// ===== material() generada =====\n',
@@ -129,13 +136,23 @@ function materialParamsOf(m: M13Material): Record<string, unknown> | undefined {
   return m.params;
 }
 
+/**
+ * Id del concepto efectivo para un objeto. Para `kind: 'concept'` viene del campo
+ * `concept` (geometría + material implícito). Para primitivos viene del `material`.
+ * El parser garantiza vía superRefine que el campo correcto está presente.
+ */
+function effectiveConceptId(obj: M13Object): string {
+  if (obj.kind === 'concept') return obj.concept!;
+  return materialIdOf(obj.material!);
+}
+
 function collectConceptIds(scene: M13Scene): string[] {
   const set = new Set<string>();
   set.add(scene.walls.concept);
   set.add(scene.floor.concept);
   set.add(scene.ceiling.concept);
   for (const obj of scene.objects) {
-    set.add(materialIdOf(obj.material));
+    set.add(effectiveConceptId(obj));
   }
   // Orden lexicográfico → output WGSL determinista entre corridas
   return [...set].sort();
@@ -160,12 +177,14 @@ function buildMatParamsLayout(
   // 1. Recolectar params por concept (primer object con ese concept gana).
   const sceneParamsByConcept: Record<string, Record<string, unknown>> = {};
 
-  const allMaterialSurfaces: M13Material[] = [
-    scene.walls,
-    scene.floor,
-    scene.ceiling,
-    ...scene.objects.map((o) => o.material),
-  ];
+  // Superficies (walls/floor/ceiling) — siempre son materiales.
+  const surfaceMats: M13Material[] = [scene.walls, scene.floor, scene.ceiling];
+  // Objects: si kind ≠ 'concept', su material está definido (parser lo refina).
+  // Si kind === 'concept', no hay params explícitos del scene (defaults del concept aplican).
+  const objectMats: M13Material[] = scene.objects
+    .filter((o): o is M13Object & { material: M13Material } => o.material !== undefined)
+    .map((o) => o.material);
+  const allMaterialSurfaces: M13Material[] = [...surfaceMats, ...objectMats];
 
   for (const m of allMaterialSurfaces) {
     const id = materialIdOf(m);
@@ -326,6 +345,11 @@ function generateObjectSdf(obj: M13Object, index: number): string {
       return `  let obj${index} = sdCylinder(${localP}, ${f(sy)}, ${f(sx)});`;
     case 'torus':
       return `  let obj${index} = sdTorus(${localP}, vec2<f32>(${f(sx)}, ${f(sy)}));`;
+    case 'concept':
+      // T-021: delegamos al SDF del concepto geométrico. Firma esperada:
+      //   fn sdf_<id>(p: vec3<f32>, scale: vec3<f32>) -> f32
+      // El compiler ya hace la translación de posición y animación a través de `localP`.
+      return `  let obj${index} = sdf_${obj.concept!}(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`;
   }
 }
 
@@ -349,7 +373,7 @@ function generateMaterialFunction(scene: M13Scene): string {
   // objetos: por posición + radio aproximado
   scene.objects.forEach((obj) => {
     const [px, py, pz] = obj.position;
-    const matId = materialIdOf(obj.material);
+    const matId = effectiveConceptId(obj);
     const scale = typeof obj.scale === 'number' ? obj.scale : Math.max(...obj.scale);
     const r = scale * 1.4;
     lines.push(`  if (length(p - vec3<f32>(${f(px)}, ${f(py)}, ${f(pz)})) < ${f(r)}) {`);
