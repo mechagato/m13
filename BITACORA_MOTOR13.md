@@ -1121,6 +1121,88 @@ Tres tasks (T-017, T-018, T-019) cerradas en una sola sesión — el cluster D-3
 
 ---
 
+## Entrada 016 · 2026-05-21 · T-020 Test E2E params + bug fix en engine cache
+
+**Duración:** ~15 min Claude (+ 2 Q&A con Gato sobre desktop nativo y "Roblox agentic")
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cierre del flow C-208 (compiler + renderer + tests). T-020 originalmente especifica un test simple ("dos escenas con params distintos → WGSL substrings distintos"), pero la implementación que hice de T-018 (params como uniforms, NO baked en WGSL) hace que el WGSL sea idéntico para mismo shape + params distintos. Esto reveló un **bug latente** en `M13Engine.loadScene`: el cache hit del shader saltaba el `initRenderer` Y no escribía los nuevos valores al matParamsBuffer.
+
+Gato hizo dos preguntas estratégicas en esta sesión:
+1. **m13 como app desktop nativa** → respondida en BITACORA + chat: m13 ya es local-first, PWA recomendada para Fase 2, Tauri 2 para Fase 4-5 si surge demanda enterprise.
+2. **m13 como base de "nuevo Roblox" con agentic systems** → respondida: factible pero requiere proyecto hermano "m13-platform" + ronda gigante de refactor (multiplayer, physics, characters, LLM local en runtime). Contradice Constitution §3.5 (determinismo en runtime) — necesita resolución. Recomendado: Vision Paper en Fase 4-5, no actionable en 2026 corto plazo. Camino comercial intermedio: B2B vertical (PLANVR con asistente IA, Cocinas Domus con voz, educativas para niños).
+
+### Lo que se hizo
+
+**1. Bug fix en `M13Engine.loadScene`:**
+
+```typescript
+if (!cacheHit) {
+  this.renderer = await initRenderer(this.canvas, compiled);
+  this.lastWgslHash = newHash;
+} else if (this.renderer && compiled.matParams.totalFloats > 0) {
+  // Cache hit del shader pero los VALORES de matParams pueden haber cambiado.
+  writeMatParams(this.renderer, compiled.matParams.values);
+}
+```
+
+Importación de `writeMatParams` agregada al engine.
+
+**2. Tests E2E del flow params:**
+
+Extendí `compiler-params.test.ts` con 2 tests T-020:
+- **"Misma estructura + params DISTINTOS → mismo WGSL, valores distintos"**: compila dos escenas idénticas excepto roughness/shimmer values, verifica que `wgsl` y `hashWgsl` son IDÉNTICOS, pero `matParams.values[0..1]` difieren.
+- **"Params en wall/floor/ceiling también se propagan"**: con `vi.resetModules` + `vi.doMock` re-mockeo `@m13/synth` para que `pared_yeso_blanco` tenga paramsSchema, valida que params en superficies del cuarto (no solo objects) también llegan al layout.
+
+**3. Nuevo archivo `engine-matparams.test.ts` con 3 tests:**
+
+Mock combinado de `@m13/synth` (concept gold con paramsSchema) + renderer (vi.fn para `initRenderer` y `writeMatParams`):
+1. **Primera carga con params:** `initRenderer 1×`, `writeMatParams 0×` (el writeBuffer va dentro de initRenderer en la rama miss).
+2. **Cache hit + params cambiados:** `initRenderer 1×` (no se vuelve a llamar), `writeMatParams 1×`. El Float32Array pasado contiene el nuevo valor.
+3. **5 corridas misma escena:** `initRenderer 1×`, `writeMatParams 4×` (uno por cada cache hit).
+
+### Verificaciones
+
+- ✅ `pnpm test` → **72/72 pass** (24 parser + 12+7+10 compiler + 6+3 engine + 10 synth). +5 tests vs T-019.
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm dev` Vite ready 256ms.
+- ✅ Backward compat: las 4 escenas demo del bootstrap sin params siguen produciendo el mismo hash. El nuevo `else if (totalFloats > 0)` queda inerte para ellas.
+
+### Decisiones tomadas
+
+- **D-1501:** Bug fix del cache hit es OBLIGATORIO en T-020 (no scope creep). Sin esto, los conceptos con params (T-025..T-034) NO podrían actualizar sus valores en runtime cuando el usuario edite el `.m13` en el editor (D-4). El test del bug es el principal entregable de T-020.
+- **D-1502:** El test del párrafo "WGSL substrings distintos" del task original NO refleja la implementación real. La realidad es: **mismo WGSL, distinto Float32Array**. Es una propiedad MEJOR (cache-friendly, runtime-editable). El test re-interpreta el done criterion como "verificar que params se propagan correctamente E2E", lo que cumple ese intent.
+- **D-1503:** `engine-matparams.test.ts` separado de `engine-cache.test.ts` para evitar combinar mocks de synth+renderer en el mismo archivo (los tests de cache existentes usan synth real). Mantenimiento más limpio.
+- **D-1504:** `writeMatParams` se llama UNA vez por loadScene (en el cache hit), no per-frame. Justified by D-1403 — valores estáticos. El editor live-update (Fase 2 D-4) llamaría explícitamente `engine.updateMatParams(values)` (función futura) para refresh sin re-cargar la escena.
+
+### Lo que tronó
+
+Bug del cache hit identificado mid-task. Diseñé los tests para exponerlo intencionalmente — fue mejor descubrirlo aquí que en producción cuando T-029 lance metal_bronce_pulido con params. Patrón replicable: cuando agregues un nuevo flujo (params, instancing, etc), escribe primero el test "cambio de input X → cambio de output Y" para encontrar gaps de propagación.
+
+### Pendientes para próxima sesión
+
+- [ ] T-021 Compiler soporte `kind: concept` para conceptos geométricos
+- [ ] T-022 Manifest JSON con `zod-to-json-schema`
+- [ ] T-023..T-024 READMEs runtime+synth
+- [ ] T-025..T-034 [PARALELIZABLES] catálogo de 14 conceptos
+
+### Reflexiones
+
+**El cluster D-3 lleva 4 tasks cerradas (T-017..T-020) en una sesión continua.** El motivo es que la arquitectura interface→compiler→renderer→test era sólida desde T-017 y cada task pone una pieza limpia encima sin refactor previo. T-021 (kind: concept) y T-022 (manifest JSON) son extensiones similares — probablemente otra sesión cortita.
+
+Después de eso, T-025..T-034 (los 14 conceptos) son paralelizables y se podrían lanzar todos al mismo tiempo con subagent-driven-development. Pero antes vale la pena cerrar T-021/T-022 que son BLOQUEADORES para que los conceptos geométricos (`pedestal_marmol`, `lampara_colgante`, `esfera_decorativa`, `cubo_basico`) tengan dónde declarar su SDF.
+
+Las Q&A de Gato sobre **desktop nativo** y **"Roblox agentic"** dejan dos vetas estratégicas para post-Fase 1:
+- **PWA en Fase 2** — bajo costo, instalación de m13 como app desktop en 2 días de trabajo.
+- **m13-platform Vision Paper en Fase 4-5** — alta visión a 18-24 meses, requiere decisión de scope.
+
+Ambas son trabajos NUEVOS — no van a Fase 1. Registradas para futuro (BITACORA es archivo de records, no de planes activos).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
