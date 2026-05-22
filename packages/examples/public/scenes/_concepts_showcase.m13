@@ -1,0 +1,158 @@
+# _concepts_showcase — vitrina de los 18 conceptos del catálogo Fase 1
+#
+# Layout: cuarto grande (8x4x8) con objetos distribuidos en una grid.
+# - Filas (eje X): paredes/floors a la izquierda, objetos al centro, geos a la derecha
+# - Fila trasera (z=-3): pared con concepto destacado
+#
+# Sirve como smoke test visual: si todos los 14 conceptos referenciados
+# renderizan sin shader errors, el catálogo está sano.
+
+version: "0.1"
+name: _concepts_showcase
+description: "Vitrina de los 18 conceptos del catálogo Fase 1 (8 bootstrap + 10 D-3)"
+
+bounds: [8, 4, 8]
+spawn: [0, 0, -6]
+
+ambient:
+  background: [0.07, 0.07, 0.08]
+  ambientColor: [0.15, 0.15, 0.16]
+  tint: [1.0, 1.0, 1.0]
+  fogColor: [0.07, 0.07, 0.08]
+  fogDensity: 0.012
+
+light:
+  position: [0, 3.5, 0]
+  color: [1.0, 0.96, 0.90]
+  intensity: 1.5
+
+# Walls: pared de concreto pulido (param: darkness 0.4 para no opacar objetos)
+walls:
+  concept: pared_concreto_pulido
+  params:
+    darkness: 0.4
+    roughness: 0.4
+
+# Floor: mármol blanco para máximo contraste con todos los objetos
+floor:
+  concept: piso_marmol_blanco
+  params:
+    veinIntensity: 0.4
+
+# Ceiling: yeso simple para no distraer
+ceiling:
+  concept: pared_yeso_blanco
+
+# Objetos: 12 piezas distribuidas, cada una usa un concepto distinto
+objects:
+  # ===== Fila 1 — materiales bootstrap (esferas en x=-5..-1) =====
+  - id: bs_dorado
+    kind: sphere
+    position: [-5, -2.5, -2]
+    scale: 0.35
+    material: metal_dorado_pulido
+    audio_reactive: true
+
+  - id: bs_cuero
+    kind: round_box
+    position: [-3.5, -2.7, -2]
+    scale: [0.4, 0.3, 0.4]
+    material: cuero_vintage
+
+  - id: bs_marmol
+    kind: sphere
+    position: [-2, -2.5, -2]
+    scale: 0.3
+    material: marmol_blanco_vetas
+
+  - id: bs_piedra
+    kind: box
+    position: [-0.5, -2.5, -2]
+    scale: [0.3, 0.5, 0.3]
+    material: piedra_volcanica
+
+  # ===== Fila 2 — materiales nuevos D-3 (en x=1..5) =====
+  - id: d3_madera
+    kind: round_box
+    position: [1, -2.7, -2]
+    scale: [0.4, 0.3, 0.4]
+    material:
+      concept: pared_madera_oscura
+      params:
+        darkness: 0.7
+        grainScale: 10
+
+  - id: d3_oxidado
+    kind: torus
+    position: [2.5, -2.4, -2]
+    scale: [0.35, 0.1, 0.35]
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.7
+
+  - id: d3_bronce
+    kind: sphere
+    position: [4, -2.5, -2]
+    scale: 0.32
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.7
+
+  - id: d3_vidrio
+    kind: round_box
+    position: [5.5, -2.5, -2]
+    scale: [0.25, 0.4, 0.25]
+    material:
+      concept: vidrio_esmerilado
+      params:
+        clarity: 0.3
+
+  # ===== Fila 3 — conceptos geométricos D-3 (en z=0, sobre pedestales) =====
+  - id: geo_pedestal_izq
+    kind: concept
+    concept: pedestal_marmol
+    position: [-3.5, -2.6, 0]
+    scale: [0.4, 0.4, 0.4]
+
+  - id: geo_lampara
+    kind: concept
+    concept: lampara_colgante
+    position: [0, 1.5, 0]
+    scale: [0.15, 0.4, 0.15]
+
+  - id: geo_esfera
+    kind: concept
+    concept: esfera_decorativa
+    position: [-3.5, -1.7, 0]
+    scale: 0.32
+    animate:
+      mode: bob
+      speed: 0.6
+      amplitude: 0.1
+
+  - id: geo_cubo
+    kind: concept
+    concept: cubo_basico
+    position: [3.5, -2.6, 0]
+    scale: [0.4, 0.4, 0.4]
+
+  # ===== Fila 4 — bootstrap materials sobrantes (en z=2, completar los 18) =====
+  - id: bs_ladrillo
+    kind: round_box
+    position: [-3, -2.7, 2.2]
+    scale: [0.35, 0.3, 0.35]
+    material: pared_ladrillo_viejo
+
+  - id: bs_madera
+    kind: cylinder
+    position: [0, -2.5, 2.2]
+    scale: [0.3, 0.5, 0.3]
+    material: piso_madera_envejecida
+
+  - id: bs_concreto
+    kind: box
+    position: [3, -2.6, 2.2]
+    scale: [0.35, 0.35, 0.35]
+    material: piso_concreto_industrial

@@ -39,6 +39,13 @@ const SCENES: SceneEntry[] = [
     description:
       'Templo prehispánico con piedra volcánica tallada y brasero ardiente central audio-reactivo. Identidad mexicana.',
   },
+  {
+    id: 'showcase',
+    label: 'showcase',
+    file: '/scenes/_concepts_showcase.m13',
+    description:
+      'Vitrina de los 18 conceptos del catálogo Fase 1 — bootstrap (8) + D-3 (6 materiales + 4 geométricos) lado a lado.',
+  },
 ];
 
 let currentSceneIdx = 0;
