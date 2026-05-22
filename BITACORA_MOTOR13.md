@@ -1040,6 +1040,87 @@ Próxima: T-019 (renderer agrega el buffer) es la otra mitad de C-208. Con esos 
 
 ---
 
+## Entrada 015 · 2026-05-21 · T-019 Renderer MAT_PARAMS buffer
+
+**Duración:** ~12 min Claude
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Tercera task del cluster D-3 — pieza complementaria de T-018. Mientras T-018 hace que el compiler PRODUZCA el `MatParamsLayout` + struct WGSL, T-019 hace que el renderer CONSUMA esos datos: crea el segundo uniform buffer, lo escribe y lo bindea al pipeline.
+
+### Lo que se hizo
+
+**Cambios en `packages/runtime/src/renderer/index.ts`:**
+
+1. **Constante `MAT_PARAMS_MAX_FLOATS = 64`** (= 256 bytes). Budget máximo del segundo uniform buffer. Si una escena excede, error claro al `initRenderer`.
+
+2. **`RendererState.matParamsBuffer: GPUBuffer | null`** — nuevo campo. `null` si la escena no tiene params (backward compat con los 8 conceptos del bootstrap), `GPUBuffer` si tiene.
+
+3. **Helper `alignedUniformSize(bytes)`** — redondea al múltiplo de 16 más cercano (WebGPU lo exige para uniform buffers, mínimo 16 bytes).
+
+4. **En `initRenderer`:**
+   - Si `compiled.matParams.totalFloats > 0`:
+     - Valida budget (≤ 64 floats)
+     - Crea `matParamsBuffer` con tamaño alineado
+     - Escribe los valores iniciales del `Float32Array` vía `device.queue.writeBuffer(...values.buffer)` (usando `.buffer` para evitar el mismatch generic `Float32Array<ArrayBufferLike>` vs `<ArrayBuffer>` que TS 5.9 introduce — mismo workaround que T-006 para mic-input)
+   - Si `totalFloats === 0`: salta todo el path, `matParamsBuffer = null`.
+
+5. **Bind group dinámico:**
+   - Siempre incluye `binding(0)` con `uniformBuffer`.
+   - Solo agrega `binding(1)` con `matParamsBuffer` cuando existe.
+   - El layout `'auto'` del pipeline se sincroniza con el shader (que el compiler de T-018 emitió condicionalmente).
+
+6. **Nueva función pública `writeMatParams(state, values)`** — reescribe el buffer en runtime. Útil para editor live-update (D-4 T-046). No-op si `matParamsBuffer === null`. Exportada desde `@m13/runtime`.
+
+**Sync con engine-cache.test.ts:**
+
+- Mock de `initRenderer` actualizado para retornar `matParamsBuffer: null` (cumplir el nuevo type contract).
+- Mock de `writeMatParams` añadido.
+
+### Verificaciones
+
+- ✅ `pnpm typecheck` limpio (tras fix del generic Float32Array con `.buffer`).
+- ✅ `pnpm test` → **67/67 pass** (24 parser + 12+7+8 compiler + 6 engine + 10 synth).
+- ✅ **Backward compat:** las 4 escenas demo siguen produciendo el mismo hash SHA-256 del WGSL (porque los 8 conceptos del bootstrap no declaran paramsSchema → totalFloats=0 → matParamsBuffer=null → mismo flujo que antes).
+- ✅ `pnpm dev` Vite ready 251ms.
+- ✅ Bundle: 50.87 KB gzipped (+0.24 KB vs T-018, **~51% del budget de 100 KB**).
+- ⏳ **Verificación visual en navegador con WebGPU real diferida a T-020 (E2E) y T-078 (sesión visual con Gato).** El renderer no se puede unit-testear sin GPU; los tests existentes verifican la integración a nivel del engine, y el browser test requiere ojo humano.
+
+### Decisiones tomadas
+
+- **D-1401:** **Bind group dinámico** (binding(1) solo cuando hay params). Razón: el pipeline `layout: 'auto'` infiere el layout del shader. Si el shader no declara binding(1), el bind group tampoco debe incluirlo, o WebGPU lanza validation error. La condicionalidad evita sincronizar manualmente shader↔bind group.
+- **D-1402:** **Budget 64 floats / 256 bytes** como hard limit (constante `MAT_PARAMS_MAX_FLOATS`). Razón: limita memoria + previene escenarios patológicos. 64 floats cubre ~6-10 conceptos con ~6-10 params cada uno, suficiente para el catálogo planeado (14 conceptos × 1-4 params típicamente = ~40 slots).
+- **D-1403:** **Escribir matParams una sola vez al cargar la escena**, no per-frame. Razón: los valores son estáticos para una escena dada (no animan, vienen de defaults o user .m13). Per-frame writes serían waste. Para editor live-update, se expone `writeMatParams(state, values)` como API explícita.
+- **D-1404:** **`writeBuffer` con `.buffer` + `byteOffset` + `byteLength`** en lugar de pasar el `Float32Array` directo. Razón: TS 5.9 hizo `Float32Array<T>` genérico, y el caso `Float32Array<ArrayBufferLike>` (default) no coincide con `Float32Array<ArrayBuffer>` que espera WebGPU. Pasar `.buffer` (un ArrayBuffer concreto) evita el mismatch. Mismo patrón que T-006 fix para mic-input.
+- **D-1405:** **Buffer mínimo de 16 bytes** (aligned to 16). WebGPU lo exige para uniform buffers. Si una escena solo necesita 1 f32 (4 bytes), reservamos 16. Overhead despreciable.
+- **D-1406:** **No emit `writeMatParams` per-frame.** El renderFrame loop sigue siendo: setPipeline + setBindGroup + draw(3) + submit. Sin cambios. matParams es "set and forget" hasta el próximo loadScene o llamada explícita a `writeMatParams`.
+
+### Lo que tronó
+
+Mismo problema de TS 5.9 generic que con T-006 — `Float32Array<ArrayBufferLike>` no asigna a `<ArrayBuffer>`. Resuelto pasando `.buffer` explícitamente. Patrón documentable para futuros usos: si pasas un typed array a una WebGPU/Web Crypto API moderna y TS se queja, pasa `.buffer` con offsets.
+
+### Pendientes para próxima sesión
+
+- [ ] T-020 Test E2E param de concept altera output visual (paralelizable)
+- [ ] T-021 Compiler soporte `kind: concept` para conceptos geométricos
+- [ ] T-022 Manifest JSON con `zod-to-json-schema`
+- [ ] T-023..T-024 READMEs runtime+synth
+- [ ] T-025..T-034 [PARALELIZABLES] catálogo de 14 conceptos
+
+### Reflexiones
+
+C-208 cerrado (T-018 + T-019). La arquitectura quedó: compiler describe el layout + emite WGSL → renderer crea el buffer + lo enlaza → concepts referencian `matParams.<id>_<param>` en sus WGSL. Cuando un concepto declara paramsSchema en T-025..T-034, todo el pipeline lo soporta sin más changes.
+
+El bundle subió de 50.02 → 50.63 → 50.87 KB tras estos cambios (+0.85 KB total). Los próximos clusters (14 conceptos + editor en D-4) serán los que muevan la aguja del bundle más significativamente.
+
+**Importante:** no se verificó la rama "renderiza con params" en navegador esta sesión. Los conceptos del bootstrap no tienen paramsSchema, así que activar la rama requiere agregar params a uno de ellos manualmente, o esperar a T-029 (metal_bronce_pulido). El test del flujo está en compiler-params.test.ts (T-018) y la integración con renderer se valida cuando T-020 (E2E) corra.
+
+Tres tasks (T-017, T-018, T-019) cerradas en una sola sesión — el cluster D-3 avanza al ritmo previsto. Siguiente decision point: ¿hacer T-020 (E2E) o saltarse directo a T-025..T-034 (conceptos) y validar de paso? T-020 es paralelizable y verificable solo en browser, así que conviene ejecutar T-025..T-034 con conceptos que ya tengan paramsSchema, y T-020 se vuelve un by-product visible.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
