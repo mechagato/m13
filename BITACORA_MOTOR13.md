@@ -359,6 +359,76 @@ Con 24 tests verdes y parser 100% cubierto, el cluster D-2 puede pasar al compil
 
 ---
 
+## Entrada 007 · 2026-05-21 · T-010 Tests compiler output
+
+**Duración:** ~15 min Claude (con fix de config en medio)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Tercer task del cluster D-2. Después de 24 tests de parser, ahora se cubre el compiler con 12 tests que ejercen las 4 escenas reales del demo y validan el codegen WGSL.
+
+### Lo que se hizo
+
+**Tests del compiler** — `packages/runtime/src/compiler/__tests__/compiler-output.test.ts` con 12 tests:
+
+1. `sala_basica`: 5 conceptos referenciados + fn map/material/vs/fs presentes
+2. `galeria_minimal`: dedup de conceptos compartidos (yeso ceiling/walls = 1 fn)
+3. `loft_industrial`: 6 conceptos únicos incluyendo cuero_vintage
+4. `templo_mexica`: solo 2 conceptos únicos pese a 6 referencias
+5. `concepto inexistente` → error `[m13/compiler] Concepto desconocido: "pared_inventada"` (el caso que NO podía testear el parser)
+6. window cut: WGSL incluye `opSub(room, windowCut)` para sala_basica
+7. animate bob: WGSL incluye `sin(u.time * 2.5) * 0.3`
+8. audio_reactive: WGSL inyecta `u.audioAmp`
+9. escena sin objects: map() solo el cuarto, sin `let obj0 =`
+10. bloques canónicos: struct Uniforms, sdBox, fbm, raymarch, calcNormal, softShadow, calcAO, shade
+11. WGSL > 4 KB en escena con varios conceptos
+12. cobertura de los 5 `kind` primitivos (sphere/box/round_box/cylinder/torus) — para llegar al 100% del compiler
+
+**Fixes de configuración:**
+
+- **`vitest.config.ts`**: el exclude original `**/index.ts` eliminaba archivos de lógica real (parser/index.ts, compiler/index.ts) del reporte. Se afina a sólo barrel exports top-level (`packages/runtime/src/index.ts`, `packages/synth/src/index.ts`).
+- **`packages/runtime/tsconfig.json`** y **`packages/synth/tsconfig.json`**: agregar `**/*.test.ts` y `**/__tests__/**` al `exclude` porque el override perdía la exclusión heredada del base. Sin esto, tsc trataba de typechear los tests (que importan `node:fs` etc. sin tipos de node).
+
+### Verificaciones
+
+- ✅ `pnpm test` → **36/36 pass** (24 parser + 12 compiler), 728ms total.
+- ✅ Coverage compiler: **100% líneas / 96.42% branches / 100% funciones / 100% statements** (excede el >50% de T-010 y el >70% combinado de T-012).
+- ✅ Parser sigue **100%** en todas las dimensiones.
+- ✅ `pnpm typecheck` limpio en los 3 packages tras los fixes de tsconfig.
+
+### Decisiones tomadas
+
+- **D-601:** Tests cargan archivos `.m13` reales del demo vía `readFileSync` desde `packages/examples/public/scenes/`. Razón: testear los snapshots reales que el demo usa, no fixtures sintéticos. Path resuelto con `import.meta.url` + `fileURLToPath`.
+- **D-602:** El tsconfig de cada package debe heredar el exclude del base — si lo override, debe re-incluir `**/*.test.ts` y `**/__tests__/**`. Es una regla del monorepo que se aplicará en futuros packages (editor en D-4).
+- **D-603:** El exclude de coverage en vitest.config.ts es más quirúrgico ahora: solo barrel exports top-level (que son re-exports puros). Per-directory index.ts (parser/index.ts, compiler/index.ts) que tienen lógica real SÍ se miden.
+
+### Lo que tronó
+
+Dos cosas atrapadas y arregladas mid-task:
+1. Coverage del compiler salía como excluida (cero archivos en el reporte) porque mi exclude del config era demasiado amplio (`**/index.ts`).
+2. Typecheck se rompió tras agregar el test que importa `node:fs/url/path` — el tsconfig del runtime estaba override-eando el exclude del base. Fix mecánico.
+
+Ninguno llegó al commit final.
+
+### Pendientes para próxima sesión (cierre del cluster D-2)
+
+- [ ] T-011 determinismo formal del compiler (sort conceptsUsed + floats con `.toFixed(6)` o equivalente)
+- [ ] T-012 test SHA-256 estable en 100 corridas
+- [ ] T-013 caché de shaders en engine
+- [ ] T-014..T-016 benchmark + bundle size
+
+### Reflexiones
+
+Llegamos a **100% del compiler con 12 tests** mientras los esperaba en 70%. El compiler resultó más "atestable" de lo que parecía — la naturaleza determinista del codegen ayuda. Las ramas no cubiertas (la única era `kind: box`) son fáciles de cazar con un test adicional.
+
+Los tests cargan escenas REALES (.m13 del demo) en lugar de fixtures sintéticos. Esto significa que cualquier regresión en `parseScene`/`compileScene` que rompa el demo, se detecta en los tests. Adicionalmente, si Gato edita una escena del demo y rompe el contrato, el test fallará — un safety net útil.
+
+Cluster D-2 lleva 36 tests verdes y los dos archivos centrales (parser, compiler) en 100% / 100%. Falta determinismo (T-011/T-012) y luego caché/bench/bundle. Aún ágil.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
