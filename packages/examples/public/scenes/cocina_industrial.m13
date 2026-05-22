@@ -1,0 +1,89 @@
+# cocina_industrial — cocina estilo loft mexicano
+#
+# Pared de ladrillo expuesto rojizo, piso de concreto pulido, lámpara colgante
+# dorada sobre isla con tope de bronce pulido. Taburetes de cuero. Atmosfera
+# cálida ámbar densa.
+#
+# Identidad: loft urbano mexicano contemporáneo, comedor/cocina abierta.
+#
+# T-038 — segunda escena formal del spec Fase 1 §4.5.
+
+version: "0.1"
+name: cocina_industrial
+description: "Cocina loft industrial con isla de bronce, lámpara colgante y taburetes de cuero"
+
+bounds: [5, 3, 6]
+spawn: [0, 0, -4]
+
+ambient:
+  background: [0.05, 0.04, 0.03]
+  ambientColor: [0.10, 0.08, 0.06]
+  tint: [1.10, 0.96, 0.82]
+  fogColor: [0.05, 0.04, 0.03]
+  fogDensity: 0.022
+
+light:
+  position: [0, 1.0, 0]
+  color: [1.0, 0.82, 0.55]
+  intensity: 1.6
+
+walls:
+  concept: pared_ladrillo_viejo
+
+floor:
+  concept: piso_concreto_industrial
+
+ceiling:
+  concept: pared_yeso_blanco
+
+objects:
+  # Lámpara colgante central sobre la isla — pieza definitoria del loft
+  - id: lampara_central
+    kind: concept
+    concept: lampara_colgante
+    position: [0, 1.0, 0]
+    scale: [0.18, 0.3, 0.18]
+
+  # Isla de cocina — base alta + tope de bronce
+  - id: isla_base
+    kind: round_box
+    position: [0, -2.4, 0]
+    scale: [0.9, 0.45, 0.55]
+    material:
+      concept: pared_madera_oscura
+      params:
+        darkness: 0.75
+        grainScale: 6
+
+  - id: isla_tope
+    kind: round_box
+    position: [0, -1.9, 0]
+    scale: [1.0, 0.05, 0.65]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.6
+
+  # Taburete izquierdo
+  - id: taburete_izq
+    kind: cylinder
+    position: [-1.5, -2.4, 0]
+    scale: [0.25, 0.45, 0.25]
+    material: cuero_vintage
+
+  # Taburete derecho
+  - id: taburete_der
+    kind: cylinder
+    position: [1.5, -2.4, 0]
+    scale: [0.25, 0.45, 0.25]
+    material: cuero_vintage
+
+  # Olla colgante con óxido decorativo (pared del fondo)
+  - id: olla_oxidada
+    kind: sphere
+    position: [-2, 0.5, 2.5]
+    scale: 0.22
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.65

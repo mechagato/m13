@@ -1,0 +1,87 @@
+# sala_galeria — galería de arte minimalista
+#
+# Espacio claro y frío con piso de mármol pulido. Una esfera escultórica
+# blanca con iridiscencia descansa sobre un pedestal de mármol. Luz cenital
+# suave + ligero fog cool para profundidad.
+#
+# Identidad: white-cube gallery / museo / showroom premium.
+#
+# T-037 — primera escena formal del spec Fase 1 §4.5.
+
+version: "0.1"
+name: sala_galeria
+description: "Galería de arte minimalista con esfera escultórica sobre pedestal"
+
+bounds: [6, 3.5, 6]
+spawn: [0, 0, -4]
+
+ambient:
+  background: [0.07, 0.075, 0.085]
+  ambientColor: [0.20, 0.21, 0.23]
+  tint: [0.98, 1.0, 1.03]
+  fogColor: [0.07, 0.075, 0.085]
+  fogDensity: 0.010
+
+light:
+  position: [0, 3.2, 0]
+  color: [0.98, 0.99, 1.02]
+  intensity: 1.25
+
+walls:
+  concept: pared_yeso_blanco
+
+floor:
+  concept: piso_marmol_blanco
+  params:
+    veinIntensity: 0.25
+
+ceiling:
+  concept: pared_yeso_blanco
+
+objects:
+  # Pedestal central
+  - id: pedestal_centro
+    kind: concept
+    concept: pedestal_marmol
+    position: [0, -2.6, 0]
+    scale: [0.4, 0.4, 0.4]
+
+  # Esfera escultórica sobre el pedestal (animación bob muy sutil)
+  - id: escultura_esfera
+    kind: concept
+    concept: esfera_decorativa
+    position: [0, -1.5, 0]
+    scale: 0.38
+    animate:
+      mode: bob
+      speed: 0.3
+      amplitude: 0.04
+
+  # Pedestal secundario a la izquierda con torus de bronce
+  - id: pedestal_izq
+    kind: concept
+    concept: pedestal_marmol
+    position: [-2.5, -2.6, -1.5]
+    scale: [0.3, 0.35, 0.3]
+
+  - id: torus_bronce
+    kind: torus
+    position: [-2.5, -1.7, -1.5]
+    scale: [0.28, 0.08, 0.28]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.4
+
+  # Pieza pequeña a la derecha — cubo de mármol vetado
+  - id: pedestal_der
+    kind: concept
+    concept: pedestal_marmol
+    position: [2.5, -2.6, -1.5]
+    scale: [0.3, 0.35, 0.3]
+
+  - id: cubo_marmol
+    kind: box
+    position: [2.5, -1.7, -1.5]
+    scale: [0.25, 0.25, 0.25]
+    material: marmol_blanco_vetas
