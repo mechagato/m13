@@ -1,0 +1,53 @@
+# sala_basica — escena fundacional .m13 v0.1
+# Cuarto residencial con ladrillo, madera, pedestal de mármol y esfera dorada.
+# Demuestra: walls + floor + ceiling + window cut + objetos + audio reactivity.
+
+version: "0.1"
+name: sala_basica
+description: "Sala residencial mexicana con esfera dorada audio-reactiva"
+
+bounds: [5, 3, 5]
+spawn: [0, 0, -3.5]
+
+ambient:
+  background: [0.05, 0.045, 0.04]
+  ambientColor: [0.08, 0.075, 0.07]
+  tint: [1.05, 1.0, 0.92]
+  fogColor: [0.05, 0.045, 0.04]
+  fogDensity: 0.015
+
+light:
+  position: [0, 2.5, 0]
+  color: [1.0, 0.92, 0.78]
+  intensity: 1.0
+
+walls:
+  concept: pared_ladrillo_viejo
+
+floor:
+  concept: piso_madera_envejecida
+
+ceiling:
+  concept: pared_yeso_blanco
+
+window:
+  position: [0, 0.5, 5]
+  size: [1.4, 1.0, 0.5]
+
+objects:
+  - id: pedestal
+    kind: round_box
+    position: [0, -2.4, 0]
+    scale: [0.5, 0.4, 0.5]
+    material: marmol_blanco_vetas
+
+  - id: esfera_dorada
+    kind: sphere
+    position: [0, -1.5, 0]
+    scale: 0.45
+    material: metal_dorado_pulido
+    audio_reactive: true
+    animate:
+      mode: bob
+      speed: 0.6
+      amplitude: 0.15

@@ -1,0 +1,22 @@
+{
+  "name": "@m13/examples",
+  "version": "0.1.0",
+  "description": "m13 example scenes app — load .m13 files and render them",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@m13/runtime": "workspace:*",
+    "@m13/synth": "workspace:*"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.40",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10"
+  }
+}

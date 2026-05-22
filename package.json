@@ -1,0 +1,22 @@
+{
+  "name": "m13",
+  "version": "0.1.0",
+  "private": true,
+  "description": "m13 — local-first world synthesis engine",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @m13/examples dev",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@8.15.5",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

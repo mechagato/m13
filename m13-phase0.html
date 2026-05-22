@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>m13 · phase 0 — sala_sdf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0908;
+    --accent: #c9a227;
+    --accent-dim: #6b5618;
+    --signal: #5fdb7f;
+    --critical: #d04545;
+    --text: #d8d2c4;
+    --text-dim: #6a6258;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    overflow: hidden; height: 100vh; width: 100vw;
+    position: fixed; inset: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.79 0 0 0 0 0.64 0 0 0 0 0.15 0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.06; mix-blend-mode: overlay;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 99;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 3px);
+  }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  .hud {
+    position: fixed; pointer-events: none; z-index: 10;
+    font-size: 11px; line-height: 1.4; letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .hud .label { color: var(--text-dim); }
+  .hud .value { color: var(--accent); font-weight: 500; }
+  .corner {
+    position: fixed; width: 20px; height: 20px;
+    border: 1px solid var(--accent); z-index: 11; pointer-events: none;
+  }
+  .corner.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+  .corner.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+  .corner.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+  .corner.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+  .hud-header { top: 24px; left: 24px; max-width: 340px; }
+  .hud-header .title {
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.15em; margin-bottom: 4px;
+  }
+  .hud-header .subtitle { color: var(--text-dim); font-size: 10px; margin-bottom: 12px; }
+  .hud-header .desc {
+    color: var(--text); font-size: 10px; text-transform: none;
+    letter-spacing: 0; line-height: 1.5; opacity: 0.7;
+  }
+  .hud-stats { top: 24px; right: 24px; text-align: right; min-width: 220px; }
+  .hud-stats .row { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; }
+  .hud-stats .divider { height: 1px; background: var(--accent-dim); margin: 8px 0; opacity: 0.4; }
+  .hud-controls { bottom: 24px; left: 24px; }
+  .hud-controls .key {
+    display: inline-block; border: 1px solid var(--accent-dim);
+    padding: 1px 6px; margin-right: 4px; color: var(--accent); font-size: 10px;
+  }
+  .hud-controls .row { padding: 3px 0; color: var(--text-dim); }
+  .hud-tag { bottom: 24px; right: 24px; text-align: right; color: var(--text-dim); }
+  .hud-tag .v { color: var(--accent); }
+  .click-prompt {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); z-index: 20;
+    text-align: center; pointer-events: none;
+    transition: opacity 0.3s; text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .click-prompt.hidden { opacity: 0; }
+  .click-prompt .box {
+    border: 1px solid var(--accent); padding: 18px 28px;
+    background: rgba(10, 9, 8, 0.7); backdrop-filter: blur(4px);
+  }
+  .click-prompt .main { font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 6px; }
+  .click-prompt .sub { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+  .crosshair {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); width: 14px; height: 14px;
+    z-index: 15; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  }
+  .crosshair.active { opacity: 0.5; }
+  .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--accent); }
+  .crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+  .crosshair::after { top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%); }
+  .error-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .error-screen.show { display: flex; }
+  .error-screen .panel {
+    border: 1px solid var(--critical); padding: 32px;
+    max-width: 560px; background: rgba(208, 69, 69, 0.05);
+  }
+  .error-screen h1 {
+    color: var(--critical); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.2em; margin-bottom: 16px; text-transform: uppercase;
+  }
+  .error-screen p { color: var(--text); font-size: 12px; line-height: 1.6; margin-bottom: 12px; }
+  .error-screen code {
+    background: rgba(255,255,255,0.05); padding: 2px 6px;
+    color: var(--accent); font-size: 11px;
+  }
+  .audio-status.active { color: var(--signal) !important; }
+</style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="crosshair" id="crosshair"></div>
+
+  <div class="hud hud-header">
+    <div class="title">m13 · phase 0</div>
+    <div class="subtitle">sala_sdf · prueba de principio</div>
+    <div class="desc">
+      Cuarto renderizado 100% con raymarching de signed distance fields. Cero polígonos, cero texturas precargadas. Materiales sintetizados al vuelo. El micrófono modula detalle en runtime (preludio del Sonido 13 visual).
+    </div>
+  </div>
+
+  <div class="hud hud-stats">
+    <div class="row"><span class="label">fps</span><span class="value" id="fps">--</span></div>
+    <div class="row"><span class="label">ms/frame</span><span class="value" id="ms">--</span></div>
+    <div class="row"><span class="label">resolution</span><span class="value" id="res">--</span></div>
+    <div class="divider"></div>
+    <div class="row"><span class="label">cam x</span><span class="value" id="cx">--</span></div>
+    <div class="row"><span class="label">cam y</span><span class="value" id="cy">--</span></div>
+    <div class="row"><span class="label">cam z</span><span class="value" id="cz">--</span></div>
+    <div class="divider"></div>
+    <div class="row"><span class="label">audio</span><span class="value audio-status" id="audio">offline</span></div>
+    <div class="row"><span class="label">amplitude</span><span class="value" id="amp">0.00</span></div>
+  </div>
+
+  <div class="hud hud-controls">
+    <div class="row"><span class="key">click</span> capturar cursor</div>
+    <div class="row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> moverse</div>
+    <div class="row"><span class="key">SPACE</span><span class="key">SHIFT</span> arriba/abajo</div>
+    <div class="row"><span class="key">M</span> activar/silenciar mic</div>
+    <div class="row"><span class="key">ESC</span> liberar cursor</div>
+  </div>
+
+  <div class="hud hud-tag">
+    <div>neonodos · <span class="v">research</span></div>
+    <div>v0.1.0-phase0</div>
+  </div>
+
+  <div class="click-prompt" id="prompt">
+    <div class="box">
+      <div class="main">click para entrar</div>
+      <div class="sub">wasd + mouse + M para mic</div>
+    </div>
+  </div>
+
+  <div class="error-screen" id="errorScreen">
+    <div class="panel">
+      <h1>:: webgpu no disponible ::</h1>
+      <p>Este demo requiere <code>WebGPU</code>, soportado en:</p>
+      <p style="margin-left: 12px;">→ Chrome 113+ / Edge 113+ desktop o Android<br>→ Safari Technology Preview con flag<br>→ Quest 3 navegador (Chromium)</p>
+      <p style="margin-top: 16px;">Detalle: <code id="errorMsg">--</code></p>
+    </div>
+  </div>
+
+<script type="module">
+// ============================================
+// m13 — Phase 0 — Sala SDF
+// Single-file demo, WebGPU + raymarching
+// ============================================
+
+const canvas = document.getElementById('canvas');
+const errorScreen = document.getElementById('errorScreen');
+const errorMsg = document.getElementById('errorMsg');
+const prompt = document.getElementById('prompt');
+const crosshair = document.getElementById('crosshair');
+const fpsEl = document.getElementById('fps');
+const msEl = document.getElementById('ms');
+const resEl = document.getElementById('res');
+const cxEl = document.getElementById('cx');
+const cyEl = document.getElementById('cy');
+const czEl = document.getElementById('cz');
+const audioEl = document.getElementById('audio');
+const ampEl = document.getElementById('amp');
+
+function fail(msg) {
+  errorMsg.textContent = msg;
+  errorScreen.classList.add('show');
+  console.error('[m13]', msg);
+}
+
+if (!navigator.gpu) {
+  fail('navigator.gpu undefined — activa WebGPU o usa Chrome/Edge 113+');
+  throw new Error('No WebGPU');
+}
+
+// ============================================
+// SHADER WGSL — el corazón del motor
+// ============================================
+const SHADER = `
+struct Uniforms {
+  resolution: vec2<f32>,
+  time: f32,
+  audioAmp: f32,
+  camPos: vec3<f32>,
+  _p0: f32,
+  camDir: vec3<f32>,
+  _p1: f32,
+  camRight: vec3<f32>,
+  _p2: f32,
+  camUp: vec3<f32>,
+  _p3: f32,
+};
+
+@group(0) @binding(0) var<uniform> u: Uniforms;
+
+@vertex
+fn vs_main(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4<f32> {
+  var pos = array<vec2<f32>, 3>(
+    vec2<f32>(-1.0, -1.0),
+    vec2<f32>( 3.0, -1.0),
+    vec2<f32>(-1.0,  3.0)
+  );
+  return vec4<f32>(pos[vi], 0.0, 1.0);
+}
+
+fn sdBox(p: vec3<f32>, b: vec3<f32>) -> f32 {
+  let q = abs(p) - b;
+  return length(max(q, vec3<f32>(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+fn sdSphere(p: vec3<f32>, r: f32) -> f32 {
+  return length(p) - r;
+}
+
+fn sdRoundBox(p: vec3<f32>, b: vec3<f32>, r: f32) -> f32 {
+  let q = abs(p) - b + vec3<f32>(r);
+  return length(max(q, vec3<f32>(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0) - r;
+}
+
+fn opSub(a: f32, b: f32) -> f32 { return max(-b, a); }
+fn opUnion(a: f32, b: f32) -> f32 { return min(a, b); }
+
+fn hash3(p: vec3<f32>) -> f32 {
+  var p3 = fract(p * 0.1031);
+  p3 = p3 + dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+fn noise3(p: vec3<f32>) -> f32 {
+  let i = floor(p);
+  let f = fract(p);
+  let u = f * f * (3.0 - 2.0 * f);
+  let n000 = hash3(i + vec3<f32>(0.0, 0.0, 0.0));
+  let n100 = hash3(i + vec3<f32>(1.0, 0.0, 0.0));
+  let n010 = hash3(i + vec3<f32>(0.0, 1.0, 0.0));
+  let n110 = hash3(i + vec3<f32>(1.0, 1.0, 0.0));
+  let n001 = hash3(i + vec3<f32>(0.0, 0.0, 1.0));
+  let n101 = hash3(i + vec3<f32>(1.0, 0.0, 1.0));
+  let n011 = hash3(i + vec3<f32>(0.0, 1.0, 1.0));
+  let n111 = hash3(i + vec3<f32>(1.0, 1.0, 1.0));
+  let nx00 = mix(n000, n100, u.x);
+  let nx10 = mix(n010, n110, u.x);
+  let nx01 = mix(n001, n101, u.x);
+  let nx11 = mix(n011, n111, u.x);
+  let nxy0 = mix(nx00, nx10, u.y);
+  let nxy1 = mix(nx01, nx11, u.y);
+  return mix(nxy0, nxy1, u.z);
+}
+
+fn fbm(p: vec3<f32>, octaves: i32) -> f32 {
+  var total: f32 = 0.0;
+  var amp: f32 = 0.5;
+  var freq: f32 = 1.0;
+  for (var i = 0; i < octaves; i++) {
+    total = total + amp * noise3(p * freq);
+    amp = amp * 0.5;
+    freq = freq * 2.0;
+  }
+  return total;
+}
+
+// ---------- ESCENA: SALA M13 ----------
+// Cuarto 10x6x10, ventana en pared norte, pedestal central, esfera flotante
+fn map(p: vec3<f32>) -> f32 {
+  let roomBounds = vec3<f32>(5.0, 3.0, 5.0);
+  let room = -sdBox(p, roomBounds);
+
+  // Ventana cortada en pared norte
+  let windowPos = p - vec3<f32>(0.0, 0.5, 5.0);
+  let windowCut = sdBox(windowPos, vec3<f32>(1.4, 1.0, 0.5));
+  let roomWithWindow = opSub(room, windowCut);
+
+  // Pedestal central
+  let pedestal = sdRoundBox(p - vec3<f32>(0.0, -2.4, 0.0), vec3<f32>(0.5, 0.4, 0.5), 0.05);
+
+  // Esfera flotante (anima en y, vibra con audio)
+  let bob = sin(u.time * 0.6) * 0.15 + u.audioAmp * 0.1;
+  let sphereR = 0.45 + u.audioAmp * 0.05;
+  let sphere = sdSphere(p - vec3<f32>(0.0, -1.5 + bob, 0.0), sphereR);
+
+  return opUnion(opUnion(roomWithWindow, pedestal), sphere);
+}
+
+fn calcNormal(p: vec3<f32>) -> vec3<f32> {
+  let e = vec2<f32>(0.0005, 0.0);
+  return normalize(vec3<f32>(
+    map(p + e.xyy) - map(p - e.xyy),
+    map(p + e.yxy) - map(p - e.yxy),
+    map(p + e.yyx) - map(p - e.yyx)
+  ));
+}
+
+struct Hit { t: f32, hit: bool };
+
+fn raymarch(ro: vec3<f32>, rd: vec3<f32>) -> Hit {
+  var t: f32 = 0.001;
+  var out: Hit;
+  out.hit = false;
+  for (var i = 0; i < 128; i++) {
+    let p = ro + rd * t;
+    let d = map(p);
+    if (abs(d) < 0.001) {
+      out.hit = true;
+      out.t = t;
+      return out;
+    }
+    if (t > 80.0) { break; }
+    t = t + d * 0.7;
+  }
+  out.t = t;
+  return out;
+}
+
+fn softShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) -> f32 {
+  var res: f32 = 1.0;
+  var t: f32 = mint;
+  for (var i = 0; i < 32; i++) {
+    if (t > maxt) { break; }
+    let h = map(ro + rd * t);
+    if (h < 0.001) { return 0.0; }
+    res = min(res, k * h / t);
+    t = t + h * 0.7;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
+  var occ: f32 = 0.0;
+  var sca: f32 = 1.0;
+  for (var i = 0; i < 5; i++) {
+    let h = 0.01 + 0.15 * f32(i) / 4.0;
+    let d = map(p + n * h);
+    occ = occ + (h - d) * sca;
+    sca = sca * 0.9;
+  }
+  return clamp(1.0 - 2.0 * occ, 0.0, 1.0);
+}
+
+// ---------- MATERIALES PROCEDURALES ----------
+fn material(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  // PISO — madera con vetas
+  if (n.y > 0.7 && p.y < -2.5) {
+    let wood = sin(p.x * 4.0 + noise3(p * 1.5) * 1.0) * 0.5 + 0.5;
+    let grain = fbm(p * vec3<f32>(20.0, 5.0, 20.0), 3);
+    return mix(vec3<f32>(0.32, 0.18, 0.10), vec3<f32>(0.52, 0.35, 0.20), wood) + vec3<f32>(grain * 0.05);
+  }
+  // TECHO — yeso blanco con micro-textura
+  if (n.y < -0.7) {
+    let t = fbm(p * 10.0, 3) * 0.1;
+    return vec3<f32>(0.88 - t, 0.86 - t, 0.82 - t);
+  }
+  // PEDESTAL — gris pulido con speckle
+  if (length(p.xz) < 0.6 && p.y < -1.9) {
+    let speckle = noise3(p * 50.0) * 0.1;
+    return vec3<f32>(0.45 + speckle, 0.42 + speckle, 0.40 + speckle);
+  }
+  // ESFERA — dorado mate audio-reactivo (Sonido 13 literal)
+  if (length(p - vec3<f32>(0.0, -1.5, 0.0)) < 0.7) {
+    let pulse = u.audioAmp * 0.6;
+    let shimmer = fbm(p * 8.0 + vec3<f32>(u.time * 0.3, 0.0, 0.0), 4);
+    let base = vec3<f32>(0.82, 0.65, 0.18);
+    return base * (0.7 + shimmer * 0.3 + pulse);
+  }
+  // PAREDES — ladrillo audio-reactivo
+  let brickScale = 4.0 + u.audioAmp * 3.0;
+  let brick = fbm(p * brickScale, 4);
+  let mortarH = fract(p.y * 3.0);
+  let mortarV = fract(p.x * 1.5 + step(0.5, mortarH) * 0.5);
+  let mortar = clamp(step(0.92, mortarH) + step(0.95, mortarV), 0.0, 1.0);
+  let brickColor = mix(vec3<f32>(0.55, 0.30, 0.22), vec3<f32>(0.42, 0.22, 0.16), brick);
+  let mortarColor = vec3<f32>(0.35, 0.32, 0.28);
+  return mix(brickColor, mortarColor, mortar);
+}
+
+// ---------- ILUMINACIÓN ----------
+fn shade(p: vec3<f32>, rd: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  let mat = material(p, n);
+  let lightPos = vec3<f32>(0.0, 2.5, 0.0);
+  let lightCol = vec3<f32>(1.0, 0.92, 0.78);
+  let toLight = lightPos - p;
+  let lightDist = length(toLight);
+  let lightDir = toLight / lightDist;
+  let diff = max(dot(n, lightDir), 0.0);
+  let atten = 1.0 / (1.0 + 0.08 * lightDist + 0.02 * lightDist * lightDist);
+  let shadow = softShadow(p + n * 0.01, lightDir, 0.02, lightDist, 8.0);
+  let ao = calcAO(p, n);
+  let viewDir = -rd;
+  let halfDir = normalize(lightDir + viewDir);
+  let spec = pow(max(dot(n, halfDir), 0.0), 16.0) * 0.15;
+  let windowDir = normalize(vec3<f32>(0.0, 0.3, 1.0));
+  let windowDiff = max(dot(n, windowDir), 0.0) * 0.3;
+  let windowLight = vec3<f32>(0.6, 0.55, 0.45);
+  let ambient = vec3<f32>(0.08, 0.075, 0.07);
+  var col = mat * (ambient * ao + diff * lightCol * atten * shadow + vec3<f32>(spec) + windowDiff * windowLight);
+  col = col * vec3<f32>(1.05, 1.0, 0.92);
+  return col;
+}
+
+@fragment
+fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
+  let uv = (fragCoord.xy * 2.0 - u.resolution) / u.resolution.y;
+  let uvFixed = vec2<f32>(uv.x, -uv.y);
+  let ro = u.camPos;
+  let rd = normalize(u.camDir + u.camRight * uvFixed.x + u.camUp * uvFixed.y);
+  let hit = raymarch(ro, rd);
+  var col: vec3<f32>;
+  if (hit.hit) {
+    let p = ro + rd * hit.t;
+    let n = calcNormal(p);
+    col = shade(p, rd, n);
+    let fog = 1.0 - exp(-hit.t * 0.015);
+    col = mix(col, vec3<f32>(0.05, 0.045, 0.04), fog * 0.3);
+  } else {
+    col = vec3<f32>(0.0);
+  }
+  col = col / (1.0 + col);
+  col = pow(col, vec3<f32>(0.4545));
+  let vignette = smoothstep(1.5, 0.5, length(uvFixed));
+  col = col * mix(0.85, 1.0, vignette);
+  return vec4<f32>(col, 1.0);
+}
+`;
+
+// ============================================
+// WEBGPU INIT
+// ============================================
+let device, context, format, pipeline, uniformBuffer, bindGroup;
+
+async function initWebGPU() {
+  try {
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+    if (!adapter) { fail('Sin adapter — GPU no soporta WebGPU'); return false; }
+    device = await adapter.requestDevice();
+    device.lost.then((info) => fail('Device perdido: ' + info.message));
+    context = canvas.getContext('webgpu');
+    format = navigator.gpu.getPreferredCanvasFormat();
+    context.configure({ device, format, alphaMode: 'opaque' });
+
+    uniformBuffer = device.createBuffer({
+      size: 80,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+
+    const module = device.createShaderModule({ code: SHADER });
+    pipeline = device.createRenderPipeline({
+      layout: 'auto',
+      vertex: { module, entryPoint: 'vs_main' },
+      fragment: { module, entryPoint: 'fs_main', targets: [{ format }] },
+      primitive: { topology: 'triangle-list' },
+    });
+    bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+    });
+    return true;
+  } catch (e) {
+    fail(e.message || String(e));
+    return false;
+  }
+}
+
+// ============================================
+// CÁMARA + INPUT
+// ============================================
+const camera = { pos: [0, 0, -3.5], yaw: 0, pitch: 0 };
+const input = { forward: false, back: false, left: false, right: false, up: false, down: false, locked: false };
+
+canvas.addEventListener('click', async () => {
+  try { await canvas.requestPointerLock({ unadjustedMovement: true }); }
+  catch { await canvas.requestPointerLock(); }
+});
+
+document.addEventListener('pointerlockchange', () => {
+  input.locked = document.pointerLockElement === canvas;
+  if (input.locked) { prompt.classList.add('hidden'); crosshair.classList.add('active'); }
+  else { prompt.classList.remove('hidden'); crosshair.classList.remove('active'); }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!input.locked) return;
+  const sens = 0.0025;
+  camera.yaw -= e.movementX * sens;
+  camera.pitch -= e.movementY * sens;
+  const lim = Math.PI / 2 - 0.05;
+  camera.pitch = Math.max(-lim, Math.min(lim, camera.pitch));
+});
+
+document.addEventListener('keydown', (e) => {
+  switch (e.code) {
+    case 'KeyW': input.forward = true; break;
+    case 'KeyS': input.back = true; break;
+    case 'KeyA': input.left = true; break;
+    case 'KeyD': input.right = true; break;
+    case 'Space': input.up = true; e.preventDefault(); break;
+    case 'ShiftLeft': case 'ShiftRight': input.down = true; break;
+    case 'KeyM': toggleAudio(); break;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  switch (e.code) {
+    case 'KeyW': input.forward = false; break;
+    case 'KeyS': input.back = false; break;
+    case 'KeyA': input.left = false; break;
+    case 'KeyD': input.right = false; break;
+    case 'Space': input.up = false; break;
+    case 'ShiftLeft': case 'ShiftRight': input.down = false; break;
+  }
+});
+
+// ============================================
+// AUDIO (micrófono — Sonido 13 reactivo)
+// ============================================
+let audioCtx = null, analyser = null, micStream = null, audioData = null, audioAmp = 0;
+
+async function toggleAudio() {
+  if (audioCtx) {
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    await audioCtx.close(); audioCtx = null; analyser = null; audioAmp = 0;
+    audioEl.textContent = 'offline'; audioEl.classList.remove('active');
+    return;
+  }
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    audioData = new Uint8Array(analyser.frequencyBinCount);
+    audioEl.textContent = 'live'; audioEl.classList.add('active');
+  } catch (e) {
+    audioEl.textContent = 'denied';
+  }
+}
+
+function sampleAudio() {
+  if (!analyser) return 0;
+  analyser.getByteFrequencyData(audioData);
+  let sum = 0;
+  for (let i = 0; i < audioData.length; i++) sum += audioData[i];
+  const avg = sum / audioData.length / 255;
+  audioAmp += (avg - audioAmp) * 0.15;
+  return audioAmp;
+}
+
+// ============================================
+// RESIZE
+// ============================================
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.floor(window.innerWidth * dpr);
+  canvas.height = Math.floor(window.innerHeight * dpr);
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  resEl.textContent = `${canvas.width}×${canvas.height}`;
+}
+window.addEventListener('resize', resize);
+
+// ============================================
+// RENDER LOOP
+// ============================================
+let lastTime = 0, fpsAccum = 0, fpsCount = 0, fpsTimer = 0;
+const t0 = performance.now();
+
+function frame(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  const time = (now - t0) / 1000;
+
+  fpsAccum += 1 / Math.max(dt, 0.0001);
+  fpsCount++;
+  fpsTimer += dt;
+  if (fpsTimer > 0.5) {
+    const fps = fpsAccum / fpsCount;
+    fpsEl.textContent = Math.round(fps).toString();
+    msEl.textContent = (1000 / fps).toFixed(1);
+    fpsAccum = 0; fpsCount = 0; fpsTimer = 0;
+  }
+
+  // Cámara
+  const cy = Math.cos(camera.yaw), sy = Math.sin(camera.yaw);
+  const cp = Math.cos(camera.pitch), sp = Math.sin(camera.pitch);
+  const fwd = [sy * cp, sp, -cy * cp];
+  const right = [cy, 0, sy];
+  const up = [
+    right[1] * fwd[2] - right[2] * fwd[1],
+    right[2] * fwd[0] - right[0] * fwd[2],
+    right[0] * fwd[1] - right[1] * fwd[0],
+  ];
+
+  const speed = 2.5 * dt;
+  if (input.forward) { camera.pos[0] += fwd[0] * speed; camera.pos[1] += fwd[1] * speed; camera.pos[2] += fwd[2] * speed; }
+  if (input.back)    { camera.pos[0] -= fwd[0] * speed; camera.pos[1] -= fwd[1] * speed; camera.pos[2] -= fwd[2] * speed; }
+  if (input.right)   { camera.pos[0] += right[0] * speed; camera.pos[2] += right[2] * speed; }
+  if (input.left)    { camera.pos[0] -= right[0] * speed; camera.pos[2] -= right[2] * speed; }
+  if (input.up) camera.pos[1] += speed;
+  if (input.down) camera.pos[1] -= speed;
+
+  // Clamp dentro del cuarto
+  camera.pos[0] = Math.max(-4.5, Math.min(4.5, camera.pos[0]));
+  camera.pos[1] = Math.max(-2.7, Math.min(2.7, camera.pos[1]));
+  camera.pos[2] = Math.max(-4.5, Math.min(4.5, camera.pos[2]));
+
+  // Audio
+  const amp = sampleAudio();
+  ampEl.textContent = amp.toFixed(2);
+  cxEl.textContent = camera.pos[0].toFixed(2);
+  cyEl.textContent = camera.pos[1].toFixed(2);
+  czEl.textContent = camera.pos[2].toFixed(2);
+
+  // Write uniforms (WGSL std140-ish layout, 80 bytes)
+  const data = new ArrayBuffer(80);
+  const dv = new DataView(data);
+  dv.setFloat32(0,  canvas.width, true);
+  dv.setFloat32(4,  canvas.height, true);
+  dv.setFloat32(8,  time, true);
+  dv.setFloat32(12, amp, true);
+  dv.setFloat32(16, camera.pos[0], true);
+  dv.setFloat32(20, camera.pos[1], true);
+  dv.setFloat32(24, camera.pos[2], true);
+  dv.setFloat32(32, fwd[0], true);
+  dv.setFloat32(36, fwd[1], true);
+  dv.setFloat32(40, fwd[2], true);
+  dv.setFloat32(48, right[0], true);
+  dv.setFloat32(52, right[1], true);
+  dv.setFloat32(56, right[2], true);
+  dv.setFloat32(64, up[0], true);
+  dv.setFloat32(68, up[1], true);
+  dv.setFloat32(72, up[2], true);
+  device.queue.writeBuffer(uniformBuffer, 0, data);
+
+  // Render pass
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [{
+      view: context.getCurrentTexture().createView(),
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+      loadOp: 'clear',
+      storeOp: 'store',
+    }],
+  });
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(3);
+  pass.end();
+  device.queue.submit([encoder.finish()]);
+
+  requestAnimationFrame(frame);
+}
+
+// ============================================
+// BOOT
+// ============================================
+(async () => {
+  const ok = await initWebGPU();
+  if (!ok) return;
+  resize();
+  lastTime = performance.now();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

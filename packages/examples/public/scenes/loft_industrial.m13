@@ -1,0 +1,51 @@
+# loft_industrial — espacio industrial mexicano cálido
+version: "0.1"
+name: loft_industrial
+description: "Loft industrial con lámpara colgante dorada"
+
+bounds: [5, 3, 5]
+spawn: [0, 0, -3.5]
+
+ambient:
+  background: [0.04, 0.035, 0.03]
+  ambientColor: [0.06, 0.055, 0.05]
+  tint: [1.05, 0.98, 0.88]
+  fogColor: [0.04, 0.035, 0.03]
+  fogDensity: 0.02
+
+light:
+  position: [0, 1.5, 0]
+  color: [1.0, 0.85, 0.6]
+  intensity: 1.4
+
+walls:
+  concept: pared_ladrillo_viejo
+
+floor:
+  concept: piso_concreto_industrial
+
+ceiling:
+  concept: pared_yeso_blanco
+
+objects:
+  - id: lampara_colgante
+    kind: sphere
+    position: [0, 1.5, 0]
+    scale: 0.18
+    material: metal_dorado_pulido
+    animate:
+      mode: bob
+      speed: 1.5
+      amplitude: 0.02
+
+  - id: butaca
+    kind: round_box
+    position: [-2, -2.3, 1]
+    scale: [0.6, 0.5, 0.6]
+    material: cuero_vintage
+
+  - id: mesa_centro
+    kind: round_box
+    position: [0, -2.5, 0]
+    scale: [1.0, 0.4, 0.6]
+    material: piso_madera_envejecida

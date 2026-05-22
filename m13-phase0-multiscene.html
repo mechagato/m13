@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>m13 · phase 0.2 — multiverso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0908;
+    --accent: #c9a227;
+    --accent-dim: #6b5618;
+    --signal: #5fdb7f;
+    --critical: #d04545;
+    --text: #d8d2c4;
+    --text-dim: #6a6258;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    overflow: hidden; height: 100vh; width: 100vw;
+    position: fixed; inset: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.79 0 0 0 0 0.64 0 0 0 0 0.15 0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.06; mix-blend-mode: overlay;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 99;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 3px);
+  }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  .hud {
+    position: fixed; pointer-events: none; z-index: 10;
+    font-size: 11px; line-height: 1.4; letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .hud .label { color: var(--text-dim); }
+  .hud .value { color: var(--accent); font-weight: 500; }
+  .corner {
+    position: fixed; width: 20px; height: 20px;
+    border: 1px solid var(--accent); z-index: 11; pointer-events: none;
+  }
+  .corner.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+  .corner.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+  .corner.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+  .corner.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+  .hud-header { top: 24px; left: 24px; max-width: 360px; }
+  .hud-header .title {
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.15em; margin-bottom: 4px;
+  }
+  .hud-header .subtitle { color: var(--text-dim); font-size: 10px; margin-bottom: 12px; }
+  .hud-header .scene-name {
+    color: var(--signal); font-weight: 500;
+    font-size: 11px; margin-bottom: 8px;
+  }
+  .hud-header .desc {
+    color: var(--text); font-size: 10px; text-transform: none;
+    letter-spacing: 0; line-height: 1.5; opacity: 0.7;
+  }
+  .hud-stats { top: 24px; right: 24px; text-align: right; min-width: 220px; }
+  .hud-stats .row { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; }
+  .hud-stats .divider { height: 1px; background: var(--accent-dim); margin: 8px 0; opacity: 0.4; }
+  .hud-controls { bottom: 24px; left: 24px; }
+  .hud-controls .key {
+    display: inline-block; border: 1px solid var(--accent-dim);
+    padding: 1px 6px; margin-right: 4px; color: var(--accent); font-size: 10px;
+  }
+  .hud-controls .row { padding: 3px 0; color: var(--text-dim); }
+  .hud-tag { bottom: 24px; right: 24px; text-align: right; color: var(--text-dim); }
+  .hud-tag .v { color: var(--accent); }
+
+  /* Scene selector */
+  .scene-selector {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(10, 9, 8, 0.7);
+    border: 1px solid var(--accent-dim);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+  .scene-selector button {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+  }
+  .scene-selector button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .scene-selector button.active {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .scene-selector .num {
+    display: inline-block;
+    margin-right: 6px;
+    opacity: 0.6;
+  }
+  .scene-selector button.active .num {
+    opacity: 0.7;
+  }
+
+  .click-prompt {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); z-index: 20;
+    text-align: center; pointer-events: none;
+    transition: opacity 0.3s; text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .click-prompt.hidden { opacity: 0; }
+  .click-prompt .box {
+    border: 1px solid var(--accent); padding: 18px 28px;
+    background: rgba(10, 9, 8, 0.7); backdrop-filter: blur(4px);
+  }
+  .click-prompt .main { font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 6px; }
+  .click-prompt .sub { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+  .crosshair {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); width: 14px; height: 14px;
+    z-index: 15; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  }
+  .crosshair.active { opacity: 0.5; }
+  .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--accent); }
+  .crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+  .crosshair::after { top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%); }
+  .error-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .error-screen.show { display: flex; }
+  .error-screen .panel {
+    border: 1px solid var(--critical); padding: 32px;
+    max-width: 560px; background: rgba(208, 69, 69, 0.05);
+  }
+  .error-screen h1 {
+    color: var(--critical); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.2em; margin-bottom: 16px; text-transform: uppercase;
+  }
+  .error-screen p { color: var(--text); font-size: 12px; line-height: 1.6; margin-bottom: 12px; }
+  .error-screen code {
+    background: rgba(255,255,255,0.05); padding: 2px 6px;
+    color: var(--accent); font-size: 11px;
+  }
+  .audio-status.active { color: var(--signal) !important; }
+</style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="crosshair" id="crosshair"></div>
+
+  <div class="hud hud-header">
+    <div class="title">m13 · phase 0.2</div>
+    <div class="subtitle">multiverso sdf · 5 escenas</div>
+    <div class="scene-name" id="sceneName">sala_sdf</div>
+    <div class="desc" id="sceneDesc">
+      Cuarto residencial con ladrillo + madera + esfera dorada audio-reactiva.
+    </div>
+  </div>
+
+  <div class="hud hud-stats">
+    <div class="row"><span class="label">fps</span><span class="value" id="fps">--</span></div>
+    <div class="row"><span class="label">ms/frame</span><span class="value" id="ms">--</span></div>
+    <div class="row"><span class="label">resolution</span><span class="value" id="res">--</span></div>
+    <div class="divider"></div>
+    <div class="row"><span class="label">cam x</span><span class="value" id="cx">--</span></div>
+    <div class="row"><span class="label">cam y</span><span class="value" id="cy">--</span></div>
+    <div class="row"><span class="label">cam z</span><span class="value" id="cz">--</span></div>
+    <div class="divider"></div>
+    <div class="row"><span class="label">audio</span><span class="value audio-status" id="audio">offline</span></div>
+    <div class="row"><span class="label">amplitude</span><span class="value" id="amp">0.00</span></div>
+  </div>
+
+  <div class="hud hud-controls">
+    <div class="row"><span class="key">click</span> capturar cursor</div>
+    <div class="row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> moverse</div>
+    <div class="row"><span class="key">SPACE</span><span class="key">SHIFT</span> arriba/abajo</div>
+    <div class="row"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span> cambiar escena</div>
+    <div class="row"><span class="key">M</span> mic on/off &nbsp;&nbsp; <span class="key">ESC</span> liberar</div>
+  </div>
+
+  <div class="hud hud-tag">
+    <div>neonodos · <span class="v">research</span></div>
+    <div>v0.2.0-multiscene</div>
+  </div>
+
+  <div class="scene-selector">
+    <button class="active" data-scene="0"><span class="num">1</span>sala</button>
+    <button data-scene="1"><span class="num">2</span>galería</button>
+    <button data-scene="2"><span class="num">3</span>cocina</button>
+    <button data-scene="3"><span class="num">4</span>templo</button>
+    <button data-scene="4"><span class="num">5</span>atelier</button>
+  </div>
+
+  <div class="click-prompt" id="prompt">
+    <div class="box">
+      <div class="main">click para entrar</div>
+      <div class="sub">wasd + mouse + 1-5 para escenas</div>
+    </div>
+  </div>
+
+  <div class="error-screen" id="errorScreen">
+    <div class="panel">
+      <h1>:: webgpu no disponible ::</h1>
+      <p>Este demo requiere <code>WebGPU</code>, soportado en:</p>
+      <p style="margin-left: 12px;">→ Chrome 113+ / Edge 113+ desktop o Android<br>→ Safari Technology Preview con flag<br>→ Quest 3 navegador (Chromium)</p>
+      <p style="margin-top: 16px;">Detalle: <code id="errorMsg">--</code></p>
+    </div>
+  </div>
+
+<script type="module">
+// ============================================
+// m13 — Phase 0.2 — Multiverso SDF
+// ============================================
+
+const canvas = document.getElementById('canvas');
+const errorScreen = document.getElementById('errorScreen');
+const errorMsg = document.getElementById('errorMsg');
+const prompt = document.getElementById('prompt');
+const crosshair = document.getElementById('crosshair');
+const fpsEl = document.getElementById('fps');
+const msEl = document.getElementById('ms');
+const resEl = document.getElementById('res');
+const cxEl = document.getElementById('cx');
+const cyEl = document.getElementById('cy');
+const czEl = document.getElementById('cz');
+const audioEl = document.getElementById('audio');
+const ampEl = document.getElementById('amp');
+const sceneNameEl = document.getElementById('sceneName');
+const sceneDescEl = document.getElementById('sceneDesc');
+
+const SCENES = [
+  {
+    id: 0,
+    name: 'sala_sdf',
+    desc: 'Cuarto residencial con ladrillo + madera + esfera dorada audio-reactiva. La escena fundacional.',
+    spawn: [0, 0, -3.5],
+    bounds: [4.5, 2.7, 4.5],
+  },
+  {
+    id: 1,
+    name: 'galería',
+    desc: 'Espacio minimalista con paredes de yeso, piso de mármol, tres esculturas geométricas sobre pedestales y tragaluces cenitales.',
+    spawn: [0, 0, -3.5],
+    bounds: [6.5, 3.2, 4.5],
+  },
+  {
+    id: 2,
+    name: 'cocina_loft',
+    desc: 'Industrial mexicano. Isla central, lámparas colgantes triples, estantería en pared de ladrillo, piso de concreto pulido.',
+    spawn: [0, 0, -4.0],
+    bounds: [5.5, 2.7, 5.5],
+  },
+  {
+    id: 3,
+    name: 'templo_mexica',
+    desc: 'Estética prehispánica. Pirámide escalonada al fondo, columnas talladas, brasero central con flama audio-reactiva. Piedra volcánica.',
+    spawn: [0, -1.5, -4.5],
+    bounds: [5.5, 3.7, 5.5],
+  },
+  {
+    id: 4,
+    name: 'atelier',
+    desc: 'Estudio creativo. Ventanal grande al norte (luz natural fría), mesa de trabajo larga, caballete con lienzo, lámpara de arquitecto.',
+    spawn: [2, 0, -2.5],
+    bounds: [4.5, 2.7, 3.5],
+  },
+];
+
+let currentScene = 0;
+
+function fail(msg) {
+  errorMsg.textContent = msg;
+  errorScreen.classList.add('show');
+  console.error('[m13]', msg);
+}
+
+if (!navigator.gpu) {
+  fail('navigator.gpu undefined — activa WebGPU o usa Chrome/Edge 113+');
+  throw new Error('No WebGPU');
+}
+
+// ============================================
+// SHADER WGSL — 5 escenas dispatched
+// ============================================
+const SHADER = `
+struct Uniforms {
+  resolution: vec2<f32>,
+  time: f32,
+  audioAmp: f32,
+  camPos: vec3<f32>,
+  sceneId: u32,
+  camDir: vec3<f32>,
+  _p1: f32,
+  camRight: vec3<f32>,
+  _p2: f32,
+  camUp: vec3<f32>,
+  _p3: f32,
+};
+
+@group(0) @binding(0) var<uniform> u: Uniforms;
+
+@vertex
+fn vs_main(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4<f32> {
+  var pos = array<vec2<f32>, 3>(
+    vec2<f32>(-1.0, -1.0),
+    vec2<f32>( 3.0, -1.0),
+    vec2<f32>(-1.0,  3.0)
+  );
+  return vec4<f32>(pos[vi], 0.0, 1.0);
+}
+
+// ---------- SDF PRIMITIVES ----------
+fn sdBox(p: vec3<f32>, b: vec3<f32>) -> f32 {
+  let q = abs(p) - b;
+  return length(max(q, vec3<f32>(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+fn sdSphere(p: vec3<f32>, r: f32) -> f32 { return length(p) - r; }
+fn sdRoundBox(p: vec3<f32>, b: vec3<f32>, r: f32) -> f32 {
+  let q = abs(p) - b + vec3<f32>(r);
+  return length(max(q, vec3<f32>(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0) - r;
+}
+fn sdCylinder(p: vec3<f32>, h: f32, r: f32) -> f32 {
+  let d = vec2<f32>(length(p.xz) - r, abs(p.y) - h);
+  return min(max(d.x, d.y), 0.0) + length(max(d, vec2<f32>(0.0)));
+}
+fn sdTorus(p: vec3<f32>, t: vec2<f32>) -> f32 {
+  let q = vec2<f32>(length(p.xz) - t.x, p.y);
+  return length(q) - t.y;
+}
+fn opSub(a: f32, b: f32) -> f32 { return max(-b, a); }
+fn opUnion(a: f32, b: f32) -> f32 { return min(a, b); }
+fn opSmoothUnion(a: f32, b: f32, k: f32) -> f32 {
+  let h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+  return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+// ---------- HASH + NOISE ----------
+fn hash3(p: vec3<f32>) -> f32 {
+  var p3 = fract(p * 0.1031);
+  p3 = p3 + dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+fn noise3(p: vec3<f32>) -> f32 {
+  let i = floor(p);
+  let f = fract(p);
+  let u = f * f * (3.0 - 2.0 * f);
+  let n000 = hash3(i);
+  let n100 = hash3(i + vec3<f32>(1.0, 0.0, 0.0));
+  let n010 = hash3(i + vec3<f32>(0.0, 1.0, 0.0));
+  let n110 = hash3(i + vec3<f32>(1.0, 1.0, 0.0));
+  let n001 = hash3(i + vec3<f32>(0.0, 0.0, 1.0));
+  let n101 = hash3(i + vec3<f32>(1.0, 0.0, 1.0));
+  let n011 = hash3(i + vec3<f32>(0.0, 1.0, 1.0));
+  let n111 = hash3(i + vec3<f32>(1.0, 1.0, 1.0));
+  let nx00 = mix(n000, n100, u.x);
+  let nx10 = mix(n010, n110, u.x);
+  let nx01 = mix(n001, n101, u.x);
+  let nx11 = mix(n011, n111, u.x);
+  return mix(mix(nx00, nx10, u.y), mix(nx01, nx11, u.y), u.z);
+}
+fn fbm(p: vec3<f32>, octaves: i32) -> f32 {
+  var total: f32 = 0.0;
+  var amp: f32 = 0.5;
+  var freq: f32 = 1.0;
+  for (var i = 0; i < octaves; i++) {
+    total = total + amp * noise3(p * freq);
+    amp = amp * 0.5;
+    freq = freq * 2.0;
+  }
+  return total;
+}
+
+// ============================================
+// ESCENA 0 — SALA SDF (residencial)
+// ============================================
+fn mapSala(p: vec3<f32>) -> f32 {
+  let room = -sdBox(p, vec3<f32>(5.0, 3.0, 5.0));
+  let windowPos = p - vec3<f32>(0.0, 0.5, 5.0);
+  let windowCut = sdBox(windowPos, vec3<f32>(1.4, 1.0, 0.5));
+  let roomWithWindow = opSub(room, windowCut);
+  let pedestal = sdRoundBox(p - vec3<f32>(0.0, -2.4, 0.0), vec3<f32>(0.5, 0.4, 0.5), 0.05);
+  let bob = sin(u.time * 0.6) * 0.15 + u.audioAmp * 0.1;
+  let sphere = sdSphere(p - vec3<f32>(0.0, -1.5 + bob, 0.0), 0.45 + u.audioAmp * 0.05);
+  return opUnion(opUnion(roomWithWindow, pedestal), sphere);
+}
+
+// ============================================
+// ESCENA 1 — GALERÍA (minimalista)
+// ============================================
+fn mapGaleria(p: vec3<f32>) -> f32 {
+  let room = -sdBox(p, vec3<f32>(7.0, 3.5, 5.0));
+  // Tragaluces cenitales (cortes en techo)
+  let sky1 = sdBox(p - vec3<f32>(-3.0, 3.5, 0.0), vec3<f32>(0.8, 0.6, 1.5));
+  let sky2 = sdBox(p - vec3<f32>(3.0, 3.5, 0.0), vec3<f32>(0.8, 0.6, 1.5));
+  let roomFinal = opSub(opSub(room, sky1), sky2);
+
+  // 3 pedestales
+  let ped1 = sdRoundBox(p - vec3<f32>(-3.0, -2.5, 0.0), vec3<f32>(0.4, 0.5, 0.4), 0.02);
+  let ped2 = sdRoundBox(p - vec3<f32>(0.0, -2.5, -2.0), vec3<f32>(0.4, 0.5, 0.4), 0.02);
+  let ped3 = sdRoundBox(p - vec3<f32>(3.0, -2.5, 0.0), vec3<f32>(0.4, 0.5, 0.4), 0.02);
+
+  // Esculturas
+  let sc1 = sdSphere(p - vec3<f32>(-3.0, -1.5 + sin(u.time * 0.4) * 0.05, 0.0), 0.4);
+  let sc2 = sdTorus(p - vec3<f32>(0.0, -1.5, -2.0), vec2<f32>(0.35, 0.12));
+  let sc3 = sdRoundBox(p - vec3<f32>(3.0, -1.5 + sin(u.time * 0.5 + 2.0) * 0.1, 0.0), vec3<f32>(0.3, 0.3, 0.3), 0.03);
+
+  let peds = opUnion(opUnion(ped1, ped2), ped3);
+  let scs = opUnion(opUnion(sc1, sc2), sc3);
+  return opUnion(opUnion(roomFinal, peds), scs);
+}
+
+// ============================================
+// ESCENA 2 — COCINA LOFT (industrial)
+// ============================================
+fn mapCocina(p: vec3<f32>) -> f32 {
+  let room = -sdBox(p, vec3<f32>(6.0, 3.0, 6.0));
+
+  // Isla central con encimera
+  let islandBase = sdRoundBox(p - vec3<f32>(0.0, -1.8, 0.0), vec3<f32>(1.5, 0.7, 0.7), 0.05);
+  let islandTop = sdRoundBox(p - vec3<f32>(0.0, -1.1, 0.0), vec3<f32>(1.6, 0.04, 0.8), 0.02);
+  let island = opUnion(islandBase, islandTop);
+
+  // 3 lámparas colgantes
+  let lampY = 1.5 + sin(u.time * 1.5) * 0.015;
+  let lamp1 = sdSphere(p - vec3<f32>(-1.0, lampY, 0.0), 0.16);
+  let lamp2 = sdSphere(p - vec3<f32>(0.0, lampY, 0.0), 0.16);
+  let lamp3 = sdSphere(p - vec3<f32>(1.0, lampY, 0.0), 0.16);
+  // Cables hacia el techo
+  let cable1 = sdCylinder(p - vec3<f32>(-1.0, 2.2, 0.0), 0.6, 0.01);
+  let cable2 = sdCylinder(p - vec3<f32>(0.0, 2.2, 0.0), 0.6, 0.01);
+  let cable3 = sdCylinder(p - vec3<f32>(1.0, 2.2, 0.0), 0.6, 0.01);
+
+  // 3 estantes en pared este (x = +6)
+  let shelf1 = sdRoundBox(p - vec3<f32>(5.6, 0.6, 0.0), vec3<f32>(0.1, 0.03, 1.5), 0.01);
+  let shelf2 = sdRoundBox(p - vec3<f32>(5.6, 0.0, 0.0), vec3<f32>(0.1, 0.03, 1.5), 0.01);
+  let shelf3 = sdRoundBox(p - vec3<f32>(5.6, -0.6, 0.0), vec3<f32>(0.1, 0.03, 1.5), 0.01);
+
+  let lamps = opUnion(opUnion(lamp1, lamp2), lamp3);
+  let cables = opUnion(opUnion(cable1, cable2), cable3);
+  let shelves = opUnion(opUnion(shelf1, shelf2), shelf3);
+  return opUnion(opUnion(opUnion(opUnion(room, island), lamps), cables), shelves);
+}
+
+// ============================================
+// ESCENA 3 — TEMPLO MEXICA (prehispánico)
+// ============================================
+fn mapTemplo(p: vec3<f32>) -> f32 {
+  let room = -sdBox(p, vec3<f32>(6.0, 4.0, 6.0));
+
+  // Pirámide escalonada (4 niveles)
+  let pp = p - vec3<f32>(0.0, -3.5, 4.0);
+  let py1 = sdRoundBox(pp - vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(2.2, 0.3, 0.9), 0.02);
+  let py2 = sdRoundBox(pp - vec3<f32>(0.0, 0.55, 0.0), vec3<f32>(1.7, 0.25, 0.7), 0.02);
+  let py3 = sdRoundBox(pp - vec3<f32>(0.0, 1.05, 0.0), vec3<f32>(1.2, 0.25, 0.55), 0.02);
+  let py4 = sdRoundBox(pp - vec3<f32>(0.0, 1.55, 0.0), vec3<f32>(0.7, 0.25, 0.4), 0.02);
+  let pyramid = opUnion(opUnion(opUnion(py1, py2), py3), py4);
+
+  // Brasero central
+  let braseroBase = sdCylinder(p - vec3<f32>(0.0, -2.7, 0.0), 0.2, 0.4);
+  let flicker = sin(u.time * 8.0) * 0.04 + sin(u.time * 13.0) * 0.025;
+  let flameY = -2.2 + flicker + u.audioAmp * 0.18;
+  let flame = sdSphere(p - vec3<f32>(0.0, flameY, 0.0), 0.28 + u.audioAmp * 0.06);
+  let brasero = opUnion(braseroBase, flame);
+
+  // 4 columnas
+  let col1 = sdCylinder(p - vec3<f32>(-4.5, 0.0, -3.5), 4.0, 0.35);
+  let col2 = sdCylinder(p - vec3<f32>(4.5, 0.0, -3.5), 4.0, 0.35);
+  let col3 = sdCylinder(p - vec3<f32>(-4.5, 0.0, 3.5), 4.0, 0.35);
+  let col4 = sdCylinder(p - vec3<f32>(4.5, 0.0, 3.5), 4.0, 0.35);
+  let cols = opUnion(opUnion(col1, col2), opUnion(col3, col4));
+
+  return opUnion(opUnion(opUnion(room, pyramid), brasero), cols);
+}
+
+// ============================================
+// ESCENA 4 — ATELIER (estudio creativo)
+// ============================================
+fn mapAtelier(p: vec3<f32>) -> f32 {
+  let room = -sdBox(p, vec3<f32>(5.0, 3.0, 4.0));
+
+  // Ventanal grande pared norte
+  let windowPos = p - vec3<f32>(0.0, 0.5, 4.0);
+  let windowCut = sdBox(windowPos, vec3<f32>(3.0, 1.5, 0.5));
+  let roomWindow = opSub(room, windowCut);
+
+  // Mesa de trabajo
+  let tableTop = sdRoundBox(p - vec3<f32>(-2.5, -1.85, 0.0), vec3<f32>(1.8, 0.05, 0.9), 0.02);
+  let leg1 = sdRoundBox(p - vec3<f32>(-4.2, -2.4, -0.8), vec3<f32>(0.05, 0.55, 0.05), 0.01);
+  let leg2 = sdRoundBox(p - vec3<f32>(-0.85, -2.4, -0.8), vec3<f32>(0.05, 0.55, 0.05), 0.01);
+  let leg3 = sdRoundBox(p - vec3<f32>(-4.2, -2.4, 0.8), vec3<f32>(0.05, 0.55, 0.05), 0.01);
+  let leg4 = sdRoundBox(p - vec3<f32>(-0.85, -2.4, 0.8), vec3<f32>(0.05, 0.55, 0.05), 0.01);
+  let legs = opUnion(opUnion(leg1, leg2), opUnion(leg3, leg4));
+
+  // Lámpara de arquitecto (esfera pequeña encendida)
+  let lampHead = sdSphere(p - vec3<f32>(-2.5, -1.0, 0.0), 0.12);
+  let lampArm = sdCylinder(p - vec3<f32>(-2.5, -1.45, 0.0), 0.4, 0.015);
+
+  // Caballete con lienzo
+  let canvasPlane = sdRoundBox(p - vec3<f32>(2.0, -0.8, 0.0), vec3<f32>(0.7, 0.9, 0.03), 0.02);
+  let easel1 = sdCylinder(p - vec3<f32>(1.6, -1.5, 0.4), 1.2, 0.025);
+  let easel2 = sdCylinder(p - vec3<f32>(2.4, -1.5, 0.4), 1.2, 0.025);
+  let easel3 = sdCylinder(p - vec3<f32>(2.0, -1.5, -0.5), 1.2, 0.025);
+  let easels = opUnion(opUnion(easel1, easel2), easel3);
+
+  return opUnion(opUnion(opUnion(opUnion(opUnion(roomWindow, tableTop), legs), opUnion(lampHead, lampArm)), canvasPlane), easels);
+}
+
+// ============================================
+// DISPATCH
+// ============================================
+fn map(p: vec3<f32>) -> f32 {
+  if (u.sceneId == 1u) { return mapGaleria(p); }
+  if (u.sceneId == 2u) { return mapCocina(p); }
+  if (u.sceneId == 3u) { return mapTemplo(p); }
+  if (u.sceneId == 4u) { return mapAtelier(p); }
+  return mapSala(p);
+}
+
+fn calcNormal(p: vec3<f32>) -> vec3<f32> {
+  let e = vec2<f32>(0.0005, 0.0);
+  return normalize(vec3<f32>(
+    map(p + e.xyy) - map(p - e.xyy),
+    map(p + e.yxy) - map(p - e.yxy),
+    map(p + e.yyx) - map(p - e.yyx)
+  ));
+}
+
+struct Hit { t: f32, hit: bool };
+
+fn raymarch(ro: vec3<f32>, rd: vec3<f32>) -> Hit {
+  var t: f32 = 0.001;
+  var out: Hit;
+  out.hit = false;
+  for (var i = 0; i < 128; i++) {
+    let p = ro + rd * t;
+    let d = map(p);
+    if (abs(d) < 0.001) {
+      out.hit = true;
+      out.t = t;
+      return out;
+    }
+    if (t > 80.0) { break; }
+    t = t + d * 0.7;
+  }
+  out.t = t;
+  return out;
+}
+
+fn softShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) -> f32 {
+  var res: f32 = 1.0;
+  var t: f32 = mint;
+  for (var i = 0; i < 32; i++) {
+    if (t > maxt) { break; }
+    let h = map(ro + rd * t);
+    if (h < 0.001) { return 0.0; }
+    res = min(res, k * h / t);
+    t = t + h * 0.7;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
+  var occ: f32 = 0.0;
+  var sca: f32 = 1.0;
+  for (var i = 0; i < 5; i++) {
+    let h = 0.01 + 0.15 * f32(i) / 4.0;
+    let d = map(p + n * h);
+    occ = occ + (h - d) * sca;
+    sca = sca * 0.9;
+  }
+  return clamp(1.0 - 2.0 * occ, 0.0, 1.0);
+}
+
+// ============================================
+// MATERIALES POR ESCENA
+// ============================================
+fn materialSala(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  if (n.y > 0.7 && p.y < -2.5) {
+    let wood = sin(p.x * 4.0 + noise3(p * 1.5)) * 0.5 + 0.5;
+    let grain = fbm(p * vec3<f32>(20.0, 5.0, 20.0), 3);
+    return mix(vec3<f32>(0.32, 0.18, 0.10), vec3<f32>(0.52, 0.35, 0.20), wood) + vec3<f32>(grain * 0.05);
+  }
+  if (n.y < -0.7) {
+    let t = fbm(p * 10.0, 3) * 0.1;
+    return vec3<f32>(0.88 - t, 0.86 - t, 0.82 - t);
+  }
+  if (length(p.xz) < 0.6 && p.y < -1.9) {
+    let speckle = noise3(p * 50.0) * 0.1;
+    return vec3<f32>(0.45 + speckle, 0.42 + speckle, 0.40 + speckle);
+  }
+  if (length(p - vec3<f32>(0.0, -1.5, 0.0)) < 0.7) {
+    let pulse = u.audioAmp * 0.6;
+    let shimmer = fbm(p * 8.0 + vec3<f32>(u.time * 0.3, 0.0, 0.0), 4);
+    return vec3<f32>(0.82, 0.65, 0.18) * (0.7 + shimmer * 0.3 + pulse);
+  }
+  let brick = fbm(p * (4.0 + u.audioAmp * 3.0), 4);
+  let mortarH = fract(p.y * 3.0);
+  let mortarV = fract(p.x * 1.5 + step(0.5, mortarH) * 0.5);
+  let mortar = clamp(step(0.92, mortarH) + step(0.95, mortarV), 0.0, 1.0);
+  return mix(mix(vec3<f32>(0.55, 0.30, 0.22), vec3<f32>(0.42, 0.22, 0.16), brick), vec3<f32>(0.35, 0.32, 0.28), mortar);
+}
+
+fn materialGaleria(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  // Piso de mármol blanco con vetas grises
+  if (n.y > 0.7 && p.y < -3.0) {
+    let vein = fbm(p * vec3<f32>(2.0, 0.5, 2.0), 4);
+    let v = smoothstep(0.4, 0.55, vein);
+    return mix(vec3<f32>(0.92, 0.91, 0.88), vec3<f32>(0.55, 0.55, 0.58), v * 0.6);
+  }
+  // Techo blanco puro
+  if (n.y < -0.7) {
+    return vec3<f32>(0.95, 0.94, 0.92);
+  }
+  // Pedestales mármol negro
+  if (abs(p.y + 2.5) < 0.6 && (abs(p.x + 3.0) < 0.5 || abs(p.x - 3.0) < 0.5 || (abs(p.x) < 0.5 && abs(p.z + 2.0) < 0.5))) {
+    return vec3<f32>(0.15, 0.14, 0.13);
+  }
+  // Escultura izquierda — esfera blanca pulida
+  if (length(p - vec3<f32>(-3.0, -1.5, 0.0)) < 0.5) {
+    let sheen = fbm(p * 20.0, 3) * 0.05;
+    return vec3<f32>(0.88, 0.86, 0.83) + vec3<f32>(sheen);
+  }
+  // Escultura centro — torus dorado
+  if (abs(p.x) < 0.5 && abs(p.z + 2.0) < 0.5 && p.y > -2.0 && p.y < -1.0) {
+    return vec3<f32>(0.85, 0.68, 0.22);
+  }
+  // Escultura derecha — cubo grafito
+  if (length(p - vec3<f32>(3.0, -1.5, 0.0)) < 0.6) {
+    let t = noise3(p * 30.0) * 0.05;
+    return vec3<f32>(0.20 + t, 0.20 + t, 0.22 + t);
+  }
+  // Paredes yeso blanco con luz cenital
+  let t = fbm(p * 8.0, 3) * 0.08;
+  return vec3<f32>(0.93 - t, 0.92 - t, 0.90 - t);
+}
+
+fn materialCocina(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  // Piso concreto pulido
+  if (n.y > 0.7 && p.y < -2.5) {
+    let speckle = fbm(p * 15.0, 4);
+    let stain = fbm(p * 2.0, 3) * 0.1;
+    return vec3<f32>(0.42 + speckle * 0.15 - stain, 0.41 + speckle * 0.15 - stain, 0.40 + speckle * 0.15 - stain);
+  }
+  // Techo blanco crudo
+  if (n.y < -0.7) {
+    return vec3<f32>(0.85, 0.84, 0.82);
+  }
+  // Isla central — encimera mármol oscuro
+  if (abs(p.x) < 1.7 && abs(p.z) < 0.85 && p.y > -1.2 && p.y < -1.0) {
+    let vein = fbm(p * vec3<f32>(3.0, 0.5, 3.0), 4);
+    let v = smoothstep(0.4, 0.6, vein);
+    return mix(vec3<f32>(0.12, 0.12, 0.14), vec3<f32>(0.45, 0.45, 0.48), v * 0.5);
+  }
+  // Base isla — madera oscura
+  if (abs(p.x) < 1.6 && abs(p.z) < 0.75 && p.y < -1.1) {
+    let wood = sin(p.x * 6.0 + noise3(p * 2.0)) * 0.3 + 0.5;
+    return mix(vec3<f32>(0.18, 0.10, 0.06), vec3<f32>(0.32, 0.20, 0.12), wood);
+  }
+  // Lámparas — emisión cálida brillante
+  if (p.y > 1.3 && abs(p.y - 1.5) < 0.2) {
+    for (var i: i32 = -1; i <= 1; i++) {
+      let cx = f32(i);
+      if (length(p - vec3<f32>(cx, 1.5, 0.0)) < 0.2) {
+        return vec3<f32>(1.4, 1.2, 0.9);
+      }
+    }
+  }
+  // Estantes — metal oscuro
+  if (p.x > 5.4 && abs(p.z) < 1.6) {
+    return vec3<f32>(0.18, 0.17, 0.16);
+  }
+  // Paredes ladrillo industrial
+  let brick = fbm(p * 5.0, 4);
+  let mortarH = fract(p.y * 3.5);
+  let mortarV = fract(p.x * 1.7 + step(0.5, mortarH) * 0.5);
+  let mortar = clamp(step(0.93, mortarH) + step(0.96, mortarV), 0.0, 1.0);
+  return mix(mix(vec3<f32>(0.48, 0.28, 0.22), vec3<f32>(0.32, 0.18, 0.14), brick), vec3<f32>(0.25, 0.23, 0.21), mortar);
+}
+
+fn materialTemplo(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  // Piso piedra volcánica oscura con losas
+  if (n.y > 0.7 && p.y < -3.5) {
+    let losaX = fract(p.x * 0.4);
+    let losaZ = fract(p.z * 0.4);
+    let join = step(0.95, losaX) + step(0.95, losaZ);
+    let rock = fbm(p * 8.0, 4);
+    let base = mix(vec3<f32>(0.18, 0.16, 0.14), vec3<f32>(0.25, 0.22, 0.19), rock);
+    return mix(base, vec3<f32>(0.08, 0.07, 0.06), clamp(join, 0.0, 1.0));
+  }
+  // Techo piedra oscura
+  if (n.y < -0.7) {
+    let rock = fbm(p * 6.0, 4);
+    return mix(vec3<f32>(0.14, 0.12, 0.10), vec3<f32>(0.22, 0.19, 0.16), rock);
+  }
+  // Brasero base
+  if (length(p.xz) < 0.45 && p.y < -2.4) {
+    let stain = fbm(p * 15.0, 3) * 0.3;
+    return vec3<f32>(0.18 + stain * 0.2, 0.10 + stain * 0.1, 0.06);
+  }
+  // Flama — emisión naranja-amarilla pulsante
+  if (length(p - vec3<f32>(0.0, -2.2, 0.0)) < 0.4) {
+    let h = (p.y + 2.5) / 0.5;
+    let core = vec3<f32>(2.0, 1.4, 0.5);
+    let edge = vec3<f32>(1.6, 0.7, 0.2);
+    return mix(core, edge, clamp(h, 0.0, 1.0)) * (0.9 + u.audioAmp * 0.6);
+  }
+  // Pirámide — piedra tallada con relieves
+  if (p.z > 3.0 && abs(p.x) < 2.5 && p.y > -3.7 && p.y < -1.5) {
+    let carving = fbm(p * 4.0, 4) + sin(p.y * 8.0) * 0.05;
+    let base = mix(vec3<f32>(0.35, 0.28, 0.22), vec3<f32>(0.48, 0.38, 0.28), carving);
+    return base;
+  }
+  // Columnas — piedra clara tallada
+  if (length(vec2<f32>(abs(p.x) - 4.5, abs(p.z) - 3.5)) < 0.5) {
+    let carve = sin(p.y * 4.0) * 0.1 + fbm(p * 5.0, 3);
+    return mix(vec3<f32>(0.42, 0.36, 0.28), vec3<f32>(0.55, 0.47, 0.36), carve);
+  }
+  // Paredes piedra tallada con glifos sugeridos
+  let stone = fbm(p * 3.5, 5);
+  let glyph = step(0.65, fbm(p * vec3<f32>(2.0, 4.0, 2.0), 3));
+  let base = mix(vec3<f32>(0.32, 0.25, 0.19), vec3<f32>(0.45, 0.36, 0.26), stone);
+  return base - glyph * vec3<f32>(0.1, 0.08, 0.06);
+}
+
+fn materialAtelier(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  // Piso madera clara con vetas
+  if (n.y > 0.7 && p.y < -2.5) {
+    let wood = sin(p.x * 5.0 + noise3(p * 2.0) * 1.2) * 0.5 + 0.5;
+    let grain = fbm(p * vec3<f32>(25.0, 4.0, 25.0), 3);
+    return mix(vec3<f32>(0.58, 0.46, 0.32), vec3<f32>(0.72, 0.58, 0.42), wood) + vec3<f32>(grain * 0.04);
+  }
+  // Techo blanco con vigas sugeridas
+  if (n.y < -0.7) {
+    let beam = step(0.85, fract(p.x * 0.3));
+    return mix(vec3<f32>(0.92, 0.90, 0.86), vec3<f32>(0.45, 0.35, 0.25), beam * 0.5);
+  }
+  // Mesa de trabajo
+  if (p.x > -4.3 && p.x < -0.7 && p.y > -1.95 && p.y < -1.75 && abs(p.z) < 1.0) {
+    let wear = fbm(p * 8.0, 4);
+    return mix(vec3<f32>(0.42, 0.30, 0.20), vec3<f32>(0.55, 0.40, 0.28), wear);
+  }
+  // Patas de mesa — madera oscura
+  if (p.y < -1.85 && (length(p.xz - vec2<f32>(-4.2, -0.8)) < 0.1 || length(p.xz - vec2<f32>(-0.85, -0.8)) < 0.1 || length(p.xz - vec2<f32>(-4.2, 0.8)) < 0.1 || length(p.xz - vec2<f32>(-0.85, 0.8)) < 0.1)) {
+    return vec3<f32>(0.25, 0.18, 0.12);
+  }
+  // Lámpara — emisión cálida
+  if (length(p - vec3<f32>(-2.5, -1.0, 0.0)) < 0.15) {
+    return vec3<f32>(1.5, 1.3, 1.0);
+  }
+  // Caballete — madera natural
+  if (p.x > 1.3 && p.x < 2.7 && p.y > -1.7 && p.y < 0.0 && abs(p.z) < 0.6) {
+    if (length(p - vec3<f32>(2.0, -0.8, 0.0)) < 1.0 && abs(p.z) < 0.1) {
+      // Lienzo blanco con pintura sugerida
+      let paint = fbm(p * vec3<f32>(3.0, 3.0, 1.0), 4);
+      return mix(vec3<f32>(0.95, 0.93, 0.88), vec3<f32>(0.7, 0.4, 0.3), step(0.55, paint) * 0.5);
+    }
+    return vec3<f32>(0.55, 0.42, 0.28);
+  }
+  // Paredes yeso claro con leve textura
+  let plaster = fbm(p * 12.0, 3) * 0.08;
+  return vec3<f32>(0.86 - plaster, 0.84 - plaster, 0.80 - plaster);
+}
+
+fn material(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  if (u.sceneId == 1u) { return materialGaleria(p, n); }
+  if (u.sceneId == 2u) { return materialCocina(p, n); }
+  if (u.sceneId == 3u) { return materialTemplo(p, n); }
+  if (u.sceneId == 4u) { return materialAtelier(p, n); }
+  return materialSala(p, n);
+}
+
+// ============================================
+// CONFIGURACIÓN DE LUZ POR ESCENA
+// ============================================
+struct LightConf {
+  pos: vec3<f32>,
+  color: vec3<f32>,
+  intensity: f32,
+  ambient: vec3<f32>,
+  tint: vec3<f32>,
+  windowDir: vec3<f32>,
+  windowColor: vec3<f32>,
+  windowIntensity: f32,
+  fogColor: vec3<f32>,
+  fogDensity: f32,
+};
+
+fn getLight(id: u32) -> LightConf {
+  var lc: LightConf;
+  // Defaults (sala)
+  lc.pos = vec3<f32>(0.0, 2.5, 0.0);
+  lc.color = vec3<f32>(1.0, 0.92, 0.78);
+  lc.intensity = 1.0;
+  lc.ambient = vec3<f32>(0.08, 0.075, 0.07);
+  lc.tint = vec3<f32>(1.05, 1.0, 0.92);
+  lc.windowDir = normalize(vec3<f32>(0.0, 0.3, 1.0));
+  lc.windowColor = vec3<f32>(0.6, 0.55, 0.45);
+  lc.windowIntensity = 0.3;
+  lc.fogColor = vec3<f32>(0.05, 0.045, 0.04);
+  lc.fogDensity = 0.015;
+
+  if (id == 1u) {
+    // Galería: luz cenital fría difusa
+    lc.pos = vec3<f32>(0.0, 4.0, 0.0);
+    lc.color = vec3<f32>(0.95, 0.96, 1.0);
+    lc.intensity = 1.2;
+    lc.ambient = vec3<f32>(0.18, 0.19, 0.21);
+    lc.tint = vec3<f32>(0.98, 1.0, 1.02);
+    lc.windowDir = normalize(vec3<f32>(0.0, 1.0, 0.0));
+    lc.windowColor = vec3<f32>(0.9, 0.92, 1.0);
+    lc.windowIntensity = 0.5;
+    lc.fogColor = vec3<f32>(0.06, 0.065, 0.07);
+    lc.fogDensity = 0.008;
+  }
+  if (id == 2u) {
+    // Cocina loft: 3 lámparas calidas concentradas
+    lc.pos = vec3<f32>(0.0, 1.5, 0.0);
+    lc.color = vec3<f32>(1.0, 0.85, 0.6);
+    lc.intensity = 1.4;
+    lc.ambient = vec3<f32>(0.06, 0.055, 0.05);
+    lc.tint = vec3<f32>(1.05, 0.98, 0.88);
+    lc.windowDir = normalize(vec3<f32>(1.0, 0.2, 0.0));
+    lc.windowColor = vec3<f32>(0.3, 0.32, 0.4);
+    lc.windowIntensity = 0.15;
+    lc.fogColor = vec3<f32>(0.04, 0.035, 0.03);
+    lc.fogDensity = 0.02;
+  }
+  if (id == 3u) {
+    // Templo mexica: luz desde el brasero, dramática
+    lc.pos = vec3<f32>(0.0, -2.0, 0.0);
+    lc.color = vec3<f32>(1.4, 0.7, 0.25);
+    lc.intensity = 1.8;
+    lc.ambient = vec3<f32>(0.04, 0.025, 0.015);
+    lc.tint = vec3<f32>(1.15, 0.92, 0.7);
+    lc.windowDir = normalize(vec3<f32>(0.0, 1.0, 0.0));
+    lc.windowColor = vec3<f32>(0.3, 0.15, 0.08);
+    lc.windowIntensity = 0.2;
+    lc.fogColor = vec3<f32>(0.08, 0.04, 0.02);
+    lc.fogDensity = 0.025;
+  }
+  if (id == 4u) {
+    // Atelier: luz natural desde ventana norte, fría
+    lc.pos = vec3<f32>(-2.5, -1.0, 0.0);
+    lc.color = vec3<f32>(1.0, 0.88, 0.7);
+    lc.intensity = 0.7;
+    lc.ambient = vec3<f32>(0.12, 0.14, 0.18);
+    lc.tint = vec3<f32>(0.98, 1.0, 1.02);
+    lc.windowDir = normalize(vec3<f32>(0.0, 0.2, 1.0));
+    lc.windowColor = vec3<f32>(0.85, 0.92, 1.05);
+    lc.windowIntensity = 0.8;
+    lc.fogColor = vec3<f32>(0.06, 0.065, 0.07);
+    lc.fogDensity = 0.01;
+  }
+
+  return lc;
+}
+
+// ============================================
+// SHADING
+// ============================================
+fn shade(p: vec3<f32>, rd: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
+  let mat = material(p, n);
+  let lc = getLight(u.sceneId);
+
+  let toLight = lc.pos - p;
+  let lightDist = length(toLight);
+  let lightDir = toLight / lightDist;
+  let diff = max(dot(n, lightDir), 0.0);
+  let atten = 1.0 / (1.0 + 0.08 * lightDist + 0.02 * lightDist * lightDist);
+  let shadow = softShadow(p + n * 0.01, lightDir, 0.02, lightDist, 8.0);
+  let ao = calcAO(p, n);
+  let viewDir = -rd;
+  let halfDir = normalize(lightDir + viewDir);
+  let spec = pow(max(dot(n, halfDir), 0.0), 16.0) * 0.15;
+  let windowDiff = max(dot(n, lc.windowDir), 0.0) * lc.windowIntensity;
+
+  var col = mat * (lc.ambient * ao + diff * lc.color * atten * shadow * lc.intensity + vec3<f32>(spec) + windowDiff * lc.windowColor);
+  col = col * lc.tint;
+  return col;
+}
+
+@fragment
+fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
+  let uv = (fragCoord.xy * 2.0 - u.resolution) / u.resolution.y;
+  let uvFixed = vec2<f32>(uv.x, -uv.y);
+  let ro = u.camPos;
+  let rd = normalize(u.camDir + u.camRight * uvFixed.x + u.camUp * uvFixed.y);
+  let hit = raymarch(ro, rd);
+  var col: vec3<f32>;
+  let lc = getLight(u.sceneId);
+  if (hit.hit) {
+    let p = ro + rd * hit.t;
+    let n = calcNormal(p);
+    col = shade(p, rd, n);
+    let fog = 1.0 - exp(-hit.t * lc.fogDensity);
+    col = mix(col, lc.fogColor, fog * 0.3);
+  } else {
+    col = vec3<f32>(0.0);
+  }
+  col = col / (1.0 + col);
+  col = pow(col, vec3<f32>(0.4545));
+  let vignette = smoothstep(1.5, 0.5, length(uvFixed));
+  col = col * mix(0.85, 1.0, vignette);
+  return vec4<f32>(col, 1.0);
+}
+`;
+
+// ============================================
+// WEBGPU INIT
+// ============================================
+let device, context, format, pipeline, uniformBuffer, bindGroup;
+
+async function initWebGPU() {
+  try {
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+    if (!adapter) { fail('Sin adapter — GPU no soporta WebGPU'); return false; }
+    device = await adapter.requestDevice();
+    device.lost.then((info) => fail('Device perdido: ' + info.message));
+    context = canvas.getContext('webgpu');
+    format = navigator.gpu.getPreferredCanvasFormat();
+    context.configure({ device, format, alphaMode: 'opaque' });
+
+    uniformBuffer = device.createBuffer({
+      size: 80,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+
+    const module = device.createShaderModule({ code: SHADER });
+    pipeline = device.createRenderPipeline({
+      layout: 'auto',
+      vertex: { module, entryPoint: 'vs_main' },
+      fragment: { module, entryPoint: 'fs_main', targets: [{ format }] },
+      primitive: { topology: 'triangle-list' },
+    });
+    bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+    });
+    return true;
+  } catch (e) {
+    fail(e.message || String(e));
+    return false;
+  }
+}
+
+// ============================================
+// CÁMARA + INPUT
+// ============================================
+const camera = { pos: [0, 0, -3.5], yaw: 0, pitch: 0 };
+const input = { forward: false, back: false, left: false, right: false, up: false, down: false, locked: false };
+
+function switchScene(idx) {
+  if (idx < 0 || idx >= SCENES.length) return;
+  currentScene = idx;
+  const s = SCENES[idx];
+  camera.pos = [...s.spawn];
+  camera.yaw = 0;
+  camera.pitch = 0;
+  sceneNameEl.textContent = s.name;
+  sceneDescEl.textContent = s.desc;
+  document.querySelectorAll('.scene-selector button').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+}
+
+document.querySelectorAll('.scene-selector button').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    const idx = parseInt(btn.dataset.scene, 10);
+    switchScene(idx);
+  });
+});
+
+canvas.addEventListener('click', async () => {
+  try { await canvas.requestPointerLock({ unadjustedMovement: true }); }
+  catch { await canvas.requestPointerLock(); }
+});
+
+document.addEventListener('pointerlockchange', () => {
+  input.locked = document.pointerLockElement === canvas;
+  if (input.locked) { prompt.classList.add('hidden'); crosshair.classList.add('active'); }
+  else { prompt.classList.remove('hidden'); crosshair.classList.remove('active'); }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!input.locked) return;
+  const sens = 0.0025;
+  camera.yaw -= e.movementX * sens;
+  camera.pitch -= e.movementY * sens;
+  const lim = Math.PI / 2 - 0.05;
+  camera.pitch = Math.max(-lim, Math.min(lim, camera.pitch));
+});
+
+document.addEventListener('keydown', (e) => {
+  switch (e.code) {
+    case 'KeyW': input.forward = true; break;
+    case 'KeyS': input.back = true; break;
+    case 'KeyA': input.left = true; break;
+    case 'KeyD': input.right = true; break;
+    case 'Space': input.up = true; e.preventDefault(); break;
+    case 'ShiftLeft': case 'ShiftRight': input.down = true; break;
+    case 'KeyM': toggleAudio(); break;
+    case 'Digit1': switchScene(0); break;
+    case 'Digit2': switchScene(1); break;
+    case 'Digit3': switchScene(2); break;
+    case 'Digit4': switchScene(3); break;
+    case 'Digit5': switchScene(4); break;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  switch (e.code) {
+    case 'KeyW': input.forward = false; break;
+    case 'KeyS': input.back = false; break;
+    case 'KeyA': input.left = false; break;
+    case 'KeyD': input.right = false; break;
+    case 'Space': input.up = false; break;
+    case 'ShiftLeft': case 'ShiftRight': input.down = false; break;
+  }
+});
+
+// ============================================
+// AUDIO
+// ============================================
+let audioCtx = null, analyser = null, micStream = null, audioData = null, audioAmp = 0;
+
+async function toggleAudio() {
+  if (audioCtx) {
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    await audioCtx.close(); audioCtx = null; analyser = null; audioAmp = 0;
+    audioEl.textContent = 'offline'; audioEl.classList.remove('active');
+    return;
+  }
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    audioData = new Uint8Array(analyser.frequencyBinCount);
+    audioEl.textContent = 'live'; audioEl.classList.add('active');
+  } catch (e) {
+    audioEl.textContent = 'denied';
+  }
+}
+
+function sampleAudio() {
+  if (!analyser) return 0;
+  analyser.getByteFrequencyData(audioData);
+  let sum = 0;
+  for (let i = 0; i < audioData.length; i++) sum += audioData[i];
+  const avg = sum / audioData.length / 255;
+  audioAmp += (avg - audioAmp) * 0.15;
+  return audioAmp;
+}
+
+// ============================================
+// RESIZE
+// ============================================
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.floor(window.innerWidth * dpr);
+  canvas.height = Math.floor(window.innerHeight * dpr);
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  resEl.textContent = `${canvas.width}×${canvas.height}`;
+}
+window.addEventListener('resize', resize);
+
+// ============================================
+// RENDER LOOP
+// ============================================
+let lastTime = 0, fpsAccum = 0, fpsCount = 0, fpsTimer = 0;
+const t0 = performance.now();
+
+function frame(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  const time = (now - t0) / 1000;
+
+  fpsAccum += 1 / Math.max(dt, 0.0001);
+  fpsCount++;
+  fpsTimer += dt;
+  if (fpsTimer > 0.5) {
+    const fps = fpsAccum / fpsCount;
+    fpsEl.textContent = Math.round(fps).toString();
+    msEl.textContent = (1000 / fps).toFixed(1);
+    fpsAccum = 0; fpsCount = 0; fpsTimer = 0;
+  }
+
+  const cy = Math.cos(camera.yaw), sy = Math.sin(camera.yaw);
+  const cp = Math.cos(camera.pitch), sp = Math.sin(camera.pitch);
+  const fwd = [sy * cp, sp, -cy * cp];
+  const right = [cy, 0, sy];
+  const up = [
+    right[1] * fwd[2] - right[2] * fwd[1],
+    right[2] * fwd[0] - right[0] * fwd[2],
+    right[0] * fwd[1] - right[1] * fwd[0],
+  ];
+
+  const speed = 2.5 * dt;
+  if (input.forward) { camera.pos[0] += fwd[0] * speed; camera.pos[1] += fwd[1] * speed; camera.pos[2] += fwd[2] * speed; }
+  if (input.back)    { camera.pos[0] -= fwd[0] * speed; camera.pos[1] -= fwd[1] * speed; camera.pos[2] -= fwd[2] * speed; }
+  if (input.right)   { camera.pos[0] += right[0] * speed; camera.pos[2] += right[2] * speed; }
+  if (input.left)    { camera.pos[0] -= right[0] * speed; camera.pos[2] -= right[2] * speed; }
+  if (input.up) camera.pos[1] += speed;
+  if (input.down) camera.pos[1] -= speed;
+
+  // Clamp dentro de los bounds de la escena
+  const bounds = SCENES[currentScene].bounds;
+  camera.pos[0] = Math.max(-bounds[0], Math.min(bounds[0], camera.pos[0]));
+  camera.pos[1] = Math.max(-bounds[1], Math.min(bounds[1], camera.pos[1]));
+  camera.pos[2] = Math.max(-bounds[2], Math.min(bounds[2], camera.pos[2]));
+
+  const amp = sampleAudio();
+  ampEl.textContent = amp.toFixed(2);
+  cxEl.textContent = camera.pos[0].toFixed(2);
+  cyEl.textContent = camera.pos[1].toFixed(2);
+  czEl.textContent = camera.pos[2].toFixed(2);
+
+  // Write uniforms (80 bytes)
+  const data = new ArrayBuffer(80);
+  const dv = new DataView(data);
+  dv.setFloat32(0,  canvas.width, true);
+  dv.setFloat32(4,  canvas.height, true);
+  dv.setFloat32(8,  time, true);
+  dv.setFloat32(12, amp, true);
+  dv.setFloat32(16, camera.pos[0], true);
+  dv.setFloat32(20, camera.pos[1], true);
+  dv.setFloat32(24, camera.pos[2], true);
+  dv.setUint32(28, currentScene, true); // sceneId en el slot de padding
+  dv.setFloat32(32, fwd[0], true);
+  dv.setFloat32(36, fwd[1], true);
+  dv.setFloat32(40, fwd[2], true);
+  dv.setFloat32(48, right[0], true);
+  dv.setFloat32(52, right[1], true);
+  dv.setFloat32(56, right[2], true);
+  dv.setFloat32(64, up[0], true);
+  dv.setFloat32(68, up[1], true);
+  dv.setFloat32(72, up[2], true);
+  device.queue.writeBuffer(uniformBuffer, 0, data);
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [{
+      view: context.getCurrentTexture().createView(),
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+      loadOp: 'clear',
+      storeOp: 'store',
+    }],
+  });
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(3);
+  pass.end();
+  device.queue.submit([encoder.finish()]);
+
+  requestAnimationFrame(frame);
+}
+
+(async () => {
+  const ok = await initWebGPU();
+  if (!ok) return;
+  resize();
+  switchScene(0);
+  lastTime = performance.now();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
