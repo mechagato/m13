@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MonacoYaml } from './MonacoYaml';
 import { Preview } from './Preview';
 import { ErrorPanel } from './ErrorPanel';
+import { NLPrompt } from './NLPrompt';
 import { INITIAL_SCENE } from '@/lib/initial-scene';
 import { errorToMarkers, type YamlMarker } from '@/lib/yaml-marker-bridge';
 
@@ -71,8 +72,12 @@ export function EditorShell(): JSX.Element {
 
       {/* Split principal — Monaco izquierda, Preview derecha */}
       <main className="flex-1 grid grid-cols-2 min-h-0">
-        <section className="border-r border-border min-h-0 min-w-0">
-          <MonacoYaml value={yaml} onChange={setYaml} markers={markers} />
+        <section className="border-r border-border min-h-0 min-w-0 flex flex-col">
+          <div className="flex-1 min-h-0">
+            <MonacoYaml value={yaml} onChange={setYaml} markers={markers} />
+          </div>
+          {/* NL Prompt — debajo del Monaco editor */}
+          <NLPrompt onGenerated={(generated) => setYaml(generated)} />
         </section>
         <section className="min-h-0 min-w-0">
           <Preview yaml={debouncedYaml} onError={handleError} onLoadInfo={handleLoadInfo} />
