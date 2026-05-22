@@ -2,6 +2,7 @@
   "name": "m13",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "m13 — local-first world synthesis engine",
   "workspaces": [
     "packages/*"
@@ -11,6 +12,7 @@
     "dev": "pnpm --filter @m13/examples dev",
     "typecheck": "pnpm -r typecheck",
     "gen:schema": "tsx tools/gen-json-schema.ts",
+    "bench:compile": "tsx tools/bench-compile.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
