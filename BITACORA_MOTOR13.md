@@ -190,6 +190,60 @@ D-1 valida que el bootstrap original ya tenía el schema correctísimo — la sp
 
 ---
 
+## Entrada 004 · 2026-05-21 · T-007 Vitest setup
+
+**Duración:** sesión corta (~15 min Claude)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Gato pidió arrancar T-007 (primer task del cluster D-2: runtime tests + extensión). Setup de Vitest + coverage v8 en el monorepo, baseline para que T-008..T-012 puedan escribir tests reales.
+
+### Lo que se hizo
+
+1. Intento inicial con `pnpm add -D vitest @vitest/coverage-v8` instaló v4.1.7 — peer dep warning porque Vitest 4 requiere Vite ≥6 y el proyecto está en Vite 5.4.21.
+2. Downgrade a `vitest@^3.0.0` + `@vitest/coverage-v8@^3.0.0` (resolvió a 3.2.4) — compatibilidad limpia con Vite 5.
+3. Creado `vitest.config.ts` en root con:
+   - `include`: `packages/**/src/**/*.test.ts` y `packages/**/__tests__/**/*.test.ts` (cubre las convenciones del plan).
+   - `passWithNoTests: true` para no romper CI antes de que existan tests.
+   - Coverage v8: providers text/html/lcov, salida en `./coverage`, incluye runtime+synth, excluye tests/index/types.
+   - Thresholds permisivos (0%) en T-007; D-2 (T-008..T-012) los subirá a 70%+ en parser y compiler.
+4. Scripts en root: `test`, `test:watch`, `test:coverage`.
+5. Scripts en `@m13/runtime`: `test`, `test:coverage` con `--root ../.. --dir packages/runtime` para filtrar.
+6. `.gitignore` ya tenía `coverage/` listado — no se commitean los reportes generados.
+
+### Verificaciones
+
+- ✅ `pnpm test` → "No test files found, exiting with code 0" (passWithNoTests funciona).
+- ✅ `pnpm test:coverage` → genera `coverage/index.html` (7.7 KB) + lcov.info + reportes por package. 0% coverage por ahora (esperado, sin tests).
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm dev` arranca Vite ready 281ms.
+
+### Decisiones tomadas
+
+- **D-301:** Pinear Vitest a v3.x (`^3.0.0`) hasta que upgrade a Vite 6 en alguna fase futura. Vitest 4 requiere Vite ≥6.
+- **D-302:** Una sola `vitest.config.ts` en root (no per-package). Razón: KISS para monorepo chico; si crece, refactorizar a workspace mode después.
+- **D-303:** Thresholds de coverage en 0% al inicio. T-008..T-012 los suben a parser/compiler ≥70% combinado, según NFR-6 del spec.
+
+### Lo que tronó
+
+Peer dep mismatch con vitest@4 vs vite@5 — atrapado y resuelto pre-commit. No llegó al typecheck/test fallido.
+
+### Pendientes para próxima sesión (D-2 continúa)
+
+- [ ] T-008 tests parser válidos (escena minimal, completa, defaults)
+- [ ] T-009 tests parser errores (con path y mensaje)
+- [ ] T-010 tests compiler (WGSL contiene fn esperadas)
+- [ ] T-011 determinismo compiler (ordenar conceptsUsed + floats fijos)
+- [ ] T-012 tests determinismo (100 corridas mismo SHA-256)
+
+### Reflexiones
+
+T-007 fue ejecutado en menos de los 45 min estimados. El peer dep de Vitest fue el único pelo en la sopa. Ahora hay baseline para escribir tests reales — los siguientes 5 tasks del cluster D-2 son los que de verdad mueven la calidad del runtime.
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
