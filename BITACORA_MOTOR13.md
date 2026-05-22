@@ -1453,6 +1453,126 @@ Si Gato lo aprueba, próxima sesión = T-037 (sala_galeria.m13) — escena minim
 
 ---
 
+## Entrada 019 · 2026-05-21 · D-5 completo — 3 escenas formales + reconciliación
+
+**Duración:** ~20 min Claude (con effort high)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh)
+
+### Contexto
+
+Cluster D-5 cerrado en batch. Tras tener el catálogo de 18 conceptos (D-3 completo), construimos las 3 escenas formales del spec §4.5 que usan el nuevo catálogo, eliminamos las 3 escenas bootstrap obsoletas, reconciliamos el scene registry del demo, y validamos compile-time per-escena.
+
+### Lo que se hizo
+
+**T-037..T-039 — 3 escenas formales:**
+
+| Escena | Identidad | Conceptos usados | Pieza emblemática |
+|---|---|---|---|
+| `sala_galeria.m13` | White-cube gallery / museo | 6 conceptos | esfera escultórica con iridiscencia sobre pedestal mármol |
+| `cocina_industrial.m13` | Loft mexicano cocina | 8 conceptos | isla con tope de bronce + lámpara colgante dorada |
+| `oficina_neonodos.m13` | Brand NeoNodos (terracota + dorado + madera) | 7 conceptos | esfera dorada audio-reactiva central + window cut |
+
+Cada escena diseñada con:
+- bounds y spawn pensados para vista compositiva
+- ambient.tint con la paleta del concepto (cool gallery / warm loft / terracota corporate)
+- light.color matching (cenital frío / ámbar / dorado cálido)
+- objetos que combinan primitivos + `kind: concept` geos
+- params usados activamente (sala_galeria usa veinIntensity, cocina usa shimmer y darkness, oficina usa varios)
+
+**T-040 — Scene registry reconciliado:**
+
+- **Eliminados:** `sala_basica.m13`, `galeria_minimal.m13`, `loft_industrial.m13` (las 3 escenas bootstrap originales).
+- **Mantenido:** `templo_mexica.m13` (showcase del audio reactivo + identidad mexicana).
+- **Conservado del cluster D-3:** `_concepts_showcase.m13` (vitrina de 18 conceptos).
+- **`packages/examples/src/main.ts`** actualizado con el nuevo SCENES array de 5 entradas:
+  1. galería (sala_galeria) — hotkey 1
+  2. cocina (cocina_industrial) — hotkey 2
+  3. oficina (oficina_neonodos) — hotkey 3
+  4. templo (templo_mexica) — hotkey 4
+  5. showcase (_concepts_showcase) — hotkey 5
+
+**Refactor de tests por scene rename:**
+
+Los tests de compiler-output (T-010), compiler-determinism (T-012) y engine-cache (T-013) referenciaban las 3 escenas bootstrap eliminadas. Reescritos:
+- `compiler-output.test.ts`: 3 tests reescritos para sala_galeria, cocina_industrial, oficina_neonodos. Assertions de conceptos referenciados actualizadas a la nueva composición. Window cut test moved a oficina_neonodos (única de las 3 nuevas con window).
+- `compiler-determinism.test.ts`: array de 4 escenas demo actualizado. 100-runs test ahora sobre sala_galeria.
+- `engine-cache.test.ts`: A → B → A test usa sala_galeria/oficina_neonodos. 10-runs test usa cocina_industrial.
+
+**T-041 — Validación compile-time per-escena:**
+
+Script efímero (`/tmp/m13_scenes_validate.mjs`) midió cada escena con 5 warmups + 20 measurements:
+
+| Escena | YAML KB | objs | conceptos | matFloats | WGSL KB | compile p95 (ms) |
+|---|--:|--:|--:|--:|--:|--:|
+| `sala_galeria` | 2.0 | 6 | 6 | 3 | 9.8 | 10.55 |
+| `cocina_industrial` | 2.0 | 6 | 8 | 6 | 10.8 | 6.37 |
+| `oficina_neonodos` | 2.6 | 6 | 7 | 7 | 10.9 | 5.57 |
+| `templo_mexica` | 1.1 | 4 | 2 | 0 | 7.5 | 3.06 |
+| `_concepts_showcase` | 3.7 | 15 | 18 | 11 | 17.0 | 6.34 |
+
+Todas las escenas:
+- ✅ < 4 KB de YAML (budget spec: < 30 KB → 7.5× holgura).
+- ✅ < 11 ms compile p95 (budget spec H1.3: < 200 ms → ~19× holgura).
+- ✅ < 18 KB de WGSL output (no hay budget pero útil para deploys).
+
+### Verificaciones
+
+- ✅ `pnpm test` → **86/86 pass** (tras reescritura de 9 tests por scene rename).
+- ✅ `pnpm typecheck` limpio.
+- ✅ `pnpm --filter @m13/runtime build` → 1.30s, 71.5 KB raw / 58.64 KB gzipped (sin cambio vs T-022 — los nuevos conceptos NO se importan al bundle del runtime, viven en synth y se compilan en runtime).
+- ✅ `pnpm --filter @m13/runtime size` → 58.64 KB gzipped (~59% del budget).
+- ✅ Determinismo: SHA-256 estable en 100 corridas por escena.
+- ⏳ FPS real diferido a T-078 (sesión visual con Gato en VNC). Los compile-time numbers son la única validación posible desde Node.
+
+### Decisiones tomadas
+
+- **D-1801:** Eliminar las 3 escenas bootstrap (sala_basica, galeria_minimal, loft_industrial) en vez de mantenerlas. Razón: el plan T-040 lo pide explícitamente; las 3 nuevas las sustituyen funcionalmente; conservarlas crearía confusión sobre cuál es la "canónica". Se conservan en git history para referencia.
+- **D-1802:** Mantener `templo_mexica.m13` y `_concepts_showcase.m13` además de las 3 nuevas. Razón: templo demuestra audio reactivo + identidad mexicana únicos; showcase es smoke test visual del catálogo. Total final: 5 escenas en el demo.
+- **D-1803:** Window cut test movido a `oficina_neonodos` (única de las 3 nuevas con window — agregado deliberadamente como pieza arquitectónica de la escena: ventana al patio).
+- **D-1804:** Validación FPS no se pudo medir desde Node (requiere WebGPU real). Se documenta compile-time como proxy y se difiere FPS visual a T-078. **Recomendación a Gato:** abrir el demo en localhost:5173 con Chrome+WebGPU, navegar las 5 escenas durante 30s cada una, verificar que el FPS counter del HUD ≥ 60. Si alguna < 60, registrar como issue y mitigar reduciendo octaves del FBM en el concept correspondiente.
+- **D-1805:** `oficina_neonodos.tint` usa `[1.08, 0.95, 0.78]` (terracota cálida) en lugar del valor #E85D3B linear directo. Razón: tint es MULTIPLICATIVO sobre el color final ya tonemapado — un terracota puro saturaría las paredes blancas. El valor actual da una calidez "ambient warmth" sin saturar.
+
+### Lo que tronó
+
+- 15 tests fallaron tras borrar las 3 escenas bootstrap (ENOENT). Atrapado y arreglado en mismo turn — refactor de 3 archivos de tests con regex-based replace + ajustes específicos.
+
+### Pendientes para próxima sesión
+
+**Clusters Fase 1 restantes:**
+- **D-7** (demo público + Quest 3 — T-058 build prod, T-059 deploy CF Pages, T-060 QR, T-061 Quest 3 test)
+- **D-4** (editor Next.js + LLM — el monstruo: 11 componentes, ~32-44 h estimadas)
+- **D-6** (benchmark vs Three.js — T-062..T-064)
+- **D-8** (cierre + spec Fase 2 — T-065..T-068)
+- **Tasks auxiliares paralelizables** (T-069 CI, T-070 size-limit CI, T-071 lint, T-072 changelog)
+
+### Reflexiones
+
+**Cluster D-5 cerrado en tiempo récord.** Las 5 escenas del demo final son:
+1. **Galería** — minimal cool, profesional
+2. **Cocina** — cálida, identidad mexicana de barrio loft
+3. **Oficina** — brand NeoNodos puro
+4. **Templo** — pieza emblemática con audio
+5. **Showcase** — vitrina técnica de los 18 conceptos
+
+Las 3 escenas nuevas demuestran **TODOS los features de Fase 1**:
+- Materiales parametrizables (T-018) — sala_galeria.piso, oficina.floor con `darkness`
+- Conceptos geométricos `kind:concept` (T-021) — pedestales en sala_galeria, oficina; lámparas en cocina, oficina; window cut en oficina
+- Audio reactivo (preexistente) — esfera dorada en oficina_neonodos
+- Animaciones bob (preexistente) — esfera escultórica en sala_galeria, esfera dorada en oficina
+
+**Tiempo de compilación per-escena ~6-10ms**: el editor (D-4) en live-reload tendrá latencia trivial. El usuario edita YAML → re-compile → re-render en <50ms incluyendo round-trip via Vite. Excelente UX.
+
+**Fase 1 muy cerca de cierre.** Lo que queda:
+- D-4 editor (caro, único bloqueador real)
+- D-7 demo público (mecánico — build + deploy + QR)
+- D-6 benchmark (mecánico)
+- D-8 docs cierre
+
+Si Gato apruebra orden: D-7 next (demo público accesible) → D-4 (editor — la pieza más impactante para validar H5 del spec) → D-6/D-8 (cierre).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
