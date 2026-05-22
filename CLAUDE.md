@@ -8,11 +8,55 @@
 
 **m13** es un motor gráfico experimental **local-first** para WebGPU/WebXR. Sintetiza mundos 3D desde archivos `.m13` (YAML semántico) usando SDF raymarching + conceptos materiales procedurales — sin assets pesados, sin red en runtime.
 
-**Estado actual:** Fase 1 en implementación. El bootstrap está completo, ahora falta extender la librería de conceptos, agregar editor minimal con LLM editor-time, hacer benchmark vs Unity, y testear en Quest 3.
+**Estado actual:** Fase 1 al 85%. Editor base funcional. Demo público LIVE en `motor13.pages.dev`. Falta cerrar editor LLM E2E + Quest 3 test + benchmark.
 
 **Owner del proyecto:** Gato (Genaro Isaí García Torres) — CEO NeoNodos.
 
 **Idioma:** español mexicano informal en docs/comentarios/commits. APIs públicas y nombres de tipos/funciones en inglés.
+
+---
+
+## 🎯 DIRECTIVA ESTRATÉGICA — PRIORIDAD #1 NeoNodos hasta Innovafest diciembre 2026
+
+**Decisión tomada por Gato el 2026-05-22, no se renegocia hasta Innovafest.**
+
+m13 es el proyecto **#1 prioritario** del catálogo NeoNodos desde junio a diciembre 2026. Razón: es el diferenciador técnico real más fuerte del portafolio NeoNodos vs cualquier competidor del mercado (Unity, PlayCanvas, Babylon, Spline, Polycam, etc.). La combinación Sonido 13 visual + semantic descriptors + LLM editor-time + WebXR + local-first es única y defensible 12-18 meses mínimo.
+
+### Roadmap revisado para Innovafest
+
+| Mes | Foco m13 | Otros proyectos NeoNodos |
+|---|---|---|
+| **mayo restante** | Cerrar Fase 1 (editor LLM E2E + Quest 3 + custom domain + benchmark + README) | Modo mantenimiento (orquestador + Sabios) |
+| **junio** | Fase 2 — Sonido 13 visual (subdivisión microtonal del detalle) | idem |
+| **julio** | Fase 5 — WebXR + Quest 3 inmersivo. **SE SALTAN Fases 3-4 del Constitution.** | idem |
+| **agosto** | B2B piloto #1 (PLANVR o Cocinas Domus) | idem |
+| **septiembre** | Polish + landing motor13.neonodos.com + paper técnico | idem |
+| **octubre** | B2B piloto #2 + casos de éxito documentados | idem |
+| **noviembre** | Buffer + ensayos + demo video profesional | idem |
+| **diciembre** | **Innovafest** 🎯 | — |
+
+### División de responsabilidades
+
+- **m13 (Claude Code + Gato):** desarrollo técnico exclusivo. Gato dedica ≥60% de su tiempo. Claude Code es el agente principal.
+- **Otros proyectos NeoNodos (INMA, NeoCAD, NeoPos, NeoPets, SyShops, ArinStudio, PanteroSecurity, neonodos.com v2, etc):** **modo mantenimiento bajo el orquestador phi**.
+  - Solo continuidad de clientes existentes
+  - Cero features nuevas excepto críticas
+  - Bug fixes by Sabios Yin/Yang
+  - Reportan al orquestador cada lunes
+- **PLANVR + Cocinas Domus:** son los **2 casos B2B target** para validación comercial. Cerrar como pilotos reales junio-agosto.
+
+### Skip rules
+
+- Fase 3 (síntesis neural ONNX) → saltada para Innovafest
+- Fase 4 (Gaussian Splatting híbrido) → saltada para Innovafest
+- Cualquier feature de m13 fuera de roadmap revisado → **no en scope** hasta enero 2027
+
+### Esta directiva sobrevive:
+
+- Cualquier crisis de cliente en otro proyecto (los Sabios resuelven, no Gato)
+- Sugerencias de "abrir nuevos frentes"
+- Tentaciones de "agregar feature cool"
+- Excepciones por presión externa
 
 ---
 
