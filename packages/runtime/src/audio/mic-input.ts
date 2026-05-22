@@ -6,7 +6,7 @@ export class MicAudioInput {
   private audioCtx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private stream: MediaStream | null = null;
-  private data: Uint8Array | null = null;
+  private data: Uint8Array<ArrayBuffer> | null = null;
   private smoothed = 0;
   private active = false;
 
@@ -26,7 +26,7 @@ export class MicAudioInput {
     this.analyser = this.audioCtx.createAnalyser();
     this.analyser.fftSize = 256;
     source.connect(this.analyser);
-    this.data = new Uint8Array(this.analyser.frequencyBinCount);
+    this.data = new Uint8Array(new ArrayBuffer(this.analyser.frequencyBinCount));
     this.active = true;
   }
 

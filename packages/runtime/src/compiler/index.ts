@@ -1,7 +1,7 @@
 import type { M13Scene, M13Object, M13Material } from '../parser/schema.js';
 import { COMMON_WGSL } from '../shaders/common.js';
 import { RAYMARCH_WGSL } from '../shaders/raymarch.js';
-import { getConcept, type Concept } from '@m13/synth';
+import { getConcept } from '@m13/synth';
 
 export interface CompiledScene {
   /** WGSL fuente completo, listo para createShaderModule */
