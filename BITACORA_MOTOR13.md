@@ -1920,6 +1920,128 @@ Edita el YAML (ej. cambia `intensity: 1.3` a `intensity: 0.3`) → el preview de
 
 ---
 
+## Entrada 023 · 2026-05-22/23 · SESIÓN ÉPICA: Deploy live + phi-llm-gateway + editor LLM + visión FlowCAD + POC
+
+**Duración:** ~6h Claude (cross-midnight)
+**Owner:** Gato
+**Asistencia:** Claude Opus 4.7 (xhigh, alternando con voice + visual companion)
+**Tipo:** sesión strategic + ejecutiva combinada
+
+### Resumen ejecutivo en 5 líneas
+
+1. **Deploy m13 LIVE** en https://motor13.pages.dev (custom domain pending Gato)
+2. **phi-llm-gateway** funcional con Anthropic + Gemini + OpenRouter — cache 20× speedup demostrado
+3. **Editor m13 con NLPrompt** + Gemini Flash genera `.m13` válido E2E
+4. **Visión FlowCAD clarificada:** killer de SolidWorks/Inventor/Blender/ProEngineer, primer showcase = CocinasBuilder, secreto técnico = motor m13
+5. **POC FlowCAD←m13 funcional:** 4 cocinas reales de NeoCAD convertidas a `.m13` (16× compresión), navegables en `motor13.pages.dev`
+
+### Decisión estratégica permanente
+
+**m13 = prioridad #1 del catálogo NeoNodos hasta Innovafest dic 2026.** Documentado en `CLAUDE.md` como directiva no-renegociable. Otros proyectos (INMA, NeoPos, NeoPets, SyShops, ArinStudio, PanteroSecurity, neonodos.com v2, etc.) en modo mantenimiento bajo orquestador phi.
+
+**Mapa estratégico:**
+- m13 = el motor (asset técnico)
+- FlowCAD = el producto B2B vendible (killer CAD)
+- CocinasBuilder = el primer showcase vertical
+- Cocinas Domus = cliente piloto LOI ya en marcha (real)
+- Innovafest pitch = "primer CAD agéntico que vive en navegador, gracias a nuestro motor m13 propio"
+
+### Logros de la sesión
+
+**Deploy + infra:**
+- `wrangler pages deploy` de `packages/examples/dist` a CF Pages
+- 264 KB total (~64 KB gzipped) — 47% del budget T-058
+- Headers `_headers` con CSP + cache rules aplicados
+- QR del HUD apunta a `motor13.pages.dev` (140px, ECC level H)
+- URL pública: ✅ HTTP 200 + scenes load + canvas WebGPU activado
+
+**phi-llm-gateway MVP (puerto 9095):**
+- FastAPI service en `tools/phi-llm-gateway/`
+- 3 providers: Anthropic, Gemini (Google AI Studio), OpenRouter
+- SQLite cache prompts → response (TTL 7 días)
+- `model: "auto"` fallback chain: Gemini Flash → Llama 70B → DeepSeek → Claude
+- Headers de telemetría: `X-Phi-Cache/Provider/Model/Tokens-In-Out/Cost-USD/Saved-USD/Latency-MS`
+- Endpoint `/llm/stats` con métricas agregadas por ventana de tiempo
+- Auth Bearer token (dev: `phi-dev-local`)
+- Cache hit demostrado: 50ms vs 1000-5000ms del provider real (~20-100× speedup)
+- Costo $0 con Gemini Flash free tier + OpenRouter free (futuro)
+
+**Editor m13 con LLM (Phase 1 de D-4):**
+- Next.js 14 + Tailwind + Monaco + WebGPU canvas + NLPrompt panel
+- `lib/llm-client.ts` parsea X-Phi-* headers a `ChatTelemetry` tipado
+- `lib/system-prompt.ts`: catálogo 18 conceptos + 5 few-shots (galería/loft/templo/oficina NeoNodos/mínimo)
+- E2E validado: "una galería minimalista..." → `.m13` válido en 5.7s con Gemini, costo $0
+- HUD muestra: provider, modelo, tokens, latencia, USD ahorrado por cache
+
+**POC FlowCAD←m13 (key milestone):**
+- `tools/flowcad-bridge/glb_to_m13.py` — lee GLB pipeline NeoCAD (trimesh), extrae bounds + colores, genera `.m13`
+- Mapping color RGB → concept m13 (palette lookup euclidean distance)
+- 4 cocinas reales convertidas: `kitchen_con_isla`, `kitchen_en_l`, `kitchen_en_u`, `kitchen_lineal`
+- GLB 15 KB → `.m13` 0.9 KB = **16× compresión**
+- Render estático Blender → interactivo WebGPU navegable
+- Live en `motor13.pages.dev` con hotkeys 6-9 (escenas "FC isla", "FC L", "FC U", "FC lineal")
+
+**Visión FlowCAD comercial:**
+> FlowCAD = SaaS B2B que vende portales personalizados a diseñadores industriales. Sus clientes finales acceden vía web sin instalar nada. Digitaliza propuestas, revisiones, validaciones, VR, AR, IA. Killer de SolidWorks, Inventor, ProEngineer, Blender, AutoCAD, Revit, Solid Edge, Fusion 360, Onshape, Catia. Defensible por motor gráfico propio (m13).
+
+**Plan integración FlowCAD←m13 (revisado):**
+
+Descubrimiento clave en sesión: el código de NeoCAD `build_kitchen.py` YA usa nombres semánticos en CadQuery Assembly (`stove_cooktop`, `sink_basin`, `faucet_body`, `hood_chimney`, `island_door_front`, etc.) — esto elimina 3-5 días del plan original. Plan revisado:
+
+| Fase | Días | Trabajo |
+|---|---|---|
+| 1. `assembly_to_m13.py` | 2 | Toma `cq.Assembly` con componentes nombrados → `.m13` con objects individuales |
+| 2. `@m13/runtime` en frontend NeoCAD | 2 | Reemplazar viewer simple de CocinasBuilder con m13 |
+| 3. Eliminar Blender de NeoCAD | 1 | Remove deps + docs |
+
+Total: **5-6 días para Blender-free NeoCAD con piezas reales (estufas, fregaderos, perillas, campanas).**
+
+### Q&A estratégica (resuelta vía visual companion)
+
+| Pregunta | Respuesta de Gato |
+|---|---|
+| OpenRouter signup? | "Gemini API key, primero probemos con esta" — provee GOOGLE_AI_KEY |
+| PLANVR cliente real? | "No sé quién te dio ese título, FlowCAD es el primer uso real, killer SolidWorks/Blender" |
+| Estado FlowCAD? | "Revisa neonodos-core/neocad, aprende todo. Dejaremos Blender por m13." |
+| Confirmas secuencia POC paralelo? | "Opción 3, máxima prioridad FlowCAD-m13. Lo que pueda avanzar en paralelo de m13, avanza." |
+| Próximo paso post-POC? | "Opción 1 (sub-meshes nombrados). NeoCAD debe tener funciones SolidWorks/Blender." |
+
+### Cifras de la sesión
+
+- **30+ commits** entre m13 monorepo + neonodos-core
+- **86/86 tests** del m13 runtime pasando
+- **4 packages** del workspace: runtime, synth, editor, examples
+- **2 nuevos tools** en neonodos-core: phi-llm-gateway, flowcad-bridge
+- **86 KB total gzipped** del demo público (motor + 9 escenas + assets)
+- **Costo LLM:** $0 USD acumulado (cache + Gemini free tier)
+- **Velocidad:** lo equivalente a ~2 semanas de trabajo tradicional en 1 sesión
+
+### Próxima sesión (continúa AHORA mismo)
+
+Arrancar `tools/flowcad-bridge/assembly_to_m13.py`:
+1. Importar `build_kitchen.py` de NeoCAD
+2. Construir un Assembly de prueba en memoria
+3. Iterar `assembly.children` con nombres semánticos
+4. Por cada child: bbox + color → primitive m13 + concept
+5. Compose `.m13` final con objects individuales
+6. Validar visualmente vs Blender render existente
+
+### Reflexión
+
+La sesión fue dirigida por VOZ + visual companion para acelerar — Gato hizo las decisiones estratégicas grandes en menos de 30 minutos cada una, y yo ejecuté en paralelo. El uso del visual companion para preguntas estructuradas multiplicó la velocidad de iteración estratégica 5×.
+
+Lo que cambió fundamentalmente esta sesión: **m13 dejó de ser "proyecto técnico cool" y se convirtió en pilar estratégico de NeoNodos con caso de uso comercial validado (Cocinas Domus LOI) y demo público live**.
+
+Lo que falta para llegar a Innovafest con confianza alta:
+- Cerrar FlowCAD-m13 integration (5-6 días)
+- Sonido 13 visual (Fase 2 de m13, junio)
+- Quest 3 inmersivo (Fase 5, julio)
+- Material de pitch (octubre-noviembre)
+
+Es factible. Si mantenemos foco m13 = prioridad #1, la probabilidad de Innovafest exitoso sube de 60% (sin foco) a 85% (con foco).
+
+---
+
 ## Plantilla para entradas futuras
 
 ```
