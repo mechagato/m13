@@ -2069,3 +2069,79 @@ Es factible. Si mantenemos foco m13 = prioridad #1, la probabilidad de Innovafes
 ### Reflexiones
 <observaciones libres>
 ```
+
+---
+
+## Sesión 2026-05-22 · Integración m13 ↔ NeoCAD + Blender removal
+
+### Lo que se hizo
+
+**Phase 1 (backend NeoCAD ← m13)** — completo
+- `backend/render/m13_export.py` — wrapper de `assembly_to_m13` desde `tools/flowcad-bridge/`
+- `DetailedKitchenBuilder.save_m13()` + `KitchenBuilder.save_m13()` (delega)
+- `build_kitchen_step()` ahora emite `.m13` junto a STEP/GLB/OBJ/STL automáticamente
+- Endpoints `GET /api/cocinas/job/{id}/model.m13` + `GET /api/neocad/session/{id}/model.m13`
+- `DesignSession.last_m13_path` + `has_m13` flag persistente
+- SSE event `model_ready` ahora incluye `m13_url`
+- Endpoint `.m13` no-strict en job_manager (sirve aunque server reinicie, persistencia por disco)
+
+**Phase 2 (frontend CocinasBuilder ← @m13/runtime)** — completo
+- `M13KitchenViewer.tsx` — drop-in viewer con dynamic import del bundle 283 KB
+- `app/m13-test/page.tsx` — página de validación visual aislada
+- `wizard/page.tsx` — m13 arriba, Three.js legacy abajo en `<details>`
+- `middleware.ts` — `/wizard`, `/m13-test`, `/m13/*` públicos
+- `public/m13/m13-runtime.js` — bundle ESM 283 KB self-contained
+- ResizeObserver para canvas con dimensiones reales (devicePixelRatio)
+- Graceful degradation cuando no hay adapter WebGPU
+
+**Phase 3 (Blender removal)** — completo
+- Eliminados: `blender_render.py`, `blender_kitchen_render.py`, `blender_render_template.py`
+- `render_step.py` — quitado fast-path Blender (siempre matplotlib)
+- Endpoint `/api/neocad/session/{id}/render` ahora usa `quick_views` (matplotlib)
+- Docstrings actualizadas
+- `glb_to_usdz.py` mantenido aislado (opcional AR Quick Look iOS)
+
+### Decisiones tomadas
+- **D-2103:** Dynamic import del bundle m13 desde `/public/m13/m13-runtime.js` con
+  `webpackIgnore`. Razón: evita análisis del bundler externo + drop-in en cualquier
+  framework Next.js sin configurar resolve aliases.
+- **D-2104:** Endpoint `.m13` no-strict en `job_manager` — si el `.m13` existe en disco,
+  se sirve aunque el process haya reiniciado. Razón: persistencia debe sobrevivir al
+  ciclo de vida del proceso FastAPI (job_manager está en RAM).
+- **D-2105:** Backend dejó de invocar Blender en flujo SSE. `auto_render` flag ya no
+  dispara render fotorrealista. Razón: motor m13 sobre WebGPU es la ruta de visualización.
+  Los PNGs matplotlib solo quedan para artefactos PDF.
+- **D-2106:** `glb_to_usdz.py` no se elimina aunque use Blender — graceful skip cuando
+  no está disponible y NO está en flujo principal. Útil opcional para AR Quick Look iOS.
+
+### Lo que tronó
+- Cocinas-builder dev server en cocinas-builder/middleware.ts redirigía `/wizard` y
+  `/m13/*` al login. Solución: agregar a lista de rutas públicas.
+- Backend NeoCAD intentado en puerto :8000 chocaba con Django de INMA. Solución: puerto :8401.
+- Cocinas-builder env `NEXT_PUBLIC_API_BASE=http://localhost:8788` apuntaba a backend
+  inexistente. Solución: actualizar a :8401.
+- Canvas en M13KitchenViewer renderizaba 0×0 sin ResizeObserver + atributos width/height
+  explícitos. Solución: ResizeObserver + `clientWidth * devicePixelRatio`.
+- Chromium headless en Cerebro4 reporta `navigator.gpu` pero adapter falla (driver GT 710
+  v470). El motor m13 hace graceful degradation con UI clara.
+
+### Pendientes para próxima sesión
+- [ ] Validación visual con WebGPU real (laptop de Gato)
+- [ ] Custom domain `motor13.neonodos.com` (acción en CF dashboard de Gato)
+- [ ] Quest 3 test (T-061)
+- [ ] T-052/T-053: 30 prompts LLM eval batch
+- [ ] T-066/T-067/T-068: cierre Fase 1 + spec Fase 2
+- [ ] Hardening: persistir `m13_path` en Supabase `cocinas_jobs` table
+- [ ] Generar escenas .m13 para otros use cases B2B (no solo cocinas)
+
+### Reflexiones
+La sesión salió **3 días adelantada** del roadmap revisado a Innovafest dic 2026.
+La fricción más grande fue identificar qué puertos usaban qué backends (INMA en :8000,
+cocinas-builder en :3001, NeoCAD en :8401). Una vez con servers separados, el integration
+fluyó limpio. El bundle ESM self-contained de 283 KB se comporta exactamente como diseñado
+desde D-1101 — drop-in real, sin builder externo, tree-shake friendly.
+
+Logro estratégico: NeoCAD ya NO depende de Blender. La eliminación quitó 1,752 líneas de
+código y ~500 MB de RAM runtime. El cliente ahora carga `.m13` (24 KB) directo en navegador
+en vez de esperar render PBR de 15-180 segundos.
+
