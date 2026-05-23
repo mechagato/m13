@@ -38,12 +38,13 @@ m13 es el proyecto **#1 prioritario** del catálogo NeoNodos desde junio a dicie
 ### División de responsabilidades
 
 - **m13 (Claude Code + Gato):** desarrollo técnico exclusivo. Gato dedica ≥60% de su tiempo. Claude Code es el agente principal.
-- **Otros proyectos NeoNodos (INMA, NeoCAD, NeoPos, NeoPets, SyShops, ArinStudio, PanteroSecurity, neonodos.com v2, etc):** **modo mantenimiento bajo el orquestador phi**.
+- **FlowCAD (ex-NeoCAD) = CASO DE USO PRIMARIO de m13.** No es proyecto separado en modo mantenimiento — es el showcase principal. m13 le da el render engine para que piezas CAD se vean en navegador sin instalar nada. Pitch ganador de Innovafest: "CAD-killer (vs SolidWorks/Blender) que corre en browser gracias a m13".
+- **Otros proyectos NeoNodos (INMA, NeoPos, NeoPets, SyShops, ArinStudio, PanteroSecurity, Cocinas Domus, neonodos.com v2, etc):** **modo mantenimiento bajo el orquestador phi**.
   - Solo continuidad de clientes existentes
   - Cero features nuevas excepto críticas
-  - Bug fixes by Sabios Yin/Yang
+  - Bug fixes por Sabios Yin/Yang
   - Reportan al orquestador cada lunes
-- **PLANVR + Cocinas Domus:** son los **2 casos B2B target** para validación comercial. Cerrar como pilotos reales junio-agosto.
+- **Cocinas Domus:** caso de uso secundario candidato (configurador vertical). Confirmar estado/viabilidad en pregunta posterior.
 
 ### Skip rules
 
