@@ -46,6 +46,33 @@ const SCENES: SceneEntry[] = [
     description:
       'Vitrina de los 18 conceptos del catálogo Fase 1 — bootstrap (8) + D-3 (6 materiales + 4 geométricos) lado a lado.',
   },
+  // ===== FlowCAD POC (mayo 2026) — cocinas reales generadas por NeoCAD/FlowCAD =====
+  // GLB original ~15KB → .m13 ~0.9KB · render estático Blender → interactivo WebGPU
+  {
+    id: 'fc_isla',
+    label: 'FC isla',
+    file: '/scenes/flowcad_kitchen_con_isla.m13',
+    description:
+      'FlowCAD POC — cocina con isla, generada por NeoCAD (pipeline CAD agéntico) y convertida a m13 (POC GLB→.m13). 16× compresión + interactiva.',
+  },
+  {
+    id: 'fc_l',
+    label: 'FC L',
+    file: '/scenes/flowcad_kitchen_en_l.m13',
+    description: 'FlowCAD POC — cocina en L, output de NeoCAD agéntico renderizado en m13.',
+  },
+  {
+    id: 'fc_u',
+    label: 'FC U',
+    file: '/scenes/flowcad_kitchen_en_u.m13',
+    description: 'FlowCAD POC — cocina en U, output de NeoCAD agéntico renderizado en m13.',
+  },
+  {
+    id: 'fc_lineal',
+    label: 'FC lineal',
+    file: '/scenes/flowcad_kitchen_lineal.m13',
+    description: 'FlowCAD POC — cocina lineal, output de NeoCAD agéntico renderizado en m13.',
+  },
 ];
 
 let currentSceneIdx = 0;
