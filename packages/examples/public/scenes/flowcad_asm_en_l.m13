@@ -1,0 +1,315 @@
+# Auto-generado por assembly_to_m13.py desde cq.Assembly
+# Componentes: 58 piezas
+# Global extent: [2440.0, 1856.0, 1805.0] mm
+
+version: "0.1"
+name: flowcad_asm_en_l
+description: "Cocina en_l (assembly converter)"
+bounds: [3.00, 2.80, 3.00]
+spawn: [0.00, 0.00, -2.10]
+ambient:
+  ambientColor: [0.18, 0.17, 0.15]
+  tint: [1.0, 0.97, 0.92]
+  fogDensity: 0.010
+light:
+  position: [0, 2.30, 0]
+  color: [1.0, 0.96, 0.88]
+  intensity: 1.4
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_yeso_blanco
+objects:
+  - id: lower_m0_body_001
+    kind: round_box
+    position: [-0.9, -0.79, -0.592]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: lower_m0_door_002
+    kind: box
+    position: [-0.9, -0.94, -0.903]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: lower_m0_door_handle_003
+    kind: box
+    position: [-0.9, -0.736, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m0_drawer1_004
+    kind: box
+    position: [-0.9, -0.475, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m0_drawer1_handle_005
+    kind: box
+    position: [-0.9, -0.475, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m0_drawer2_006
+    kind: box
+    position: [-0.9, -0.625, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m0_drawer2_handle_007
+    kind: box
+    position: [-0.9, -0.625, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: upper_m0_body_008
+    kind: box
+    position: [-0.9, 0.1, -0.717]
+    scale: [0.2990, 0.1750, 0.3500]
+    material: pared_madera_oscura
+  - id: upper_m0_door_009
+    kind: box
+    position: [-0.9, 0.1, -0.903]
+    scale: [0.2960, 0.0090, 0.3460]
+    material: pared_madera_oscura
+  - id: upper_m0_door_handle_010
+    kind: box
+    position: [-0.9, -0.212, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m1_body_011
+    kind: round_box
+    position: [-0.3, -0.79, -0.592]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: lower_m1_door_012
+    kind: box
+    position: [-0.3, -0.94, -0.903]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: lower_m1_door_handle_013
+    kind: box
+    position: [-0.3, -0.736, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m1_drawer1_014
+    kind: box
+    position: [-0.3, -0.475, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m1_drawer1_handle_015
+    kind: box
+    position: [-0.3, -0.475, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m1_drawer2_016
+    kind: box
+    position: [-0.3, -0.625, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m1_drawer2_handle_017
+    kind: box
+    position: [-0.3, -0.625, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: upper_m1_body_018
+    kind: box
+    position: [-0.3, 0.1, -0.717]
+    scale: [0.2990, 0.1750, 0.3500]
+    material: pared_madera_oscura
+  - id: upper_m1_door_019
+    kind: box
+    position: [-0.3, 0.1, -0.903]
+    scale: [0.2960, 0.0090, 0.3460]
+    material: pared_madera_oscura
+  - id: upper_m1_door_handle_020
+    kind: box
+    position: [-0.3, -0.212, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m2_body_021
+    kind: round_box
+    position: [0.3, -0.79, -0.592]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: lower_m2_door_022
+    kind: box
+    position: [0.3, -0.94, -0.903]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: lower_m2_door_handle_023
+    kind: box
+    position: [0.3, -0.736, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m2_drawer1_024
+    kind: box
+    position: [0.3, -0.475, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m2_drawer1_handle_025
+    kind: box
+    position: [0.3, -0.475, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m2_drawer2_026
+    kind: box
+    position: [0.3, -0.625, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m2_drawer2_handle_027
+    kind: box
+    position: [0.3, -0.625, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: upper_m2_body_028
+    kind: box
+    position: [0.3, 0.1, -0.717]
+    scale: [0.2990, 0.1750, 0.3500]
+    material: pared_madera_oscura
+  - id: upper_m2_door_029
+    kind: box
+    position: [0.3, 0.1, -0.903]
+    scale: [0.2960, 0.0090, 0.3460]
+    material: pared_madera_oscura
+  - id: upper_m2_door_handle_030
+    kind: box
+    position: [0.3, -0.212, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m3_body_031
+    kind: round_box
+    position: [0.9, -0.79, -0.592]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: lower_m3_door_032
+    kind: box
+    position: [0.9, -0.94, -0.903]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: lower_m3_door_handle_033
+    kind: box
+    position: [0.9, -0.736, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m3_drawer1_034
+    kind: box
+    position: [0.9, -0.475, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m3_drawer1_handle_035
+    kind: box
+    position: [0.9, -0.475, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: lower_m3_drawer2_036
+    kind: box
+    position: [0.9, -0.625, -0.903]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: lower_m3_drawer2_handle_037
+    kind: box
+    position: [0.9, -0.625, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: upper_m3_body_038
+    kind: box
+    position: [0.9, 0.1, -0.717]
+    scale: [0.2990, 0.1750, 0.3500]
+    material: pared_madera_oscura
+  - id: upper_m3_door_039
+    kind: box
+    position: [0.9, 0.1, -0.903]
+    scale: [0.2960, 0.0090, 0.3460]
+    material: pared_madera_oscura
+  - id: upper_m3_door_handle_040
+    kind: box
+    position: [0.9, -0.212, -0.912]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: countertop_041
+    kind: box
+    position: [0.0, -0.385, -0.592]
+    scale: [1.2200, 0.3200, 0.0150]
+    material: pared_madera_oscura
+  - id: baseboard_042
+    kind: box
+    position: [0.0, -1.24, -0.852]
+    scale: [1.2000, 0.0400, 0.0600]
+    material: cuero_vintage
+  - id: crown_molding_043
+    kind: box
+    position: [0.0, 0.4775, -0.726]
+    scale: [1.2180, 0.1840, 0.0275]
+    material: pared_madera_oscura
+  - id: en_l_lower_m0_body_044
+    kind: round_box
+    position: [0.9, -0.79, 0.008]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: en_l_lower_m0_door_045
+    kind: box
+    position: [0.9, -0.94, -0.303]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: en_l_lower_m0_door_handle_046
+    kind: box
+    position: [0.9, -0.736, -0.312]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: en_l_lower_m0_drawer1_047
+    kind: box
+    position: [0.9, -0.475, -0.303]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: en_l_lower_m0_drawer1_handle_048
+    kind: box
+    position: [0.9, -0.475, -0.312]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: en_l_lower_m0_drawer2_049
+    kind: box
+    position: [0.9, -0.625, -0.303]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: en_l_lower_m0_drawer2_handle_050
+    kind: box
+    position: [0.9, -0.625, -0.312]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: en_l_lower_m1_body_051
+    kind: round_box
+    position: [0.9, -0.79, 0.608]
+    scale: [0.2990, 0.3000, 0.3900]
+    material: pared_madera_oscura
+  - id: en_l_lower_m1_door_052
+    kind: box
+    position: [0.9, -0.94, 0.297]
+    scale: [0.2960, 0.0090, 0.2380]
+    material: pared_madera_oscura
+  - id: en_l_lower_m1_door_handle_053
+    kind: box
+    position: [0.9, -0.736, 0.288]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: en_l_lower_m1_drawer1_054
+    kind: box
+    position: [0.9, -0.475, 0.297]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: en_l_lower_m1_drawer1_handle_055
+    kind: box
+    position: [0.9, -0.475, 0.288]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: en_l_lower_m1_drawer2_056
+    kind: box
+    position: [0.9, -0.625, 0.297]
+    scale: [0.2960, 0.0090, 0.0730]
+    material: pared_madera_oscura
+  - id: en_l_lower_m1_drawer2_handle_057
+    kind: box
+    position: [0.9, -0.625, 0.288]
+    scale: [0.0800, 0.0160, 0.0060]
+    material: metal_oxidado
+  - id: countertop_058
+    kind: box
+    position: [0.88, -0.385, 0.308]
+    scale: [0.3200, 0.6200, 0.0150]
+    material: pared_madera_oscura
+

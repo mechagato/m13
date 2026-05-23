@@ -46,32 +46,39 @@ const SCENES: SceneEntry[] = [
     description:
       'Vitrina de los 18 conceptos del catálogo Fase 1 — bootstrap (8) + D-3 (6 materiales + 4 geométricos) lado a lado.',
   },
-  // ===== FlowCAD POC (mayo 2026) — cocinas reales generadas por NeoCAD/FlowCAD =====
-  // GLB original ~15KB → .m13 ~0.9KB · render estático Blender → interactivo WebGPU
+  // ===== FlowCAD assembly converter (mayo 2026) — sub-piezas REALES con nombres =====
+  // assembly_to_m13.py extrae 43-73 componentes del cq.Assembly de NeoCAD,
+  // cada uno con bbox + color + concept m13 apropiado. Reemplaza pipeline Blender.
+  {
+    id: 'fc_lineal',
+    label: 'FC lineal',
+    file: '/scenes/flowcad_asm_lineal.m13',
+    description:
+      'FlowCAD — cocina lineal con 43 sub-piezas individuales (gabinetes, puertas, manijas, encimera, electrodomésticos) extraídas del cq.Assembly de NeoCAD. Reemplaza pipeline Blender.',
+  },
   {
     id: 'fc_isla',
     label: 'FC isla',
-    file: '/scenes/flowcad_kitchen_con_isla.m13',
-    description:
-      'FlowCAD POC — cocina con isla, generada por NeoCAD (pipeline CAD agéntico) y convertida a m13 (POC GLB→.m13). 16× compresión + interactiva.',
+    file: '/scenes/flowcad_asm_con_isla.m13',
+    description: 'FlowCAD — cocina con isla central, 43 sub-piezas reales del Assembly de NeoCAD renderizadas en m13.',
   },
   {
     id: 'fc_l',
     label: 'FC L',
-    file: '/scenes/flowcad_kitchen_en_l.m13',
-    description: 'FlowCAD POC — cocina en L, output de NeoCAD agéntico renderizado en m13.',
+    file: '/scenes/flowcad_asm_en_l.m13',
+    description: 'FlowCAD — cocina en L, 58 sub-piezas individuales en disposición esquinada.',
   },
   {
     id: 'fc_u',
     label: 'FC U',
-    file: '/scenes/flowcad_kitchen_en_u.m13',
-    description: 'FlowCAD POC — cocina en U, output de NeoCAD agéntico renderizado en m13.',
+    file: '/scenes/flowcad_asm_en_u.m13',
+    description: 'FlowCAD — cocina en U, 73 sub-piezas reales — la más rica del demo en componentes individuales.',
   },
   {
-    id: 'fc_lineal',
-    label: 'FC lineal',
-    file: '/scenes/flowcad_kitchen_lineal.m13',
-    description: 'FlowCAD POC — cocina lineal, output de NeoCAD agéntico renderizado en m13.',
+    id: 'fc_esc',
+    label: 'FC escuadra',
+    file: '/scenes/flowcad_asm_escuadra.m13',
+    description: 'FlowCAD — cocina en escuadra, 58 sub-piezas con encimera y gabinetes.',
   },
 ];
 
