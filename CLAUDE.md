@@ -87,15 +87,16 @@ Si una propuesta de cambio viola alguno de estos puntos, **detente y pregunta a 
 
 | Fase | Codename | Estado |
 |---|---|---|
-| 0 | Proof of principle SDF raymarching | ✅ COMPLETED (demos HTML standalone) |
-| 1 | Lenguaje .m13 + librería conceptos | 🚧 IN PROGRESS (bootstrap hecho, impl pendiente) |
-| 2 | Detalle continuo (Sonido 13 visual) | ⏳ PENDING |
-| 3 | Síntesis neural local con ONNX | ⏳ PENDING |
-| 4 | Gaussian Splatting híbrido | ⏳ PENDING |
-| 5 | WebXR + Quest 3 + voz | ⏳ PENDING |
-| 6 | Edición temporal + Sabio Compositor | ⏳ PENDING |
+| 0 | Proof of principle SDF raymarching | COMPLETED (demos HTML standalone) |
+| 1 | Lenguaje .m13 + librería conceptos | COMPLETED (gate cerrado 2026-05-28) |
+| 2 | Detalle continuo (Sonido 13 visual) | PENDING |
+| 3 | Síntesis neural local con ONNX | PENDING |
+| 4 | Gaussian Splatting híbrido | PENDING |
+| 5 | WebXR + Quest 3 + voz | PENDING |
+| 6 | Edición temporal + Sabio Compositor | PENDING |
 
-Lee `docs/spec/phase-1-spec.md` para el detalle de qué falta en Fase 1.
+Lee `docs/spec/phase-1-spec.md` para el detalle de lo entregado en Fase 1.
+Lee `BITACORA_MOTOR13.md` entrada 2026-05-28 para el gate de cierre.
 
 ---
 
@@ -203,31 +204,76 @@ pnpm --filter @m13/synth typecheck     # typecheck solo de synth
 
 ---
 
-## Próximos pasos prioritarios (Fase 1)
+## Proximos pasos prioritarios (Fase 2)
 
-Según `docs/spec/phase-1-spec.md`:
+Fase 1 cerrada el 2026-05-28. La Fase 2 (Sonido 13 visual) es la siguiente segun el
+roadmap revisado (CLAUDE.md seccion "Directiva Estrategica").
 
-1. Resolver Open Questions OQ-1 a OQ-4 (preguntar a Gato).
-2. Generar `docs/plans/phase-1-plan.md` desde el spec.
-3. Generar `docs/tasks/phase-1-tasks.md` desde el plan.
-4. Extender librería de conceptos: de 8 actuales a ~15. Sugerencias: `vidrio_traslucido`, `tela_lino`, `agua_quieta`, `papel_tapiz_geometrico`, `metal_oxidado`, `madera_clara`, `azulejo_talavera`.
-5. Implementar editor minimal en Next.js con LLM editor-time (Claude API) que tome prompt en español → genere `.m13` válido → preview en vivo.
-6. Benchmark vs Unity WebGL build: tiempo de carga, FPS sostenido, peso del bundle.
-7. Test en Quest 3 (navegador del Quest soporta WebGPU desde Horizon OS v62+).
+IMPORTANTE: el spec de Fase 2 (`docs/spec/phase-2-spec.md`) esta EN PAUSA por orden
+de Gato. T-066 fue cancelada. No crear ni borradorear ese spec sin instruccion directa
+de Gato. El contenido y direccion de Fase 2 se define cuando Gato lo indique.
+
+Blockers que requieren accion de Gato antes de abrir Fase 2:
+
+1. Quest 3 test (T-061): criterio de Fase 1 aun pendiente. Requiere hardware Quest 3.
+   Instrucciones en `docs/DEPLOY.md` (setup Tailscale + navegador Quest + FPS validation).
+2. Custom domain `motor13.neonodos.com`: accion en Cloudflare Pages dashboard.
+3. Validacion visual WebGPU real (FPS >60fps): requiere laptop de Gato con GPU compatible.
+4. LLM eval batch T-052/T-053: 30 prompts de evaluacion, target >70% pass rate.
+   Aun no ejecutado. Requiere sesion con API key activa.
+5. Benchmark vs Three.js (T-062..T-064): no completado. Reporte `docs/papers/phase-1-benchmark.md` no existe.
+6. Reconciliar colision de codigos D-2103/D-2104 en BITACORA.
+7. Decidir convencion de codigos D-xxxx para Fase 2.
+
+Una vez que Gato aprueba el cierre y da la orden, el siguiente flujo es:
+  Spec Fase 2 (Gato dirige direccion) → Plan → Tasks → Implement.
 
 ---
 
 ## Decisiones técnicas registradas
 
-- **D-001:** Monorepo con pnpm workspaces (sobre Nx/Turbo). Razón: simplicidad, ya usado en NeoNodos.
-- **D-002:** `main` de packages apunta a `./src/index.ts`, no `./dist/`. Razón: dev sin build previo.
-- **D-003:** Parsing con `yaml` + validación con `zod`. Razón: ambos son standard, Zod nos da tipos TS de regalo.
-- **D-004:** SDF raymarching como base de Fase 1, no rasterización clásica. Razón: alinea con la tesis del Sonido 13 (continuidad).
-- **D-005:** Conceptos materiales como módulos TS que exportan WGSL como string. Razón: tree-shakeable, refactor-friendly, no requiere loader custom.
-- **D-006:** Look del HUD: JetBrains Mono + accent dorado `#c9a227` + grain + scanlines. Razón: identidad visual NeoNodos.
-- **D-007:** Escenas servidas desde `packages/examples/public/scenes/`. Razón: Vite las sirve estáticamente sin configuración.
+Las decisiones D-001..D-007 son del bootstrap inicial. Las D-2xx..D-9xx son de Fase 1
+(codigos usados en BITACORA; ver ahi la serie completa). Se documentan aqui solo las
+decisiones de alto impacto arquitectonico que todo nuevo agente debe conocer al arrancar.
 
-Cualquier decisión técnica nueva durante sesiones de Claude Code se agrega aquí con código D-XXX incremental.
+### Bootstrap (pre-Fase 1)
+
+- **D-001:** Monorepo con pnpm workspaces (sobre Nx/Turbo). Razon: simplicidad, ya usado en NeoNodos.
+- **D-002:** `main` de packages apunta a `./src/index.ts`, no `./dist/`. Razon: dev sin build previo.
+- **D-003:** Parsing con `yaml` + validacion con `zod`. Razon: ambos son standard, Zod da tipos TS de regalo.
+- **D-004:** SDF raymarching como base de Fase 1, no rasterizacion clasica. Razon: alinea con tesis Sonido 13.
+- **D-005:** Conceptos materiales como modulos TS que exportan WGSL como string. Razon: tree-shakeable, refactor-friendly.
+- **D-006:** Look del HUD: JetBrains Mono + accent dorado `#c9a227` + grain + scanlines. Razon: identidad NeoNodos.
+- **D-007:** Escenas servidas desde `packages/examples/public/scenes/`. Razon: Vite las sirve estaticamente.
+
+### Fase 1 — decisiones arquitectonicas clave (sesiones 2026-05-21/22)
+
+Nota: los codigos D-2xx..D-9xx viven en BITACORA_MOTOR13.md. Se extraen aqui los que
+afectan a cualquier trabajo futuro en Fase 2+:
+
+- **D-2101 (editor):** Scaffold manual del editor Next.js (no `pnpm create next-app`). Sin TTY en Claude Code.
+- **D-2102 (editor):** `next.config.mjs` con `resolve.extensionAlias` mapea `.js` → `.ts` para webpack 5.
+  Sin esto Next falla con "Module not found" en imports ESM del runtime.
+- **D-2103 (editor):** M13Engine importado dinamicamente con `await import('@m13/runtime')` en editor.
+  Razon: evita que Next.js ejecute `navigator.gpu` en SSR.
+- **D-2104 (editor):** Debounce 250ms YAML → loadScene en live reload. Cumple FR-4.3 (<500ms) sin saturar compiler.
+- **D-2103 (FlowCAD, sesion 22-may):** Dynamic import del bundle m13 desde `/public/m13/m13-runtime.js`
+  con `webpackIgnore`. Drop-in en cualquier app Next.js sin configurar resolve aliases.
+  NOTA: este codigo D-2103 colisiona con el editor — la BITACORA tiene dos entradas con ese codigo.
+  Pendiente reconciliar en inicio de Fase 2.
+- **D-2104 (FlowCAD, sesion 22-may):** Endpoint `.m13` no-strict en job_manager de NeoCAD — persiste
+  aunque el proceso FastAPI reinicie (archivo en disco). Colision de codigo con D-2104 editor.
+- **D-2105 (FlowCAD, sesion 22-may):** Backend NeoCAD dejo de invocar Blender en flujo SSE.
+  Motor m13 sobre WebGPU es la ruta de visualizacion principal.
+- **D-2106 (FlowCAD, sesion 22-may):** `glb_to_usdz.py` se mantiene aislado con graceful skip. No afecta flujo principal.
+
+### Blocker de nomenclatura pendiente para Fase 2
+
+Los codigos D-2103 y D-2104 tienen colision en BITACORA (dos sesiones distintas los reutilizaron).
+Al iniciar Fase 2, Gato debe decidir la convencion de codigos D-xxxx para la nueva fase
+(se sugiere D-3xxx para Fase 2, reservando D-2xxx para Fase 1 ya cerrada).
+
+Cualquier decision tecnica nueva durante sesiones de Claude Code se agrega aqui con codigo D-XXX incremental.
 
 ---
 
@@ -282,4 +328,4 @@ Mejor parar y preguntar que destruir el proyecto con buenas intenciones.
 
 ---
 
-*Última actualización: bootstrap inicial · v0.1.0*
+*Ultima actualizacion: 2026-05-28 · T-067 cierre Fase 1 · v0.1.0*
