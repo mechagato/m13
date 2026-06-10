@@ -6,6 +6,7 @@ import {
   renderFrame,
   writeUniforms,
   writeMatParams,
+  destroyRenderer,
   type RendererState,
 } from './renderer/index.js';
 import { FlyCamera, type FlyCameraOptions } from './camera/fly-camera.js';
@@ -45,6 +46,7 @@ export class M13Engine {
   private camera: FlyCamera | null = null;
   private audio: MicAudioInput | null = null;
   private running = false;
+  private disposed = false;
   private rafId = 0;
   private lastTime = 0;
   private t0 = 0;
@@ -72,6 +74,9 @@ export class M13Engine {
    * evita `initRenderer` (que es el costo dominante de un re-load).
    */
   async loadScene(yamlOrUrl: string): Promise<M13Scene> {
+    if (this.disposed) {
+      throw new Error('[m13/engine] El engine ya fue liberado con dispose() — crea una nueva instancia.');
+    }
     const text = looksLikeUrl(yamlOrUrl) ? await fetchText(yamlOrUrl) : yamlOrUrl;
     const scene = parseScene(text);
     const compiled = compileScene(scene);
@@ -131,6 +136,9 @@ export class M13Engine {
   }
 
   start(): void {
+    if (this.disposed) {
+      throw new Error('[m13/engine] El engine ya fue liberado con dispose() — crea una nueva instancia.');
+    }
     if (this.running) return;
     if (!this.renderer || !this.compiled) {
       throw new Error('[m13/engine] start() llamado sin loadScene previo');
@@ -150,6 +158,59 @@ export class M13Engine {
   stop(): void {
     this.running = false;
     cancelAnimationFrame(this.rafId);
+  }
+
+  /**
+   * Libera todos los recursos GPU y deja el engine en estado no-usable.
+   *
+   * - Cancela el loop de render activo (requestAnimationFrame).
+   * - Desacopla la FlyCamera (quita event listeners del canvas y document).
+   * - Para el input de audio si estaba activo.
+   * - Destruye device, context y buffers WebGPU vía destroyRenderer().
+   * - Es idempotente: llamadas posteriores son no-op seguras.
+   * - Tras dispose(), loadScene() y start() lanzan error claro.
+   *
+   * Caso de uso principal: regla "solo-un-ACTIVE" de FlowCAD — liberar la GPU
+   * al hacer promote de un engine a otro, evitando el leak de device tras 2-3 ciclos.
+   */
+  dispose(): void {
+    // Idempotente: segunda llamada es no-op.
+    if (this.disposed) return;
+    this.disposed = true;
+
+    // Detener el loop de render primero para que el tick no acceda a recursos
+    // ya destruidos si hay un frame en vuelo.
+    this.running = false;
+    cancelAnimationFrame(this.rafId);
+    this.rafId = 0;
+
+    // Desacoplar cámara — quita event listeners de canvas y document.
+    if (this.camera) {
+      this.camera.detach();
+      this.camera = null;
+    }
+
+    // Detener audio (fire-and-forget; el stream de MediaDevices se cierra solo).
+    if (this.audio) {
+      void this.audio.stop();
+      this.audio = null;
+    }
+
+    // Destruir recursos WebGPU.
+    if (this.renderer) {
+      destroyRenderer(this.renderer);
+      this.renderer = null;
+    }
+
+    // Limpiar el estado de compilación para dejar al engine inerte.
+    this.compiled = null;
+    this.lastWgslHash = null;
+    this.lastLoadInfo = null;
+  }
+
+  /** Devuelve true si dispose() ya fue llamado en este engine. */
+  isDisposed(): boolean {
+    return this.disposed;
   }
 
   private tick(now: number): void {

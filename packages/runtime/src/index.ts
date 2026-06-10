@@ -9,7 +9,7 @@
 export { M13Engine } from './engine.js';
 export type { M13EngineOptions, SceneLoadInfo } from './engine.js';
 
-export { writeMatParams } from './renderer/index.js';
+export { writeMatParams, destroyRenderer } from './renderer/index.js';
 
 export { parseScene, validateScene, SUPPORTED_VERSION } from './parser/index.js';
 export type { ParseOptions } from './parser/index.js';

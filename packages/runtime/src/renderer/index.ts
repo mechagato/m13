@@ -219,6 +219,29 @@ export function writeMatParams(state: RendererState, values: Float32Array): void
   );
 }
 
+/**
+ * Libera todos los recursos WebGPU asociados a un RendererState.
+ *
+ * Destruye los buffers GPU, desconfigura el canvas context y llama a
+ * device.destroy() para que el driver libere la memoria de la GPU.
+ * Es idempotente: llamar dos veces sobre el mismo state es seguro porque
+ * los objetos WebGPU ignoran operaciones sobre recursos ya destruidos.
+ *
+ * No libera el pipeline ni los bind groups explícitamente porque el driver
+ * los recoge automáticamente al destruir el device (WebGPU spec §device-destroy).
+ */
+export function destroyRenderer(state: RendererState): void {
+  // Destruir buffers explícitamente antes del device para ayudar al GC del driver.
+  state.uniformBuffer.destroy();
+  if (state.matParamsBuffer) {
+    state.matParamsBuffer.destroy();
+  }
+  // Desconfigura el context: libera la swap-chain y las texturas de presentación.
+  state.context.unconfigure();
+  // Destruye el device y todos los objetos hijos (pipelines, bind groups, etc.).
+  state.device.destroy();
+}
+
 export function renderFrame(state: RendererState): void {
   const encoder = state.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
