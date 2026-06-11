@@ -315,6 +315,22 @@ Estas surgieron en conversaciones con Gato. No están en el plan de Fase 1 actua
 - Cocinas Domus con voz (cliente describe cocina, m13 sintetiza)
 - Educativas para niños (tutor IA en mundo 3D)
 
+### Idea 3 — MCP de m13 + app en ChatGPT/Claude (PRIORIDAD ALTA, orden de Gato 2026-06-11)
+
+**Origen:** pregunta de inversionista sobre canales de distribución.
+**Directiva de Gato:** "estos se deben lanzar desde el inicio para llegar a sectores
+empresariales más rápido" — NO es idea de cajón, es candidato a primeras tasks post-Fase 2
+(o paralelo a ella si Gato lo ordena).
+**Qué es:** servidor MCP que expone `generate_m13_scene` (prompt NL → .m13 validado →
+link 3D caminable en motor13) + variante como app/connector de ChatGPT. Cualquier LLM
+del planeta se vuelve front-end de m13.
+**Por qué es barato:** el formato .m13 es texto LLM-first, el system prompt ya está al
+100% de pass rate (T-052/053), el parser/compiler ya validan — el MCP es plomería de días.
+**Por qué importa:** distribución gratuita dentro de ChatGPT/Claude = canal de adquisición
+empresarial sin costo de marketing. Coherente con D-025-06 (la IA crea recetas, el render
+siempre es local del cliente).
+**Constitution check:** cumple — LLM solo editor-time; el MCP ES editor-time.
+
 ---
 
 ## Si te desvías o te pierdes

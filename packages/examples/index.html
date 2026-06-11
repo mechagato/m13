@@ -3,73 +3,215 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>m13 · runtime demo</title>
+<title>m13 · este mundo pesa 2 KB</title>
+<meta name="description" content="m13 — motor gráfico semántico. La IA escribe recetas de 2 KB, tu dispositivo sintetiza el mundo 3D gratis para siempre.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/src/style.css">
 </head>
-<body>
-  <canvas id="canvas"></canvas>
+<body data-view="crear">
 
-  <div class="corner tl"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-  <div class="corner br"></div>
-  <div class="crosshair" id="crosshair"></div>
+  <!-- ============ Ventana de la app (workspace IDE agéntico) ============ -->
+  <div class="app-window" id="appWindow">
 
-  <div class="hud hud-header">
-    <div class="title">m13 · runtime</div>
-    <div class="subtitle">@m13/runtime v0.1.0 · escenas .m13 reales</div>
-    <div class="scene-name" id="sceneName">cargando…</div>
-    <div class="desc" id="sceneDesc">Inicializando el motor.</div>
-  </div>
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="tb-left">
+        <button class="tb-icon" title="Menú" aria-label="Menú">☰</button>
+        <span class="tb-logo">m13<span class="tb-dot">·</span>neonodos</span>
+      </div>
+      <div class="tb-search">
+        <span class="tb-search-ico">⌕</span>
+        <input id="searchInput" type="text" placeholder="Buscar escena…" autocomplete="off" spellcheck="false">
+        <kbd>Ctrl+K</kbd>
+      </div>
+      <div class="tb-right">
+        <button class="tb-icon" id="panelToggle" title="Panel derecho" aria-label="Panel derecho">▥</button>
+      </div>
+    </header>
 
-  <div class="hud hud-stats">
-    <div class="row"><span class="label">fps</span><span class="value" id="fps">--</span></div>
-    <div class="row"><span class="label">ms/frame</span><span class="value" id="ms">--</span></div>
-    <div class="row"><span class="label">resolution</span><span class="value" id="res">--</span></div>
-    <div class="divider"></div>
-    <div class="row"><span class="label">cam x</span><span class="value" id="cx">--</span></div>
-    <div class="row"><span class="label">cam y</span><span class="value" id="cy">--</span></div>
-    <div class="row"><span class="label">cam z</span><span class="value" id="cz">--</span></div>
-    <div class="divider"></div>
-    <div class="row"><span class="label">audio</span><span class="value audio-status" id="audio">offline</span></div>
-    <div class="row"><span class="label">amplitude</span><span class="value" id="amp">0.00</span></div>
-  </div>
+    <div class="workspace">
 
-  <div class="hud hud-controls">
-    <div class="row"><span class="key">click</span> capturar cursor</div>
-    <div class="row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> moverse</div>
-    <div class="row"><span class="key">SPACE</span><span class="key">SHIFT</span> arriba/abajo</div>
-    <div class="row"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span> cambiar escena</div>
-    <div class="row"><span class="key">M</span> mic on/off &nbsp;&nbsp; <span class="key">ESC</span> liberar</div>
-  </div>
+      <!-- Rail izquierdo de iconos -->
+      <nav class="rail" id="rail">
+        <button class="rail-btn active" data-view-btn="crear" title="Crear (agente)"><span>◆</span></button>
+        <button class="rail-btn" data-view-btn="explorar" title="Explorar (paseo 3D)"><span>▦</span></button>
+        <button class="rail-btn" data-view-btn="porque" title="Por qué m13"><span>◎</span></button>
+        <button class="rail-btn" data-view-btn="ajustes" title="Ajustes"><span>⚙</span></button>
+        <div class="rail-spacer"></div>
+        <div class="rail-brand">m<span>13</span></div>
+      </nav>
 
-  <div class="hud hud-tag">
-    <div>neonodos · <span class="v">runtime</span></div>
-    <div>v0.1.0</div>
-  </div>
+      <!-- Zona central — el "documento" -->
+      <main class="main">
 
-  <a class="qr-panel" href="https://motor13.pages.dev" target="_blank" rel="noopener" title="Escanéame o abre la URL directamente desde tu móvil/Quest 3">
-    <img src="/qr.png" alt="QR a motor13.pages.dev" width="140" height="140" />
-    <div class="qr-caption">motor13.pages.dev</div>
-    <div class="qr-hint">abre en tu móvil →</div>
-  </a>
+        <div class="taskline" id="taskLine">
+          <span class="task-spinner" id="taskSpinner" hidden></span>
+          <span class="task-text" id="taskText">listo — describe una escena o pulsa + para los presets</span>
+        </div>
 
-  <div class="scene-selector" id="sceneSelector"></div>
+        <div class="doc" id="doc">
+          <canvas id="canvas"></canvas>
+          <div class="crosshair" id="crosshair"></div>
 
-  <div class="click-prompt" id="prompt">
-    <div class="box">
-      <div class="main">click para entrar</div>
-      <div class="sub">wasd + mouse + 1-4 escenas</div>
+          <!-- HUD del walkthrough (solo vista Explorar) -->
+          <div class="hud hud-info explore-ui">
+            <div class="scene-name" id="sceneName">cargando…</div>
+            <div class="desc" id="sceneDesc">Inicializando el motor.</div>
+          </div>
+
+          <div class="hud hud-stats explore-ui" id="hudStats">
+            <div class="row"><span class="label">fps</span><span class="value" id="fps">--</span></div>
+            <div class="row"><span class="label">ms/frame</span><span class="value" id="ms">--</span></div>
+            <div class="row"><span class="label">resolution</span><span class="value" id="res">--</span></div>
+            <div class="divider"></div>
+            <div class="row"><span class="label">cam x</span><span class="value" id="cx">--</span></div>
+            <div class="row"><span class="label">cam y</span><span class="value" id="cy">--</span></div>
+            <div class="row"><span class="label">cam z</span><span class="value" id="cz">--</span></div>
+            <div class="divider"></div>
+            <div class="row"><span class="label">audio</span><span class="value audio-status" id="audio">offline</span></div>
+            <div class="row"><span class="label">amplitude</span><span class="value" id="amp">0.00</span></div>
+          </div>
+
+          <!-- HUD de negocio — modo pitch (tecla P) -->
+          <div class="hud hud-pitch" id="hudPitch">
+            <div class="row"><span class="label">peso escena</span><span class="value" id="pitchBytes">--</span></div>
+            <div class="row"><span class="label">imagen equivalente</span><span class="value">~60 KB</span></div>
+            <div class="divider"></div>
+            <div class="row"><span class="label">costo IA de esta vista</span><span class="value neon">$0</span></div>
+            <div class="row"><span class="label">render</span><span class="value">100% local</span></div>
+          </div>
+
+          <div class="hud hud-controls explore-ui">
+            <div class="row"><span class="key">click</span> capturar cursor</div>
+            <div class="row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> moverse</div>
+            <div class="row"><span class="key">SPACE</span><span class="key">SHIFT</span> arriba/abajo</div>
+            <div class="row"><span class="key">1</span>–<span class="key">9</span> cambiar escena</div>
+            <div class="row"><span class="key">M</span> mic &nbsp; <span class="key">P</span> pitch &nbsp; <span class="key">ESC</span> liberar</div>
+          </div>
+
+          <div class="click-prompt explore-ui" id="prompt">
+            <div class="box">
+              <div class="main">click para entrar</div>
+              <div class="sub">wasd + mouse + 1-9 escenas</div>
+            </div>
+          </div>
+
+          <!-- Error WebGPU — DENTRO del documento, no encima de la app -->
+          <div class="doc-error" id="errorScreen">
+            <div class="panel">
+              <h1>:: render no disponible ::</h1>
+              <p id="errorMsg">--</p>
+            </div>
+          </div>
+
+          <!-- Vista: Por qué m13 -->
+          <section class="view-pane pane-porque">
+            <div class="porque-inner">
+              <div class="pane-title">// por qué m13</div>
+              <div class="big-numbers">
+                <div class="big-num">
+                  <div class="num">30.8×</div>
+                  <div class="cap">menos peso que Three.js (benchmark real)</div>
+                </div>
+                <div class="big-num">
+                  <div class="num">$0</div>
+                  <div class="cap">Crear con IA: centavos, una vez · Ver/caminar/girar: $0, para siempre</div>
+                </div>
+                <div class="big-num">
+                  <div class="num">1</div>
+                  <div class="cap">sola base de código: web + móvil + (pronto) VR</div>
+                </div>
+              </div>
+              <table class="bench-table">
+                <thead><tr><th></th><th>m13</th><th>Three.js equivalente</th></tr></thead>
+                <tbody>
+                  <tr><td>Peso de la escena (galería)</td><td class="neon">2,014 bytes</td><td>62,115 bytes</td></tr>
+                  <tr><td>Composición</td><td>1 archivo YAML semántico</td><td>HTML + JS + 4 texturas JPG</td></tr>
+                  <tr><td>Reducción</td><td class="neon" colspan="2">30.8× a favor de m13 — H1 (&gt;10×) validada</td></tr>
+                </tbody>
+              </table>
+              <div class="porque-qr">
+                <img src="/qr.png" alt="QR a motor13.pages.dev" width="150" height="150">
+                <div class="porque-qr-cap">ábrelo en tu celular ahora<br><span class="neon">motor13.pages.dev</span></div>
+              </div>
+              <div class="porque-contact">NeoNodos · motor13 · isai@neonodos.com</div>
+            </div>
+          </section>
+
+          <!-- Vista: Ajustes -->
+          <section class="view-pane pane-ajustes">
+            <div class="ajustes-inner">
+              <div class="pane-title">// ajustes</div>
+              <p class="ajustes-sub">Endpoint LLM opcional (editor-time, Constitution §3). Sin endpoint, el generador paramétrico local funciona igual — $0, sin red.</p>
+              <form id="settingsForm" class="settings-form">
+                <label>
+                  <span>URL del endpoint</span>
+                  <input type="url" id="llmUrlInput" placeholder="https://phi-llm-gateway…" autocomplete="off" spellcheck="false">
+                </label>
+                <label>
+                  <span>Token</span>
+                  <input type="password" id="llmTokenInput" placeholder="phi-dev-local" autocomplete="off">
+                </label>
+                <div class="settings-actions">
+                  <button type="submit" class="btn-neon">Guardar</button>
+                  <button type="button" class="btn-ghost" id="settingsClear">Borrar</button>
+                </div>
+                <div class="settings-status" id="settingsStatus"></div>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer-zone">
+          <div class="chips" id="chips" hidden></div>
+          <form class="composer" id="promptForm">
+            <button type="button" class="comp-plus" id="chipsToggle" title="Presets" aria-label="Presets">+</button>
+            <input id="promptInput" type="text" placeholder="Pregunta cualquier cosa… describe la escena que quieres" autocomplete="off">
+            <button type="submit" class="comp-send" id="promptBtn" title="Generar" aria-label="Generar">↑</button>
+          </form>
+          <div class="statusbar">
+            <span class="sb-item">Build ▾</span>
+            <span class="sb-sep">·</span>
+            <span class="sb-item">m13 runtime v0.1.0</span>
+            <span class="sb-sep">·</span>
+            <span class="sb-item" id="llmStatus">⚡ local sin IA</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Panel derecho colapsable -->
+      <aside class="sidepanel" id="sidepanel">
+        <div class="sp-section sp-receta" id="recipePanel" data-empty="true">
+          <div class="sp-head"><span class="sp-title">Receta</span></div>
+          <div class="file-card">
+            <div class="file-head">
+              <span class="file-name" id="recipeName">escena.m13</span>
+              <button class="file-copy" id="recipeCopy">copiar</button>
+            </div>
+            <div class="code" id="recipeCode"><div class="code-empty">genera una escena para ver su receta .m13</div></div>
+          </div>
+          <div class="recipe-weight" id="recipeWeight"></div>
+          <div class="render-note" id="renderNote"></div>
+        </div>
+        <div class="sp-section sp-escenas">
+          <div class="sp-head"><span class="sp-title">Escenas</span><span class="sp-count" id="sceneCount"></span></div>
+          <div class="tree" id="sceneSelector"></div>
+        </div>
+      </aside>
     </div>
   </div>
 
-  <div class="error-screen" id="errorScreen">
-    <div class="panel">
-      <h1>:: error ::</h1>
-      <p id="errorMsg">--</p>
+  <!-- ============ Pantalla de entrada narrativa ============ -->
+  <div class="entry-screen" id="entryScreen">
+    <div class="entry-inner">
+      <div class="entry-brand">m13 · neonodos</div>
+      <h1 class="entry-line">Este mundo pesa <span class="neon">2 KB</span></h1>
+      <h1 class="entry-line">Se creó escribiendo <span class="neon">una frase</span></h1>
+      <h1 class="entry-line">Corre en tu celular <span class="neon">sin instalar nada</span></h1>
+      <button class="entry-btn" id="enterBtn">Entrar →</button>
     </div>
   </div>
 

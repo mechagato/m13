@@ -2333,3 +2333,21 @@ Ningún agente futuro puede introducir dependencia de IA en el flujo de render/p
 **Nomenclatura (misma orden):** el proyecto se llama **FlowCAD** — "NeoCAD" es el nombre
 anterior y queda deprecado en toda comunicación (la carpeta `~/neonodos-core/neocad`
 se conserva por compatibilidad de paths/crons).
+
+### Adendum 025-b — 2026-06-11 — MVP agéntico en motor13.pages.dev + Idea 3 MCP
+
+- **Idea 3 registrada en CLAUDE.md (prioridad alta, orden de Gato):** MCP de m13 + app
+  ChatGPT/Claude como canal de distribución empresarial — "lanzar desde el inicio".
+- **motor13.pages.dev rediseñado y deployado** como MVP "killer de generadores de media IA":
+  UI nativa agéntica estilo IDE (dirección de arte de imagen provista por Gato — paleta
+  #050807/#2dd476, rail de iconos, composer con chips, receta como archivo con líneas).
+  Tab Crear (default): generación paramétrica LOCAL instantánea (D-025-06, sin IA) +
+  prompt libre con cliente LLM opcional (localStorage m13_llm_url/token) y fallback
+  honesto por keywords. Panel "Receta" muestra el .m13 con peso real en bytes (el pitch).
+  Tabs Explorar (walkthrough WASD intacto) y Por qué m13 (números de negocio) + Ajustes.
+  Modo pitch tecla P. 185 escenas generadas validadas contra parser+compiler: 0 fallas.
+- Verificación: typecheck limpio, build OK, screenshots Puppeteer revisados (m13_ide_*).
+- Stopper Gato: endpoint LLM público para el prompt con IA en vivo (hoy fallback local);
+  validación visual WebGPU en laptop real.
+
+*Sesión registrada · 2026-06-11 · phi + Claude Fable 5*
