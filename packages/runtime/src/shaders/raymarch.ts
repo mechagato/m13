@@ -7,6 +7,13 @@
  */
 
 export const RAYMARCH_WGSL = /* wgsl */ `
+// NOTA (auditoría 2026-06-10): constantes de calidad hardcodeadas en este shader,
+// candidatas a convertirse en uniforms de calidad configurables en Fase 2
+// (requieren validación visual antes de cambiarlas — NO tocar en Cerebro4):
+//   - 128 pasos máximos de raymarch (loop en fn raymarch)
+//   - 32 pasos de soft shadow (loop en fn softShadow)
+//   - 5 taps de ambient occlusion (loop en fn calcAO)
+//   - t > 80.0 distancia máxima de marcha · epsilon 0.001 de hit
 fn calcNormal(p: vec3<f32>) -> vec3<f32> {
   let e = vec2<f32>(0.0005, 0.0);
   return normalize(vec3<f32>(

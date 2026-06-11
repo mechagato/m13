@@ -59,6 +59,30 @@ export async function initRenderer(
     throw new Error('[m13/renderer] No se pudo obtener adapter WebGPU');
   }
   const device = await adapter.requestDevice();
+
+  // Manejo defensivo de pérdida de device — SOLO logging, sin recovery automático
+  // (la estrategia de recovery es diseño de Fase 2). Los checks defensivos
+  // (typeof) permiten que fake devices de tests sin `.lost` no truenen.
+  if (typeof device.lost?.then === 'function') {
+    void device.lost.then((info) => {
+      if (info.reason === 'destroyed') {
+        // Pérdida esperada: destroyRenderer()/dispose() llamó device.destroy().
+        console.info('[m13/renderer] GPUDevice destruido (dispose intencional).');
+      } else {
+        console.error(
+          `[m13/renderer] GPUDevice perdido inesperadamente (reason: ${info.reason}): ${info.message}. ` +
+            'El render se detuvo — recarga la escena para reinicializar.',
+        );
+      }
+    });
+  }
+  if (typeof device.addEventListener === 'function') {
+    device.addEventListener('uncapturederror', (ev) => {
+      const e = ev as GPUUncapturedErrorEvent;
+      console.error(`[m13/renderer] uncapturederror WebGPU: ${e.error?.message ?? String(e)}`);
+    });
+  }
+
   const context = canvas.getContext('webgpu') as GPUCanvasContext | null;
   if (!context) {
     throw new Error('[m13/renderer] canvas.getContext("webgpu") devolvió null');

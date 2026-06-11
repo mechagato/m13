@@ -18,6 +18,11 @@ export interface M13EngineOptions {
   pixelRatio?: number;
   /** Callback opcional para stats de cada frame */
   onFrame?: (stats: FrameStats) => void;
+  /**
+   * Callback opcional cuando una excepción dentro del loop de render detiene
+   * el motor. Sin esto, el error solo se loggea en consola con prefijo [m13/engine].
+   */
+  onError?: (e: Error) => void;
 }
 
 export interface SceneLoadInfo {
@@ -167,7 +172,17 @@ export class M13Engine {
     this.lastTime = this.t0;
     const loop = (now: number): void => {
       if (!this.running) return;
-      this.tick(now);
+      // Una excepción en tick() NO debe matar el RAF loop en silencio:
+      // detenemos el loop limpiamente, loggeamos y notificamos via onError.
+      try {
+        this.tick(now);
+      } catch (err) {
+        const e = err instanceof Error ? err : new Error(String(err));
+        this.stop();
+        console.error('[m13/engine] excepción en el loop de render — motor detenido:', e);
+        this.opts.onError?.(e);
+        return;
+      }
       this.rafId = requestAnimationFrame(loop);
     };
     this.rafId = requestAnimationFrame(loop);

@@ -48,31 +48,80 @@ export interface ChatResponse {
   telemetry: ChatTelemetry;
 }
 
+/** Timeout por request (ms). Configurable via NEXT_PUBLIC_PHI_LLM_TIMEOUT_MS. */
+const DEFAULT_TIMEOUT_MS = Number.parseInt(
+  process.env.NEXT_PUBLIC_PHI_LLM_TIMEOUT_MS ?? '60000',
+  10,
+);
+
+/** Backoff antes del único retry (ms). */
+const RETRY_BACKOFF_MS = 1500;
+
+/** Un fetch con AbortController + timeout. Lanza Error con mensaje claro en español. */
+async function fetchWithTimeout(body: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(`${GATEWAY_URL}/llm/chat`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GATEWAY_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error(
+        `El gateway LLM no respondió en ${Math.round(timeoutMs / 1000)}s — tiempo de espera agotado. Intenta de nuevo.`,
+      );
+    }
+    throw new Error(
+      'No se pudo conectar con el gateway LLM. Verifica que phi-llm-gateway esté corriendo y tu conexión de red.',
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Llama `/llm/chat` del phi-llm-gateway. Devuelve la respuesta del LLM
  * + telemetría parsed de los X-Phi-* headers.
+ *
+ * Robustez: timeout de 60s (configurable via NEXT_PUBLIC_PHI_LLM_TIMEOUT_MS)
+ * y 1 retry con backoff en errores de red, timeout o respuestas 5xx.
+ * Los errores 4xx NO se reintentan (son del request, no transitorios).
  */
 export async function chat(req: ChatRequest): Promise<ChatResponse> {
-  const res = await fetch(`${GATEWAY_URL}/llm/chat`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${GATEWAY_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: req.model ?? 'auto',
-      system: req.system ?? '',
-      messages: req.messages,
-      max_tokens: req.max_tokens ?? 4096,
-      temperature: req.temperature,
-      project_id: req.project_id ?? 'm13-editor',
-      cache: req.cache ?? true,
-    }),
+  const payload = JSON.stringify({
+    model: req.model ?? 'auto',
+    system: req.system ?? '',
+    messages: req.messages,
+    max_tokens: req.max_tokens ?? 4096,
+    temperature: req.temperature,
+    project_id: req.project_id ?? 'm13-editor',
+    cache: req.cache ?? true,
   });
 
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(payload, DEFAULT_TIMEOUT_MS);
+    if (res.status >= 500) {
+      // 5xx transitorio: un retry con backoff.
+      throw new Error(`gateway respondió ${res.status}`);
+    }
+  } catch {
+    // Error de red, timeout o 5xx → esperar backoff y reintentar UNA vez.
+    await new Promise((r) => setTimeout(r, RETRY_BACKOFF_MS));
+    res = await fetchWithTimeout(payload, DEFAULT_TIMEOUT_MS);
+  }
+
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`phi-llm-gateway ${res.status}: ${body.slice(0, 500)}`);
+    const bodyText = await res.text();
+    throw new Error(
+      `El gateway LLM devolvió un error (${res.status}). Detalle: ${bodyText.slice(0, 500)}`,
+    );
   }
 
   const body = (await res.json()) as Omit<ChatResponse, 'telemetry'>;
