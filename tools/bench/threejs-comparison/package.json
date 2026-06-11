@@ -1,0 +1,18 @@
+{
+  "name": "m13-bench-threejs-comparison",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Benchmark T-062/T-063 — escena Three.js equivalente a sala_galeria.m13 (NO es parte del workspace pnpm de m13)",
+  "scripts": {
+    "textures": "node generate-textures.mjs",
+    "bench:load": "node bench-load.mjs",
+    "serve": "npx --yes serve -l 8413 ."
+  },
+  "dependencies": {
+    "three": "^0.165.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.4"
+  }
+}

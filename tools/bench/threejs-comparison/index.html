@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>m13 bench — sala_galeria en Three.js (WebGL)</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #121316; }
+    #hud {
+      position: fixed; top: 13px; left: 13px; z-index: 10;
+      font: 12px/1.4 "JetBrains Mono", monospace; color: #c9a227;
+      background: rgba(0,0,0,0.55); padding: 5px 8px; border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">cargando…</div>
+  <!-- T-062: escena visualmente equivalente a sala_galeria.m13, motor tradicional.
+       Requiere: bundle three.module.min.js (677 KB) + 4 texturas JPG (./textures/).
+       Servir con: npm run serve  →  http://localhost:8413 -->
+  <script type="module" src="./scene.js"></script>
+</body>
+</html>
