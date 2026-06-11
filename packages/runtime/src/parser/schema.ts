@@ -11,14 +11,22 @@ import { z } from 'zod';
 // ---------- primitivos ----------
 
 const vec3 = z.tuple([z.number(), z.number(), z.number()]);
-const rgb = z.tuple([z.number(), z.number(), z.number()]);
+// Dimensiones físicas (bounds, scale, size): 0 o negativo produce SDFs degeneradas
+// y clamps de cámara invertidos — se rechazan en parse, no en runtime.
+const positiveVec3 = z.tuple([
+  z.number().positive(),
+  z.number().positive(),
+  z.number().positive(),
+]);
+// Canales de color: sin cota superior (HDR válido) pero nunca negativos.
+const rgb = z.tuple([z.number().min(0), z.number().min(0), z.number().min(0)]);
 
 // ---------- iluminación ----------
 
 const lightSchema = z.object({
   position: vec3.default([0, 2.5, 0]),
   color: rgb.default([1.0, 0.92, 0.78]),
-  intensity: z.number().default(1.0),
+  intensity: z.number().min(0).default(1.0),
 });
 
 const ambientSchema = z.object({
@@ -64,8 +72,9 @@ const objectSchema = z
     /** Solo válido (y requerido) cuando `kind === 'concept'`. Id del concepto geométrico. */
     concept: z.string().optional(),
     position: vec3,
+    /** Rotación estática en grados (Euler XYZ extrínseco, orden de aplicación X→Y→Z). */
     rotation: vec3.optional(),
-    scale: z.union([z.number(), vec3]).default(1),
+    scale: z.union([z.number().positive(), positiveVec3]).default(1),
     /** Requerido cuando kind ≠ 'concept'. Para kind:'concept' el material viene del concept. */
     material: materialSchema.optional(),
     audio_reactive: z.boolean().default(false),
@@ -73,7 +82,7 @@ const objectSchema = z
       .object({
         mode: z.enum(['bob', 'rotate', 'pulse']),
         speed: z.number().default(1.0),
-        amplitude: z.number().default(0.1),
+        amplitude: z.number().min(0).default(0.1),
       })
       .optional(),
   })
@@ -103,7 +112,7 @@ export const m13SceneSchema = z.object({
   version: z.string().default('0.1'),
   name: z.string(),
   description: z.string().optional(),
-  bounds: vec3.default([5, 3, 5]),
+  bounds: positiveVec3.default([5, 3, 5]),
   spawn: vec3.default([0, 0, -3.5]),
   ambient: ambientSchema.default({}),
   light: lightSchema.default({}),
@@ -113,7 +122,7 @@ export const m13SceneSchema = z.object({
   window: z
     .object({
       position: vec3,
-      size: vec3,
+      size: positiveVec3,
     })
     .optional(),
   objects: z.array(objectSchema).default([]),
