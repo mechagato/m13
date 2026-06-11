@@ -219,11 +219,13 @@ Blockers que requieren accion de Gato antes de abrir Fase 2:
    Instrucciones en `docs/DEPLOY.md` (setup Tailscale + navegador Quest + FPS validation).
 2. Custom domain `motor13.neonodos.com`: accion en Cloudflare Pages dashboard.
 3. Validacion visual WebGPU real (FPS >60fps): requiere laptop de Gato con GPU compatible.
-4. LLM eval batch T-052/T-053: 30 prompts de evaluacion, target >70% pass rate.
-   Aun no ejecutado. Requiere sesion con API key activa.
-5. Benchmark vs Three.js (T-062..T-064): no completado. Reporte `docs/papers/phase-1-benchmark.md` no existe.
-6. Reconciliar colision de codigos D-2103/D-2104 en BITACORA.
-7. Decidir convencion de codigos D-xxxx para Fase 2.
+4. ~~LLM eval batch T-052/T-053~~ — COMPLETADO 2026-06-11: **100% pass rate en 3 corridas**
+   (baseline 93.3%, una iteracion del system prompt). Ver BITACORA entrada 025.
+5. ~~Benchmark vs Three.js (T-062..T-064)~~ — COMPLETADO 2026-06-11: **H1 validada, 30.8×**
+   de reduccion de peso. Reporte en `docs/papers/phase-1-benchmark.md` (FPS/memoria GPU
+   pendientes de laptop de Gato).
+6. ~~Reconciliar colision D-2103/D-2104~~ — RESUELTO 2026-06-11 (FlowCAD → D-2107/D-2108).
+7. ~~Convencion de codigos D-xxxx~~ — RESUELTO: D-3xxx para Fase 2.
 
 Una vez que Gato aprueba el cierre y da la orden, el siguiente flujo es:
   Spec Fase 2 (Gato dirige direccion) → Plan → Tasks → Implement.
@@ -257,21 +259,21 @@ afectan a cualquier trabajo futuro en Fase 2+:
 - **D-2103 (editor):** M13Engine importado dinamicamente con `await import('@m13/runtime')` en editor.
   Razon: evita que Next.js ejecute `navigator.gpu` en SSR.
 - **D-2104 (editor):** Debounce 250ms YAML → loadScene en live reload. Cumple FR-4.3 (<500ms) sin saturar compiler.
-- **D-2103 (FlowCAD, sesion 22-may):** Dynamic import del bundle m13 desde `/public/m13/m13-runtime.js`
-  con `webpackIgnore`. Drop-in en cualquier app Next.js sin configurar resolve aliases.
-  NOTA: este codigo D-2103 colisiona con el editor — la BITACORA tiene dos entradas con ese codigo.
-  Pendiente reconciliar en inicio de Fase 2.
-- **D-2104 (FlowCAD, sesion 22-may):** Endpoint `.m13` no-strict en job_manager de NeoCAD — persiste
-  aunque el proceso FastAPI reinicie (archivo en disco). Colision de codigo con D-2104 editor.
+- **D-2107 (FlowCAD, sesion 22-may — antes D-2103, re-codificado 2026-06-11):** Dynamic import del
+  bundle m13 desde `/public/m13/m13-runtime.js` con `webpackIgnore`. Drop-in en cualquier app Next.js
+  sin configurar resolve aliases.
+- **D-2108 (FlowCAD, sesion 22-may — antes D-2104, re-codificado 2026-06-11):** Endpoint `.m13`
+  no-strict en job_manager de NeoCAD — persiste aunque el proceso FastAPI reinicie (archivo en disco).
 - **D-2105 (FlowCAD, sesion 22-may):** Backend NeoCAD dejo de invocar Blender en flujo SSE.
   Motor m13 sobre WebGPU es la ruta de visualizacion principal.
 - **D-2106 (FlowCAD, sesion 22-may):** `glb_to_usdz.py` se mantiene aislado con graceful skip. No afecta flujo principal.
 
-### Blocker de nomenclatura pendiente para Fase 2
+### Convencion de codigos D (resuelta 2026-06-11)
 
-Los codigos D-2103 y D-2104 tienen colision en BITACORA (dos sesiones distintas los reutilizaron).
-Al iniciar Fase 2, Gato debe decidir la convencion de codigos D-xxxx para la nueva fase
-(se sugiere D-3xxx para Fase 2, reservando D-2xxx para Fase 1 ya cerrada).
+La colision D-2103/D-2104 quedo reconciliada: las entradas FlowCAD de la sesion 22-may se
+re-codificaron a **D-2107/D-2108** (el editor conserva los originales). Convencion firme:
+**D-2xxx = Fase 1 (cerrada) · D-3xxx = Fase 2 · D-Nxxx = Fase N.** Las decisiones de la
+auditoria 2026-06-10/11 usan la serie D-025-xx (entrada 025 de BITACORA).
 
 Cualquier decision tecnica nueva durante sesiones de Claude Code se agrega aqui con codigo D-XXX incremental.
 

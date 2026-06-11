@@ -2102,10 +2102,10 @@ Es factible. Si mantenemos foco m13 = prioridad #1, la probabilidad de Innovafes
 - `glb_to_usdz.py` mantenido aislado (opcional AR Quick Look iOS)
 
 ### Decisiones tomadas
-- **D-2103:** Dynamic import del bundle m13 desde `/public/m13/m13-runtime.js` con
+- **D-2107** *(antes D-2103, re-codificado 2026-06-11 — colisión con D-2103 del editor)*: Dynamic import del bundle m13 desde `/public/m13/m13-runtime.js` con
   `webpackIgnore`. Razón: evita análisis del bundler externo + drop-in en cualquier
   framework Next.js sin configurar resolve aliases.
-- **D-2104:** Endpoint `.m13` no-strict en `job_manager` — si el `.m13` existe en disco,
+- **D-2108** *(antes D-2104, re-codificado 2026-06-11 — colisión con D-2104 del editor)*: Endpoint `.m13` no-strict en `job_manager` — si el `.m13` existe en disco,
   se sirve aunque el process haya reiniciado. Razón: persistencia debe sobrevivir al
   ciclo de vida del proceso FastAPI (job_manager está en RAM).
 - **D-2105:** Backend dejó de invocar Blender en flujo SSE. `auto_render` flag ya no
@@ -2247,3 +2247,74 @@ Los 3 blockers restantes dependen de hardware o acciones de Gato:
 Primera sesion de Fase 2 — arrancar cuando Gato haya dado direccion del spec.
 Leer: CLAUDE.md (proximos pasos Fase 2) + BITACORA entradas 023+024 + constitution.md.
 
+
+---
+
+## Entrada 025 — 2026-06-11 — Auditoría profunda + cierre de pendientes ejecutables de Fase 1
+
+### Contexto
+Sesión dirigida por Gato: (1) verificar sincronía local↔GitHub, (2) auditoría profunda
+multi-lente del proyecto completo, (3) cerrar los pendientes de Fase 1 que no requieren
+hardware (T-052/053 y T-062..064), (4) reconciliar D-codes. FlowCAD avanzó en paralelo
+en background (ver BITACORA de neocad).
+
+### Veredicto de sincronía
+Local y `mechagato/m13` (privado) 100% sincronizados en e69d3a2. Aclaración importante:
+`phi_production/phi/m13.py` en `mechagato/phi-main` es un PUENTE PHI↔Motor13, NO el motor.
+El motor tiene su propio repo. (Otra sesión había afirmado lo contrario — incorrecto.)
+
+### Auditoría profunda (workflow 7 lentes + verificación adversarial)
+87 hallazgos → 9 confirmados 2-de-2 → **los 9 corregidos** + 3 extras descubiertos al
+arreglar (leak GPUDevice en cache-miss, script de tests roto, cancelAnimationFrame sin
+guard). Reporte completo: `docs/audit/deep-review-2026-06-10.md`. Nota de honestidad:
+~44 hallazgos quedaron sin verificación adversarial completa por 2 cortes de límite de
+sesión — listados como deuda en el reporte.
+
+### T-052/T-053 — LLM eval (SC-4): **PASS**
+- Suite `packages/editor/__tests__/llm-eval.ts` + `prompts.json` (30 prompts, 7 categorías)
+- Vía phi-llm-gateway local :9095 (claude-sonnet-4-6, cache:false, temp 0.3)
+- Baseline con prompt original: 28/30 (93.3%). Fails: formato de `window`.
+- 1 iteración del system prompt (reglas window/rotation/animate/restricciones numéricas)
+- **3 corridas oficiales consecutivas: 30/30 = 100% cada una** (target ≥70%)
+- `pnpm --filter @m13/editor test:llm` reproducible
+
+### T-062..T-064 — Benchmark vs Three.js (SC-5): **H1 VALIDADA**
+- `tools/bench/threejs-comparison/` (réplica WebGL de sala_galeria, texturas sharp 512px)
+- Assets de escena: .m13 2,014 B vs Three.js 62,115 B → **30.8× de reducción** (umbral 10×)
+- Bundle motor gzip: m13 70.9 KB vs three 167.5 KB (2.36×)
+- Prep CPU: Three.js ~1.8× más rápido en build de grafo (reportado con honestidad)
+- FPS y memoria GPU: [PENDIENTE — laptop Gato], instrucciones en el reporte
+- Reporte: `docs/papers/phase-1-benchmark.md`
+
+### Reconciliación D-codes (cerrada)
+- FlowCAD sesión 22-may: D-2103→**D-2107**, D-2104→**D-2108** (BITACORA + CLAUDE.md)
+- Convención firme: D-2xxx Fase 1 · D-3xxx Fase 2 · D-Nxxx Fase N
+
+### Decisiones de esta sesión
+- **D-025-01:** rotation = Euler XYZ extrínseco en GRADOS, matriz inversa precomputada
+  compile-time. Razón: cero costo runtime para objetos sin rotación, YAML human/LLM-friendly.
+- **D-025-02:** ambient.background llega al shader vía missColor() generada por el
+  compilador (constante de escena), NO vía uniform. Razón: evita tocar UNIFORM_BYTES.
+- **D-025-03:** FR-2.2 se cumple declarativamente (signature+seed en los 18 conceptos);
+  el consumo de seeds en WGSL se difiere a Fase 2 por requerir validación visual en GPU.
+- **D-025-04:** pulse acota amplitude a 0.9 (k nunca ≤0). bob produce WGSL idéntico al
+  histórico (sin regresión de cache).
+- **D-025-05:** script de test del runtime corregido a filtro posicional de vitest;
+  la suite de regresión vuelve a ser ejecutable vía pnpm.
+
+### Estado de verificación
+- typecheck limpio (4 packages) · **112/112 tests verdes** · determinismo intacto
+- SC-4 PASS · SC-5 PASS · Quedan SOLO pendientes de hardware/humano: SC-1 (FPS laptop),
+  SC-6 (Quest 3), SC-7 (usuario no-técnico) + custom domain Cloudflare.
+
+### FlowCAD (paralelo, repo mechagato/flowcad)
+Front :3002 ↔ brain :8900 conectados (BrainRealtimeClient), E2E real validado
+(placa 50x30x5mm → bbox exacto), 21/21 tests, commits 216afbb + 8f0b619 PUSHEADOS.
+Remote cambiado a SSH (tokens gh inválidos — stopper menor para Gato).
+
+### Próximo paso
+Gate de Fase 1 ahora solo espera a Gato: FPS laptop + Quest 3 + custom domain + usuario
+no-técnico. Fase 2 espera su dirección (spec EN PAUSA). Siguiente integración recomendada:
+cerebro FlowCAD emitiendo .m13 renderizable en el canvas m13 del front (showcase Innovafest).
+
+*Sesión registrada · 2026-06-11 · phi + Claude Fable 5*
