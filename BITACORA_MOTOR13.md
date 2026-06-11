@@ -2318,3 +2318,18 @@ no-técnico. Fase 2 espera su dirección (spec EN PAUSA). Siguiente integración
 cerebro FlowCAD emitiendo .m13 renderizable en el canvas m13 del front (showcase Innovafest).
 
 *Sesión registrada · 2026-06-11 · phi + Claude Fable 5*
+
+### D-025-06 (decisión estratégica, orden directa de Gato 2026-06-11)
+
+**FlowCAD Desktop renderiza y parametriza 100% local; la IA es solo capa de autoría
+opcional.** El contrato cerebro↔render es el archivo `.m13` persistido en disco — NUNCA
+un stream vivo de la IA al canvas. Tres niveles de producto: (1) determinista puro
+siempre disponible (render m13 + re-ejecución paramétrica CadQuery sin LLM), (2) IA
+local-asistida futura, (3) IA premium online (razonamiento de ingeniería desde lenguaje
+natural). Razón: usuarios son diseñadores industriales con workstations potentes; la
+licencia desktop no tiene costo marginal por uso; alineado con constitution.md §3.
+Ningún agente futuro puede introducir dependencia de IA en el flujo de render/parametrizado.
+
+**Nomenclatura (misma orden):** el proyecto se llama **FlowCAD** — "NeoCAD" es el nombre
+anterior y queda deprecado en toda comunicación (la carpeta `~/neonodos-core/neocad`
+se conserva por compatibilidad de paths/crons).
