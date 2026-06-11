@@ -28,6 +28,8 @@ vi.mock('../renderer/index.js', () => ({
   renderFrame: vi.fn(),
   writeUniforms: vi.fn(),
   writeMatParams: vi.fn(),
+  // loadScene destruye el renderer anterior en cache-miss (fix de leak GPU).
+  destroyRenderer: vi.fn(),
 }));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -89,6 +91,9 @@ describe('M13Engine — shader cache (T-013)', () => {
     expect(initRenderer).toHaveBeenCalledTimes(2);
     expect(firstHash).not.toBe(secondHash);
     expect(engine.getLastLoadInfo()!.reusedPipeline).toBe(false);
+    // El renderer del primer shader debe destruirse al reemplazarlo (anti-leak).
+    const { destroyRenderer } = await import('../renderer/index.js');
+    expect(destroyRenderer).toHaveBeenCalledTimes(1);
   });
 
   it('cargar A → B → A: el cache solo retiene la ULTIMA escena (no es LRU multi-entry)', async () => {

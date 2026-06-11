@@ -20,8 +20,8 @@
     "build": "vite build",
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --declarationDir dist/types",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --root ../.. --dir packages/runtime",
-    "test:coverage": "vitest run --root ../.. --dir packages/runtime --coverage",
+    "test": "vitest run --root ../.. packages/runtime",
+    "test:coverage": "vitest run --root ../.. packages/runtime --coverage",
     "size": "size-limit",
     "clean": "rm -rf dist *.tsbuildinfo"
   },

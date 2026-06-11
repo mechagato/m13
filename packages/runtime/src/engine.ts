@@ -82,10 +82,28 @@ export class M13Engine {
     const compiled = compileScene(scene);
     const newHash = await hashWgsl(compiled.wgsl);
 
+    // dispose() pudo llegar mientras fetchText/hashWgsl estaban en vuelo.
+    // Sin este guard, las asignaciones de abajo "revivirían" un engine disposed.
+    if (this.disposed) {
+      throw new Error('[m13/engine] dispose() llamado durante loadScene — operación cancelada.');
+    }
+
     const cacheHit = this.renderer !== null && newHash === this.lastWgslHash;
 
     if (!cacheHit) {
-      this.renderer = await initRenderer(this.canvas, compiled);
+      const newRenderer = await initRenderer(this.canvas, compiled);
+      if (this.disposed) {
+        // dispose() llegó mientras initRenderer creaba el device: liberarlo
+        // de inmediato o queda un GPUDevice huérfano fuera del alcance de dispose().
+        destroyRenderer(newRenderer);
+        throw new Error('[m13/engine] dispose() llamado durante loadScene — recursos GPU liberados.');
+      }
+      // Cache-miss con renderer previo: destruir el anterior antes de reemplazarlo.
+      // Sin esto, cada cambio de shader filtra un GPUDevice completo.
+      if (this.renderer) {
+        destroyRenderer(this.renderer);
+      }
+      this.renderer = newRenderer;
       this.lastWgslHash = newHash;
     } else if (this.renderer && compiled.matParams.totalFloats > 0) {
       // Cache hit del shader pero los VALORES de matParams pueden haber cambiado
@@ -157,7 +175,7 @@ export class M13Engine {
 
   stop(): void {
     this.running = false;
-    cancelAnimationFrame(this.rafId);
+    cancelRaf(this.rafId);
   }
 
   /**
@@ -181,7 +199,7 @@ export class M13Engine {
     // Detener el loop de render primero para que el tick no acceda a recursos
     // ya destruidos si hay un frame en vuelo.
     this.running = false;
-    cancelAnimationFrame(this.rafId);
+    cancelRaf(this.rafId);
     this.rafId = 0;
 
     // Desacoplar cámara — quita event listeners de canvas y document.
@@ -267,6 +285,14 @@ export class M13Engine {
       cameraPos: cam.pos,
       audioAmplitude: amp,
     });
+  }
+}
+
+// cancelAnimationFrame no existe fuera del browser (Node, SSR, tests).
+// dispose()/stop() deben ser seguros en cualquier entorno.
+function cancelRaf(id: number): void {
+  if (typeof cancelAnimationFrame === 'function') {
+    cancelAnimationFrame(id);
   }
 }
 
