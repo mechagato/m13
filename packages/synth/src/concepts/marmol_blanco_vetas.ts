@@ -4,6 +4,15 @@ export const marmolBlancoVetas: Concept = {
   id: 'marmol_blanco_vetas',
   category: 'universal',
   description: 'Mármol blanco con vetas grises procedurales. Galería, lujo, baños.',
+  // FR-2.2 — base blanco vec3(0.92,0.91,0.88) con vetas fbm gris (mix hasta 0.6); sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.92, 0.91, 0.88],
+    roughness: 0.3,
+    normalVariation: 0.4,
+    audioReactivity: 0,
+  },
+  seed: 1005,
   wgsl: /* wgsl */ `
 fn mat_marmol_blanco_vetas(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   let vein = fbm(p * vec3<f32>(2.0, 0.5, 2.0), 4);

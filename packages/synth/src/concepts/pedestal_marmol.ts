@@ -22,6 +22,15 @@ export const pedestalMarmol: Concept = {
   id: 'pedestal_marmol',
   category: 'object_geo',
   description: 'Pedestal de mármol blanco con aristas redondeadas — base para esculturas, escaparates.',
+  // FR-2.2 — base vec3(0.94,0.93,0.88) con vetas grises fbm (mix 0.45). Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.94, 0.93, 0.88],
+    roughness: 0.3,
+    normalVariation: 0.35,
+    audioReactivity: 0,
+  },
+  seed: 1013,
   paramsSchema: z.object({
     cornerRadius: z.number().min(0).max(0.5),
   }),

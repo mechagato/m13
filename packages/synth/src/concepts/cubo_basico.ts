@@ -18,6 +18,16 @@ export const cuboBasico: Concept = {
   id: 'cubo_basico',
   category: 'object_geo',
   description: 'Cubo gris básico — bloque de construcción para prototipado de escenas.',
+  // FR-2.2 — signature derivada del WGSL real: base vec3(0.55,0.55,0.58), speckle leve 0.03, sin audioAmp.
+  signature: {
+    baseColor: [0.55, 0.55, 0.58],
+    roughness: 0.7,
+    normalVariation: 0.1,
+    audioReactivity: 0,
+  },
+  // Seed procedural (1001 = primero en orden alfabético). Reserva la base para
+  // variación per-instancia en Fase 2 — el WGSL aún no lo consume.
+  seed: 1001,
   wgsl: /* wgsl */ `
 fn mat_cubo_basico(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   let n_speckle = noise3(p * 30.0) * 0.03;

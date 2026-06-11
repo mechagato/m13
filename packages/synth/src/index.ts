@@ -48,6 +48,23 @@ export type ConceptCategory =
   | 'object_geo';
 
 /**
+ * Material signature (FR-2.2): caracterización declarativa del material que
+ * el WGSL del concepto produce. Valores derivados HONESTAMENTE del código
+ * WGSL real (constantes vec3, amplitudes de ruido, uso de audioAmp) — no
+ * inventados. Sirve al editor/LLM para razonar sobre materiales sin parsear WGSL.
+ */
+export interface MaterialSignature {
+  /** Color dominante RGB (0-1 aprox) que el WGSL realmente produce */
+  baseColor: [number, number, number];
+  /** Rugosidad estimada del material (0 = pulido espejo, 1 = totalmente rugoso) */
+  roughness: number;
+  /** Cuánto varía espacialmente la superficie (0 = plana, 1 = ruido/fbm de alta amplitud) */
+  normalVariation: number;
+  /** Cuánto responde el material a audioAmp (0 = lo ignora por completo) */
+  audioReactivity: number;
+}
+
+/**
  * Concepto: unidad reutilizable de síntesis material o geométrica.
  *
  * Los conceptos básicos (los 8 del bootstrap) sólo declaran `wgsl` material.
@@ -55,6 +72,10 @@ export type ConceptCategory =
  *  - `wgslSdf` para conceptos geométricos (T-021, kind: 'concept')
  *  - `paramsSchema` para parámetros editables validados por Zod
  *  - `defaults` para valores iniciales de los parámetros
+ *
+ * Todos los conceptos declaran (FR-2.2):
+ *  - `signature` — material signature derivada del WGSL real
+ *  - `seed` — procedural seed entero único y determinista por concepto
  *
  * El `manifest()` está siempre presente — lo adjunta el registry al registrar
  * cada concepto crudo. Devuelve metadata serializable para el editor.
@@ -66,6 +87,15 @@ export interface Concept {
   category: ConceptCategory;
   /** Descripción legible para humanos */
   description: string;
+  /** Material signature (FR-2.2) — color base, roughness, variación, audio reactivity */
+  signature: MaterialSignature;
+  /**
+   * Procedural seed (FR-2.2) — entero único por concepto, asignado secuencialmente
+   * por orden alfabético de id (1001, 1002, ...). Reserva la base para variación
+   * procedural por-instancia en Fase 2; el WGSL aún no lo consume (eso requiere
+   * validación visual con GPU).
+   */
+  seed: number;
   /** Fragmento WGSL que define `fn mat_<id>(p, n, audioAmp) -> vec3<f32>` */
   wgsl: string;
   /** Fragmento WGSL opcional que define `fn sdf_<id>(p, ...) -> f32` (solo conceptos geométricos) */
@@ -92,6 +122,10 @@ export interface ConceptManifest {
   id: string;
   category: ConceptCategory;
   description: string;
+  /** Material signature (FR-2.2) — serializable, derivada del WGSL real */
+  signature: MaterialSignature;
+  /** Procedural seed (FR-2.2) — entero único determinista por concepto */
+  seed: number;
   /** true si el concepto declara su propio SDF geométrico (no solo material) */
   hasGeometricSDF: boolean;
   /** true si el concepto acepta parámetros editables */
@@ -155,6 +189,8 @@ function attachManifest(raw: Concept): Concept {
       id: raw.id,
       category: raw.category,
       description: raw.description,
+      signature: raw.signature,
+      seed: raw.seed,
       hasGeometricSDF: raw.wgslSdf !== undefined,
       hasParams: raw.paramsSchema !== undefined,
       defaults: raw.defaults,

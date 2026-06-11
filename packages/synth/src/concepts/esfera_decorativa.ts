@@ -18,6 +18,15 @@ export const esferaDecorativa: Concept = {
   id: 'esfera_decorativa',
   category: 'object_geo',
   description: 'Esfera decorativa blanco mate con iridiscencia sutil — escultura genérica, decoración.',
+  // FR-2.2 — base vec3(0.95,0.94,0.92); iridiscencia depende de la normal, no hay ruido espacial; sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.95, 0.94, 0.92],
+    roughness: 0.6,
+    normalVariation: 0.05,
+    audioReactivity: 0,
+  },
+  seed: 1003,
   wgsl: /* wgsl */ `
 fn mat_esfera_decorativa(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   // Iridiscencia leve dependiente del ángulo de la normal.

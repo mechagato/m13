@@ -14,6 +14,16 @@ export const metalOxidado: Concept = {
   id: 'metal_oxidado',
   category: 'object',
   description: 'Metal con óxido naranja — esculturas industriales, fierros viejos, ambientes rústicos.',
+  // FR-2.2 — mezcla gris (0.55) ↔ óxido (0.62,0.30,0.13) con rustAmount default 0.5: dominante ≈ (0.58,0.44,0.34).
+  // fbm rust mask + speckle alta frecuencia. Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.58, 0.44, 0.34],
+    roughness: 0.8,
+    normalVariation: 0.6,
+    audioReactivity: 0,
+  },
+  seed: 1008,
   paramsSchema: z.object({
     rustAmount: z.number().min(0).max(1),
   }),

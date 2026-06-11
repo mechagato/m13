@@ -189,6 +189,65 @@ describe('synth — Concept registry y manifest', () => {
   });
 
   // ============================================
+  // FR-2.2 — material signature + procedural seed
+  // ============================================
+
+  it('FR-2.2: cada concepto declara signature con rangos válidos (0-1)', () => {
+    for (const c of listConcepts()) {
+      const s = c.signature;
+      expect(s, `${c.id} debe declarar signature`).toBeDefined();
+      expect(s.baseColor).toHaveLength(3);
+      for (const ch of s.baseColor) {
+        expect(ch, `${c.id} baseColor canal fuera de rango`).toBeGreaterThanOrEqual(0);
+        expect(ch, `${c.id} baseColor canal fuera de rango`).toBeLessThanOrEqual(1);
+      }
+      for (const [name, v] of [
+        ['roughness', s.roughness],
+        ['normalVariation', s.normalVariation],
+        ['audioReactivity', s.audioReactivity],
+      ] as const) {
+        expect(v, `${c.id}.${name} fuera de rango`).toBeGreaterThanOrEqual(0);
+        expect(v, `${c.id}.${name} fuera de rango`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('FR-2.2: cada concepto declara seed entero único', () => {
+    const seeds = listConcepts().map((c) => c.seed);
+    for (const seed of seeds) {
+      expect(Number.isInteger(seed)).toBe(true);
+    }
+    expect(new Set(seeds).size).toBe(TOTAL_COUNT);
+  });
+
+  it('FR-2.2: el manifest propaga signature y seed (serializables)', () => {
+    for (const c of listConcepts()) {
+      const m = c.manifest!();
+      expect(m.signature).toEqual(c.signature);
+      expect(m.seed).toBe(c.seed);
+      const parsed = JSON.parse(JSON.stringify(m)) as ConceptManifest;
+      expect(parsed.signature).toEqual(c.signature);
+      expect(parsed.seed).toBe(c.seed);
+    }
+  });
+
+  it('FR-2.2: seeds asignados secuencialmente por orden alfabético de id desde 1001', () => {
+    const sorted = [...listConcepts()].sort((a, b) => a.id.localeCompare(b.id));
+    sorted.forEach((c, i) => {
+      expect(c.seed, `${c.id} seed esperado ${1001 + i}`).toBe(1001 + i);
+    });
+  });
+
+  it('FR-2.2: audioReactivity refleja el uso real de audioAmp en el WGSL', () => {
+    // metal_dorado_pulido y pared_ladrillo_viejo usan audioAmp de forma significativa
+    expect(getConcept('metal_dorado_pulido')!.signature.audioReactivity).toBeGreaterThan(0);
+    expect(getConcept('pared_ladrillo_viejo')!.signature.audioReactivity).toBeGreaterThan(0);
+    // los demás lo ignoran
+    expect(getConcept('pared_yeso_blanco')!.signature.audioReactivity).toBe(0);
+    expect(getConcept('cubo_basico')!.signature.audioReactivity).toBe(0);
+  });
+
+  // ============================================
   // ConceptCategory `object_geo`
   // ============================================
 
@@ -198,6 +257,8 @@ describe('synth — Concept registry y manifest', () => {
       id: 'test_geo',
       category: 'object_geo',
       description: 'test',
+      signature: { baseColor: [0.5, 0.5, 0.5], roughness: 0.5, normalVariation: 0, audioReactivity: 0 },
+      seed: 9999,
       wgsl: 'fn mat_test_geo() {}',
       wgslSdf: 'fn sdf_test_geo() -> f32 { return 0.0; }',
     };

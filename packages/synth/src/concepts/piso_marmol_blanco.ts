@@ -15,6 +15,15 @@ export const pisoMarmolBlanco: Concept = {
   id: 'piso_marmol_blanco',
   category: 'floor',
   description: 'Mármol blanco pulido — galería, lobby, baño premium. Vetas sutiles.',
+  // FR-2.2 — base vec3(0.95,0.94,0.92), vetas sutiles (veinIntensity 0.3 default * 0.55). Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.95, 0.94, 0.92],
+    roughness: 0.2,
+    normalVariation: 0.2,
+    audioReactivity: 0,
+  },
+  seed: 1017,
   paramsSchema: z.object({
     veinIntensity: z.number().min(0).max(1),
   }),

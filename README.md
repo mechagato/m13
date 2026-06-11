@@ -3,7 +3,7 @@
 > A local-first world synthesis engine for WebXR and the modern web.
 > Built on semantic representation, signed distance fields, and continuous detail.
 
-**Status:** Research · Phase 0 (proof of principle)
+**Status:** Research · Phase 1 complete (`.m13` language + runtime + editor) · [Live demo](https://motor13.pages.dev)
 **License:** TBD (pending — see `constitution.md` §8.4)
 **Platform:** WebGPU only
 
@@ -64,7 +64,7 @@ Workload distribution (target):
 | Phase | Codename                              | Status      |
 |-------|---------------------------------------|-------------|
 | 0     | Proof of principle (SDF raymarching)  | ✅ Done     |
-| 1     | `.m13` language + concept library     | 🚧 Drafted  |
+| 1     | `.m13` language + concept library     | ✅ Done     |
 | 2     | Continuous detail (Sonido 13 visual)  | 📋 Planned  |
 | 3     | Local neural material synthesis       | 📋 Planned  |
 | 4     | Hybrid composition + Gaussian Splatting | 📋 Planned |

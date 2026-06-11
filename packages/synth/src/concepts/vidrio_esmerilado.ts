@@ -17,6 +17,16 @@ export const vidrioEsmerilado: Concept = {
   id: 'vidrio_esmerilado',
   category: 'object',
   description: 'Vidrio esmerilado emulado (sin transmisión real — limitación v0.1). Mamparas, lámparas, ventanas.',
+  // FR-2.2 — albedo mix frost(0.92,0.94,0.96)↔clear(0.78,0.84,0.88) con clarity 0.5 → ≈ (0.85,0.89,0.92).
+  // Frost noise 0.18 + micro fbm 0.08. Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.85, 0.89, 0.92],
+    roughness: 0.35,
+    normalVariation: 0.35,
+    audioReactivity: 0,
+  },
+  seed: 1018,
   paramsSchema: z.object({
     clarity: z.number().min(0).max(1),
   }),

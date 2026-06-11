@@ -15,6 +15,16 @@ export const paredMaderaOscura: Concept = {
   id: 'pared_madera_oscura',
   category: 'wall',
   description: 'Madera oscura con vetas — despacho, biblioteca, boiserie clásica.',
+  // FR-2.2 — base (0.36,0.22,0.12) oscurecida por darkness 0.6 → dominante ≈ (0.25,0.15,0.08).
+  // Vetas senoidales + grain noise. Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.25, 0.15, 0.08],
+    roughness: 0.55,
+    normalVariation: 0.4,
+    audioReactivity: 0,
+  },
+  seed: 1011,
   paramsSchema: z.object({
     darkness: z.number().min(0).max(1),
     grainScale: z.number().min(1).max(20),

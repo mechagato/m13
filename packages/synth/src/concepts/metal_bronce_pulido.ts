@@ -15,6 +15,15 @@ export const metalBroncePulido: Concept = {
   id: 'metal_bronce_pulido',
   category: 'object',
   description: 'Bronce cobrizo cálido con shimmer animado — herrajes, candelabros, decoración premium.',
+  // FR-2.2 — base vec3(0.74,0.46,0.22), glint noise leve (0.18*shimmer); NO audio-reactive (por diseño).
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.74, 0.46, 0.22],
+    roughness: 0.25,
+    normalVariation: 0.2,
+    audioReactivity: 0,
+  },
+  seed: 1006,
   paramsSchema: z.object({
     shimmer: z.number().min(0).max(1),
   }),

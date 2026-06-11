@@ -22,6 +22,15 @@ export const lamparaColgante: Concept = {
   id: 'lampara_colgante',
   category: 'object_geo',
   description: 'Lámpara colgante emisiva — luz cálida inline (sin contribución real a la escena, v0.1).',
+  // FR-2.2 — warm white vec3(1.0,0.85,0.55) emisivo; superficie lisa sin ruido; sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [1.0, 0.85, 0.55],
+    roughness: 0.2,
+    normalVariation: 0,
+    audioReactivity: 0,
+  },
+  seed: 1004,
   paramsSchema: z.object({
     glowIntensity: z.number().min(0).max(2),
     length: z.number().min(0.05).max(2),

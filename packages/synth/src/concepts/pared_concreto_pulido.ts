@@ -15,6 +15,15 @@ export const paredConcretoPulido: Concept = {
   id: 'pared_concreto_pulido',
   category: 'wall',
   description: 'Concreto pulido industrial — gris speckled con manchas sutiles. Loft / oficina / parking.',
+  // FR-2.2 — con darkness default 0.5: val ≈ 0.60, tinte cálido leve (1.0/0.99/0.97). Speckle y stain de baja amplitud. Sin audioAmp.
+  // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
+  signature: {
+    baseColor: [0.6, 0.59, 0.58],
+    roughness: 0.4,
+    normalVariation: 0.15,
+    audioReactivity: 0,
+  },
+  seed: 1009,
   paramsSchema: z.object({
     darkness: z.number().min(0).max(1),
     roughness: z.number().min(0).max(1),
