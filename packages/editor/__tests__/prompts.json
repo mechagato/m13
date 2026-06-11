@@ -1,0 +1,152 @@
+[
+  {
+    "id": "cuarto-01",
+    "category": "cuartos",
+    "prompt": "Una sala acogedora con paredes de yeso blanco, piso de madera envejecida y una mesa baja de madera oscura al centro."
+  },
+  {
+    "id": "cuarto-02",
+    "category": "cuartos",
+    "prompt": "Quiero una recámara chica con luz cálida tenue, paredes de madera oscura y piso de concreto industrial."
+  },
+  {
+    "id": "cuarto-03",
+    "category": "cuartos",
+    "prompt": "Una sala de estar amplia con techo alto, niebla ligera, y un torus de bronce pulido flotando como decoración."
+  },
+  {
+    "id": "cuarto-04",
+    "category": "cuartos",
+    "prompt": "Hazme un cuarto de meditación: piedra volcánica en paredes, piso de mármol blanco, y una esfera blanca decorativa al centro que suba y baje lento."
+  },
+  {
+    "id": "cuarto-05",
+    "category": "cuartos",
+    "prompt": "Un cuarto vacío minimalista, todo blanco, sin objetos."
+  },
+  {
+    "id": "cocina-01",
+    "category": "cocinas",
+    "prompt": "Una cocina industrial con ladrillo viejo, piso de concreto y una lámpara colgante sobre el centro."
+  },
+  {
+    "id": "cocina-02",
+    "category": "cocinas",
+    "prompt": "Cocina moderna con piso de mármol blanco, paredes de yeso, y una barra central tipo caja con material de mármol."
+  },
+  {
+    "id": "cocina-03",
+    "category": "cocinas",
+    "prompt": "Quiero una cocina rústica mexicana: paredes de ladrillo viejo, piso de madera envejecida, y un cilindro de bronce pulido como olla decorativa al centro."
+  },
+  {
+    "id": "cocina-04",
+    "category": "cocinas",
+    "prompt": "Cocina loft oscura con una ventana, luz fría, y dos cubos básicos como muebles."
+  },
+  {
+    "id": "cocina-05",
+    "category": "cocinas",
+    "prompt": "Una cocina chiquita con techo bajo y una esfera de vidrio esmerilado colgando como lámpara."
+  },
+  {
+    "id": "oficina-01",
+    "category": "oficinas",
+    "prompt": "Oficina ejecutiva con paredes de madera oscura, piso de mármol y un escritorio en forma de caja con material de cuero vintage."
+  },
+  {
+    "id": "oficina-02",
+    "category": "oficinas",
+    "prompt": "Una oficina con la identidad NeoNodos: tonos terracota cálidos y una esfera dorada audio-reactiva sobre un pedestal."
+  },
+  {
+    "id": "oficina-03",
+    "category": "oficinas",
+    "prompt": "Sala de juntas con una mesa larga al centro (caja redondeada), paredes de concreto pulido y luz neutra cenital."
+  },
+  {
+    "id": "oficina-04",
+    "category": "oficinas",
+    "prompt": "Oficina creativa con piso de concreto industrial, una lámpara colgante y un torus dorado que gire lentamente."
+  },
+  {
+    "id": "abstracta-01",
+    "category": "abstractas",
+    "prompt": "Una escena abstracta: cuarto oscuro con niebla densa y cinco esferas doradas flotando a distintas alturas."
+  },
+  {
+    "id": "abstracta-02",
+    "category": "abstractas",
+    "prompt": "Espacio surrealista: piso de mármol, paredes de piedra volcánica, y un torus gigante de vidrio esmerilado atravesado en el centro."
+  },
+  {
+    "id": "abstracta-03",
+    "category": "abstractas",
+    "prompt": "Instalación de arte: tres pedestales de mármol en fila, cada uno con una esfera decorativa encima."
+  },
+  {
+    "id": "abstracta-04",
+    "category": "abstractas",
+    "prompt": "Un vacío contemplativo casi sin luz, con una sola esfera audio-reactiva de metal oxidado al centro."
+  },
+  {
+    "id": "exterior-01",
+    "category": "exteriores",
+    "prompt": "Un patio interior estilo mexicano con piso de piedra volcánica, paredes de ladrillo viejo y una fuente central hecha con un cilindro de mármol."
+  },
+  {
+    "id": "exterior-02",
+    "category": "exteriores",
+    "prompt": "Una terraza minimalista al atardecer: luz cálida naranja intensa, piso de concreto, y una esfera de bronce decorativa."
+  },
+  {
+    "id": "exterior-03",
+    "category": "exteriores",
+    "prompt": "Un jardín zen interior: piso de concreto, una piedra grande al centro (esfera de piedra volcánica) y niebla suave."
+  },
+  {
+    "id": "luzmat-01",
+    "category": "luz-material",
+    "prompt": "Un cuarto blanco con luz roja dramática que venga desde abajo."
+  },
+  {
+    "id": "luzmat-02",
+    "category": "luz-material",
+    "prompt": "Galería con paredes de concreto pulido bien oscuro (darkness alto) y piso de mármol con vetas muy intensas."
+  },
+  {
+    "id": "luzmat-03",
+    "category": "luz-material",
+    "prompt": "Un cuarto con paredes de madera oscura con grano muy marcado (grainScale alto) y luz tenue azulada."
+  },
+  {
+    "id": "luzmat-04",
+    "category": "luz-material",
+    "prompt": "Cuarto industrial con una esfera central de metal completamente oxidado y luz ámbar desde una lámpara colgante."
+  },
+  {
+    "id": "edicion-01",
+    "category": "ediciones",
+    "prompt": "Tengo esta escena .m13:\n\nversion: \"0.1\"\nname: cuarto_vacio\nwalls:\n  concept: pared_yeso_blanco\nfloor:\n  concept: piso_madera_envejecida\nceiling:\n  concept: pared_yeso_blanco\n\nModifícala: agrega una esfera dorada al centro. Devuelve la escena completa actualizada."
+  },
+  {
+    "id": "edicion-02",
+    "category": "ediciones",
+    "prompt": "Tengo esta escena .m13:\n\nversion: \"0.1\"\nname: galeria\nbounds: [6, 3.5, 6]\nlight:\n  position: [0, 3, 0]\n  intensity: 1.2\nwalls:\n  concept: pared_yeso_blanco\nfloor:\n  concept: piso_marmol_blanco\nceiling:\n  concept: pared_yeso_blanco\n\nModifícala: cambia el piso a concreto industrial y baja la intensidad de la luz a 0.8. Devuelve la escena completa actualizada."
+  },
+  {
+    "id": "edicion-03",
+    "category": "ediciones",
+    "prompt": "Tengo esta escena .m13:\n\nversion: \"0.1\"\nname: loft\nbounds: [5, 3, 5]\nwalls:\n  concept: pared_ladrillo_viejo\nfloor:\n  concept: piso_concreto_industrial\nceiling:\n  concept: pared_yeso_blanco\nobjects:\n  - id: esfera_audio\n    kind: sphere\n    position: [0, -1.5, 0]\n    scale: 0.35\n    material: metal_dorado_pulido\n    audio_reactive: true\n\nModifícala: quita la esfera de audio y agrega una ventana en la pared del fondo. Devuelve la escena completa actualizada."
+  },
+  {
+    "id": "edicion-04",
+    "category": "ediciones",
+    "prompt": "Tengo esta escena .m13:\n\nversion: \"0.1\"\nname: templo\nbounds: [5, 3.5, 5]\nambient:\n  fogDensity: 0.02\nwalls:\n  concept: piedra_volcanica\nfloor:\n  concept: piedra_volcanica\nceiling:\n  concept: piedra_volcanica\nobjects:\n  - id: brasero\n    kind: cylinder\n    position: [0, -2.8, 0]\n    scale: [0.45, 0.2, 0.45]\n    material: piedra_volcanica\n\nModifícala: haz el brasero más grande y pon la niebla más densa. Devuelve la escena completa actualizada."
+  },
+  {
+    "id": "edicion-05",
+    "category": "ediciones",
+    "prompt": "Tengo esta escena .m13:\n\nversion: \"0.1\"\nname: oficina\nbounds: [5.5, 3, 5.5]\nambient:\n  tint: [1.0, 1.0, 1.0]\nwalls:\n  concept: pared_yeso_blanco\nfloor:\n  concept: pared_madera_oscura\nceiling:\n  concept: pared_yeso_blanco\nobjects:\n  - id: escritorio\n    kind: box\n    position: [0, -2.6, 0]\n    scale: [0.8, 0.4, 0.5]\n    material: cuero_vintage\n\nModifícala: agrega un torus de bronce pulido girando arriba del escritorio y cambia el tint a uno más cálido. Devuelve la escena completa actualizada."
+  }
+]

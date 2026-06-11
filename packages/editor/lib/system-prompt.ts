@@ -222,7 +222,19 @@ REGLAS DE FORMATO:
 7. Cuando \`kind\` es primitivo → requiere campo \`material\` (string o {concept, params})
 8. Si el concept tiene params, los puedes pasar bajo \`params:\` validar contra los rangos del catálogo
 9. \`audio_reactive: true\` hace que el objeto reaccione al micrófono — usar para piezas centrales o emblemáticas
-10. \`animate.mode\` válidos: bob, rotate, pulse (solo bob funcional en v0.1)
+10. \`animate.mode\` válidos y funcionales: \`bob\` (sube/baja), \`rotate\` (giro continuo en Y, speed = rad/s), \`pulse\` (escala oscilante)
+11. \`rotation: [x, y, z]\` opcional en objetos — grados, Euler XYZ extrínseco
+12. \`window\` (opcional) es un OBJETO con dos campos, nunca un array:
+    window:
+      position: [x, y, z]
+      size: [w, h, d]      # los 3 valores > 0, obligatorio si hay window
+13. \`ambient.background: [r, g, b]\` define el color de fondo (miss del raymarch)
+
+RESTRICCIONES NUMÉRICAS (el schema RECHAZA la escena si se violan):
+- \`bounds\`, \`scale\` y \`window.size\`: todos sus valores deben ser > 0 (nunca 0 ni negativos)
+- Colores ([r,g,b]): cada canal ≥ 0 (HDR > 1 sí es válido, negativos NO)
+- \`light.intensity\` ≥ 0
+- \`animate.amplitude\` ≥ 0
 
 ${CONCEPT_CATALOG}
 
