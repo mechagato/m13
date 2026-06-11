@@ -352,6 +352,29 @@ timbres, progresión, microtonos Carrillo) y Web Audio la sintetiza local y grat
 Proyecto hermano, NO feature de m13. Sin fecha — se evalúa tras éxito comercial de m13.
 Voces clonadas: descartado (territorio neural pesado + temas legales de consentimiento).
 
+### Idea 6 — Modelo neural propio entrenado con la fábrica de datos .m13 (documentado 2026-06-11)
+
+**La ventaja que pocos tienen:** m13 posee una fábrica de datos de entrenamiento gratis y
+auto-validada — el generador paramétrico produce escenas .m13 válidas infinitas (185
+validadas con 0 fallas contra parser+compiler) y el eval harness (T-052/053, 100% pass)
+mide calidad automáticamente. Cada escena generada desde hoy es data acumulándose.
+
+**Camino A — LLM chico local (el más barato/valioso):** fine-tune de un modelo 1-3B con
+pares (prompt → .m13) sintéticos + curados. Resultado: generación de escenas sin internet
+y sin costo por token — cierra el círculo de D-025-06 al 100% (ni la capa opcional de IA
+dependería de la nube). Pipeline: generador paramétrico → dataset → fine-tune → eval
+harness como benchmark de regresión.
+
+**Camino B — Neural SDFs (el más alineado con la tesis):** familia DeepSDF — una red
+chiquita ES la forma 3D, función continua aprendida. Es la tesis Sonido 13 con pesos
+neuronales. Encaja directo en la Fase 3 del roadmap (síntesis neural local ONNX).
+
+**Hardware:** Gato confirmó (2026-06-11) acceso a un servidor mejor que Cerebro4 para
+entrenar — los experimentos del Camino A son viables sin nube de pago.
+**Orden:** post-Fase 2 + validación comercial B2B. Mientras tanto: empezar a PERSISTIR
+las escenas generadas (demo público + editor + FlowCAD) como dataset desde ya — costo
+cero, el tiempo juega a favor.
+
 ---
 
 ## Si te desvías o te pierdes
