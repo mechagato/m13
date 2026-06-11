@@ -2351,3 +2351,9 @@ se conserva por compatibilidad de paths/crons).
   validación visual WebGPU en laptop real.
 
 *Sesión registrada · 2026-06-11 · phi + Claude Fable 5*
+
+### Adendum 025-c — 2026-06-11 — Custom domain LIVE
+- **https://motor13.neonodos.com** activo (HTTP 200, sirviendo el MVP agéntico).
+  Hecho vía API de Cloudflare (CLOUDFLARE_API_TOKEN del .env): dominio agregado al
+  proyecto Pages + CNAME proxied en zona neonodos.com + cert Google emitido.
+  Stopper #2 del gate cerrado sin intervención manual de Gato.
