@@ -1,6 +1,9 @@
 /**
  * raymarch.wgsl — fragmento WGSL con los pasos del renderer.
  * Se prepende después de los conceptos materiales y la función map() generada.
+ *
+ * Contrato con el compilador: este fragmento llama a `missColor()`, que el
+ * compilador SIEMPRE genera (constante de escena con `ambient.background`).
  */
 
 export const RAYMARCH_WGSL = /* wgsl */ `
@@ -92,7 +95,9 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
     let fog = 1.0 - exp(-hit.t * u.fogDensity);
     col = mix(col, u.fogColor, fog * 0.3);
   } else {
-    col = vec3<f32>(0.0);
+    // Miss: color de fondo de la escena (ambient.background), mezclado con la
+    // niebla para que el horizonte no corte abrupto contra la geometría.
+    col = mix(missColor(), u.fogColor, 0.25);
   }
   col = col / (1.0 + col);
   col = pow(col, vec3<f32>(0.4545));

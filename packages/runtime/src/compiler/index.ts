@@ -80,6 +80,8 @@ export function compileScene(scene: M13Scene): CompiledScene {
   const wgsl = [
     COMMON_WGSL,
     matParamsBlock,
+    '\n// ===== constantes de escena =====\n',
+    generateSceneConstants(scene),
     '\n// ===== conceptos materiales =====\n',
     ...concepts.map((c) => c.wgsl),
     sdfSection,
@@ -277,6 +279,48 @@ function generateMatParamsStruct(layout: MatParamsLayout): string {
   return lines.join('\n');
 }
 
+/**
+ * Constantes de escena que el shader estático (RAYMARCH_WGSL) consume.
+ * `missColor()` es parte del contrato: raymarch.ts la llama en el miss del
+ * raymarcher, así `ambient.background` por fin llega al pixel (antes el miss
+ * renderizaba negro puro ignorando background).
+ */
+function generateSceneConstants(scene: M13Scene): string {
+  const [br, bg, bb] = scene.ambient.background;
+  return [
+    'fn missColor() -> vec3<f32> {',
+    `  return vec3<f32>(${f(br)}, ${f(bg)}, ${f(bb)});`,
+    '}',
+  ].join('\n');
+}
+
+/**
+ * Matriz de rotación inversa (Rᵀ) para una rotación Euler XYZ extrínseca en
+ * grados. Se precomputa en compile-time y se emite como constante mat3x3 —
+ * costo runtime: un multiply de matriz por objeto rotado, cero para el resto.
+ *
+ * Convención: R = Rz(γ)·Ry(β)·Rx(α) rota el OBJETO; el SDF evalúa en espacio
+ * local, así que el punto se transforma con la inversa Rᵀ.
+ */
+function rotationInverseMatrix(deg: readonly [number, number, number]): number[][] {
+  const [ax, ay, az] = deg.map((d) => (d * Math.PI) / 180);
+  const [cx, sx] = [Math.cos(ax), Math.sin(ax)];
+  const [cy, sy] = [Math.cos(ay), Math.sin(ay)];
+  const [cz, sz] = [Math.cos(az), Math.sin(az)];
+  const Rx = [[1, 0, 0], [0, cx, -sx], [0, sx, cx]];
+  const Ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]];
+  const Rz = [[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]];
+  const mul = (A: number[][], B: number[][]): number[][] =>
+    A.map((row, i) => row.map((_, j) => A[i][0] * B[0][j] + A[i][1] * B[1][j] + A[i][2] * B[2][j]));
+  const R = mul(Rz, mul(Ry, Rx));
+  // transpose = inversa (R es ortogonal)
+  return [0, 1, 2].map((i) => [0, 1, 2].map((j) => R[j][i]));
+}
+
+function hasStaticRotation(obj: M13Object): boolean {
+  return obj.rotation !== undefined && obj.rotation.some((v) => v !== 0);
+}
+
 function generateMapFunction(scene: M13Scene): string {
   const [bx, by, bz] = scene.bounds;
   const lines: string[] = [];
@@ -330,26 +374,72 @@ function generateObjectSdf(obj: M13Object, index: number): string {
   // no hay audio reactivity — antes producía `sdSphere(..., r 0.0)` (inválido).
   const extraR = obj.audio_reactive ? `+ u.audioAmp * 0.05` : `+ 0.0`;
 
-  const localP = `(p - vec3<f32>(${f(px)}, ${f(py)} + (${yOffset}), ${f(pz)}))`;
+  // Transformaciones adicionales (FR-1.3 rotation, animate rotate/pulse).
+  // Se emiten SOLO cuando el objeto las usa: una escena sin estas features
+  // produce el mismo WGSL byte-por-byte que antes (determinismo + shader cache).
+  const pre: string[] = [];
+  let localP = `(p - vec3<f32>(${f(px)}, ${f(py)} + (${yOffset}), ${f(pz)}))`;
+
+  if (hasStaticRotation(obj)) {
+    const m = rotationInverseMatrix(obj.rotation!);
+    // mat3x3<f32> recibe COLUMNAS: columna j = (m[0][j], m[1][j], m[2][j])
+    pre.push(
+      `  let rotM${index} = mat3x3<f32>(` +
+        `vec3<f32>(${f(m[0][0])}, ${f(m[1][0])}, ${f(m[2][0])}), ` +
+        `vec3<f32>(${f(m[0][1])}, ${f(m[1][1])}, ${f(m[2][1])}), ` +
+        `vec3<f32>(${f(m[0][2])}, ${f(m[1][2])}, ${f(m[2][2])}));`,
+    );
+    localP = `(rotM${index} * ${localP})`;
+  }
+
+  if (obj.animate?.mode === 'rotate') {
+    // Giro continuo alrededor del eje Y local. speed = velocidad angular (rad/s).
+    // Inversa de Ry(θ) aplicada al punto: (c·x − s·z, y, s·x + c·z) con θ = time·speed.
+    pre.push(`  let ang${index} = u.time * ${f(obj.animate.speed)};`);
+    pre.push(`  let cs${index} = cos(ang${index});`);
+    pre.push(`  let sn${index} = sin(ang${index});`);
+    pre.push(`  let rp${index} = ${localP};`);
+    pre.push(
+      `  let rq${index} = vec3<f32>(cs${index} * rp${index}.x - sn${index} * rp${index}.z, rp${index}.y, sn${index} * rp${index}.x + cs${index} * rp${index}.z);`,
+    );
+    localP = `rq${index}`;
+  }
+
+  // Pulse: escala uniforme oscilante. SDF válida bajo escala uniforme:
+  // d = sdf(p/k) · k. amplitude se acota a 0.9 para que k nunca llegue a 0.
+  let scaleIn = '';
+  let scaleOut = '';
+  if (obj.animate?.mode === 'pulse') {
+    const amp = Math.min(obj.animate.amplitude, 0.9);
+    pre.push(
+      `  let k${index} = 1.0 + ${f(amp)} * sin(u.time * ${f(obj.animate.speed)});`,
+    );
+    pre.push(`  let pp${index} = ${localP} / k${index};`);
+    localP = `pp${index}`;
+    scaleIn = '(';
+    scaleOut = `) * k${index}`;
+  }
+
+  const prefix = pre.length > 0 ? pre.join('\n') + '\n' : '';
 
   switch (obj.kind) {
     case 'sphere': {
       const r = sx; // sphere uses x scale as radius
-      return `  let obj${index} = sdSphere(${localP}, ${f(r)} ${extraR});`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdSphere(${localP}, ${f(r)} ${extraR})${scaleOut};`;
     }
     case 'box':
-      return `  let obj${index} = sdBox(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdBox(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}))${scaleOut};`;
     case 'round_box':
-      return `  let obj${index} = sdRoundBox(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}), 0.05);`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdRoundBox(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}), 0.05)${scaleOut};`;
     case 'cylinder':
-      return `  let obj${index} = sdCylinder(${localP}, ${f(sy)}, ${f(sx)});`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdCylinder(${localP}, ${f(sy)}, ${f(sx)})${scaleOut};`;
     case 'torus':
-      return `  let obj${index} = sdTorus(${localP}, vec2<f32>(${f(sx)}, ${f(sy)}));`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdTorus(${localP}, vec2<f32>(${f(sx)}, ${f(sy)}))${scaleOut};`;
     case 'concept':
       // T-021: delegamos al SDF del concepto geométrico. Firma esperada:
       //   fn sdf_<id>(p: vec3<f32>, scale: vec3<f32>) -> f32
       // El compiler ya hace la translación de posición y animación a través de `localP`.
-      return `  let obj${index} = sdf_${obj.concept!}(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`;
+      return `${prefix}  let obj${index} = ${scaleIn}sdf_${obj.concept!}(${localP}, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}))${scaleOut};`;
   }
 }
 

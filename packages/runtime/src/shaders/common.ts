@@ -67,6 +67,14 @@ fn sdTorus(p: vec3<f32>, t: vec2<f32>) -> f32 {
 }
 fn opSub(a: f32, b: f32) -> f32 { return max(-b, a); }
 fn opUnion(a: f32, b: f32) -> f32 { return min(a, b); }
+// Unión suave (polynomial smooth min, Quilez). k = radio de mezcla.
+// Nota: el resultado es un bound (no distancia exacta) — válido para raymarching
+// con paso conservador. Base para la subdivisión continua de Fase 2 (Sonido 13).
+fn opSmoothUnion(a: f32, b: f32, k: f32) -> f32 {
+  let kk = max(k, 0.0001);
+  let h = clamp(0.5 + 0.5 * (b - a) / kk, 0.0, 1.0);
+  return mix(b, a, h) - kk * h * (1.0 - h);
+}
 
 // ---------- HASH + NOISE ----------
 fn hash3(p: vec3<f32>) -> f32 {
