@@ -18,6 +18,9 @@ const goldMetalConcept: Concept = {
   id: 'metal_dorado_pulido',
   category: 'object',
   description: 'gold metal con roughness param (test fixture)',
+  // FR-2.2 — fixture: signature/seed dummy, requeridos por la interface Concept
+  signature: { baseColor: [0.5, 0.5, 0.5], roughness: 0.5, normalVariation: 0, audioReactivity: 0 },
+  seed: 9001,
   wgsl: `fn mat_metal_dorado_pulido(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   let r = matParams.metal_dorado_pulido_roughness;
   return vec3<f32>(1.0 - r, 0.84 - r * 0.3, 0.0);
@@ -33,6 +36,9 @@ const plainConcept: Concept = {
   id: 'pared_yeso_blanco',
   category: 'wall',
   description: 'yeso sin params (test fixture)',
+  // FR-2.2 — fixture: signature/seed dummy, requeridos por la interface Concept
+  signature: { baseColor: [0.5, 0.5, 0.5], roughness: 0.5, normalVariation: 0, audioReactivity: 0 },
+  seed: 9002,
   wgsl: `fn mat_pared_yeso_blanco(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   return vec3<f32>(0.95);
 }`,
@@ -42,6 +48,9 @@ const floorConcept: Concept = {
   id: 'piso_madera_envejecida',
   category: 'floor',
   description: 'piso sin params (test fixture)',
+  // FR-2.2 — fixture: signature/seed dummy, requeridos por la interface Concept
+  signature: { baseColor: [0.5, 0.5, 0.5], roughness: 0.5, normalVariation: 0, audioReactivity: 0 },
+  seed: 9003,
   wgsl: `fn mat_piso_madera_envejecida(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   return vec3<f32>(0.4, 0.25, 0.15);
 }`,
