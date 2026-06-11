@@ -331,6 +331,27 @@ empresarial sin costo de marketing. Coherente con D-025-06 (la IA crea recetas, 
 siempre es local del cliente).
 **Constitution check:** cumple — LLM solo editor-time; el MCP ES editor-time.
 
+### Idea 4 — m13 Live: performance audiovisual reactivo (SUBPROYECTO aprobado por Gato 2026-06-11)
+
+**Qué es:** extensión de usos del Sonido 13 para shows en vivo. Subproyecto en
+`~/neonodos-core/m13-live/` (scaffold creado 2026-06-11; ver su VISION.md). Tres módulos:
+1. **cue-engine:** escenas .m13 pre-diseñadas que cambian por MIDI/timecode (Web MIDI +
+   shader cache del engine ya lo permiten — el switch de escena es casi instantáneo).
+2. **crowd-mirror:** Kinect/cámara de profundidad capta al público y lo "esculpe" en la
+   escena como SDFs vivos (metaballs/siluetas) — el público se ve modelado en pantalla.
+3. **gesture-trigger:** cámara frente al performer; gestos pre-configurados (MediaPipe
+   pose, local) disparan efectos visuales, cambios de escena o un sampler de audio (WebAudio).
+**Constitution check:** cumple — todo determinista y local, cero LLM en runtime.
+**Scope:** NO compite con Fase 2 — se desarrolla post-Fase 2 o como demo complementario
+de Innovafest si Gato lo ordena. El scaffold existe para no perder la visión.
+
+### Idea 5 — Síntesis de audio procedural "a13" (hermano conceptual, idea de cajón)
+
+La tesis m13 aplicada a audio: la IA escribe una receta sonora de texto (escala, tempo,
+timbres, progresión, microtonos Carrillo) y Web Audio la sintetiza local y gratis.
+Proyecto hermano, NO feature de m13. Sin fecha — se evalúa tras éxito comercial de m13.
+Voces clonadas: descartado (territorio neural pesado + temas legales de consentimiento).
+
 ---
 
 ## Si te desvías o te pierdes
