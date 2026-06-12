@@ -194,7 +194,27 @@ export class FlyCamera {
     this.listeners = [];
   }
 
+  /** Lee el primer gamepad activo (Quest controllers / Xbox): stick izq = moverse,
+   *  stick der = mirar. Deadzone 0.15. No-op si no hay gamepads (D-2111). */
+  private pollGamepad(dt: number): [number, number] {
+    if (typeof navigator === 'undefined' || !navigator.getGamepads) return [0, 0];
+    for (const gp of navigator.getGamepads()) {
+      if (!gp || gp.axes.length < 4) continue;
+      const dz = (v: number): number => (Math.abs(v) > 0.15 ? v : 0);
+      const lookX = dz(gp.axes[2] ?? 0);
+      const lookY = dz(gp.axes[3] ?? 0);
+      if (lookX !== 0 || lookY !== 0) {
+        const lim = Math.PI / 2 - 0.05;
+        this.yaw -= lookX * 2.2 * dt;
+        this.pitch = Math.max(-lim, Math.min(lim, this.pitch - lookY * 1.6 * dt));
+      }
+      return [dz(gp.axes[0] ?? 0), -dz(gp.axes[1] ?? 0)];
+    }
+    return [0, 0];
+  }
+
   update(dt: number): CameraVectors {
+    const gamepadMove = this.pollGamepad(dt);
     const cy = Math.cos(this.yaw);
     const sy = Math.sin(this.yaw);
     const cp = Math.cos(this.pitch);
@@ -227,8 +247,10 @@ export class FlyCamera {
     }
     if (this.input.up) this.pos[1] += v;
     if (this.input.down) this.pos[1] -= v;
-    // Joystick táctil (D-2109): [strafe, forward] proporcional al arrastre
-    const [tx, tz] = this.touchMove;
+    // Joystick táctil (D-2109) + stick izquierdo del gamepad (D-2111):
+    // [strafe, forward] proporcional
+    const tx = this.touchMove[0] + gamepadMove[0];
+    const tz = this.touchMove[1] + gamepadMove[1];
     if (tx !== 0 || tz !== 0) {
       this.pos[0] += (fwd[0] * tz + right[0] * tx) * v;
       this.pos[1] += fwd[1] * tz * v;
