@@ -41,6 +41,24 @@ jobs:
       - name: Tests
         run: pnpm test
 
+      # B2 (auditoría 06-12): el JSON Schema exportado se desincronizó del Zod
+      # real y le enseñó un formato viejo al editor LLM. Este guard lo hace
+      # imposible: si schema.ts cambia sin regenerar, CI truena.
+      - name: JSON Schema drift-guard (B2)
+        run: |
+          pnpm gen:schema
+          git diff --exit-code m13-spec/v0.1.schema.json || {
+            echo "::error::m13-spec/v0.1.schema.json desincronizado — corre 'pnpm gen:schema' y commitea"; exit 1; }
+
+      # Contrato con phi-main (auditoría 06-12): phi-main genera escenas contra
+      # el espejo m13_concepts.json. Conceptos nuevos/renombrados sin regenerar
+      # el espejo = phi-main emite escenas inválidas.
+      - name: Concepts mirror drift-guard (contrato phi-main)
+        run: |
+          pnpm export-concepts
+          git diff --exit-code m13-spec/m13_concepts.json || {
+            echo "::error::m13-spec/m13_concepts.json desincronizado — corre 'pnpm export-concepts' y commitea"; exit 1; }
+
       - name: Build examples
         run: pnpm --filter @m13/examples build
 

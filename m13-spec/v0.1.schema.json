@@ -20,13 +20,16 @@
           "maxItems": 3,
           "items": [
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           ],
           "default": [
@@ -36,7 +39,20 @@
           ]
         },
         "spawn": {
-          "$ref": "#/definitions/M13Scene/properties/bounds",
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
           "default": [
             0,
             0,
@@ -52,13 +68,16 @@
               "maxItems": 3,
               "items": [
                 {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 0
                 },
                 {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 0
                 },
                 {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 0
                 }
               ],
               "default": [
@@ -104,7 +123,7 @@
           "type": "object",
           "properties": {
             "position": {
-              "$ref": "#/definitions/M13Scene/properties/bounds",
+              "$ref": "#/definitions/M13Scene/properties/spawn",
               "default": [
                 0,
                 2.5,
@@ -121,6 +140,7 @@
             },
             "intensity": {
               "type": "number",
+              "minimum": 0,
               "default": 1
             }
           },
@@ -153,7 +173,7 @@
           "type": "object",
           "properties": {
             "position": {
-              "$ref": "#/definitions/M13Scene/properties/bounds"
+              "$ref": "#/definitions/M13Scene/properties/spawn"
             },
             "size": {
               "$ref": "#/definitions/M13Scene/properties/bounds"
@@ -180,19 +200,24 @@
                   "box",
                   "round_box",
                   "cylinder",
-                  "torus"
+                  "torus",
+                  "concept"
                 ]
               },
+              "concept": {
+                "type": "string"
+              },
               "position": {
-                "$ref": "#/definitions/M13Scene/properties/bounds"
+                "$ref": "#/definitions/M13Scene/properties/spawn"
               },
               "rotation": {
-                "$ref": "#/definitions/M13Scene/properties/bounds"
+                "$ref": "#/definitions/M13Scene/properties/spawn"
               },
               "scale": {
                 "anyOf": [
                   {
-                    "type": "number"
+                    "type": "number",
+                    "exclusiveMinimum": 0
                   },
                   {
                     "$ref": "#/definitions/M13Scene/properties/bounds"
@@ -244,6 +269,7 @@
                   },
                   "amplitude": {
                     "type": "number",
+                    "minimum": 0,
                     "default": 0.1
                   }
                 },
@@ -256,8 +282,7 @@
             "required": [
               "id",
               "kind",
-              "position",
-              "material"
+              "position"
             ],
             "additionalProperties": false
           },

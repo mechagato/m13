@@ -1,0 +1,141 @@
+{
+  "_comment": "Registry de conceptos m13 v0.1 — generado por `pnpm export-concepts` desde @m13/synth listManifests(). NO editar a mano. categoria: material (walls/floor/ceiling/objects[].material) | objeto (kind: concept, geometría propia). categoria_motor: ConceptCategory real del motor.",
+  "version": "0.1",
+  "concepts": [
+    {
+      "id": "pared_yeso_blanco",
+      "categoria": "material",
+      "categoria_motor": "wall",
+      "descripcion": "Yeso blanco con micro-textura sutil. Limpio, neutral, museo/galería."
+    },
+    {
+      "id": "pared_ladrillo_viejo",
+      "categoria": "material",
+      "categoria_motor": "wall",
+      "descripcion": "Ladrillo rojizo con mortero procedural. Industrial mexicano. Audio-reactivo."
+    },
+    {
+      "id": "piso_madera_envejecida",
+      "categoria": "material",
+      "categoria_motor": "floor",
+      "descripcion": "Madera con vetas senoidales + grain noise. Cálida, residencial."
+    },
+    {
+      "id": "piso_concreto_industrial",
+      "categoria": "material",
+      "categoria_motor": "floor",
+      "descripcion": "Concreto pulido con speckle y leves manchas. Loft, garaje, lab."
+    },
+    {
+      "id": "metal_dorado_pulido",
+      "categoria": "material",
+      "categoria_motor": "object",
+      "descripcion": "Dorado mate audio-reactivo con shimmer animado. La \"esfera m13\"."
+    },
+    {
+      "id": "marmol_blanco_vetas",
+      "categoria": "material",
+      "categoria_motor": "universal",
+      "descripcion": "Mármol blanco con vetas grises procedurales. Galería, lujo, baños."
+    },
+    {
+      "id": "piedra_volcanica",
+      "categoria": "material",
+      "categoria_motor": "universal",
+      "descripcion": "Piedra volcánica oscura con relieves. Templos, prehispánico, dramático."
+    },
+    {
+      "id": "cuero_vintage",
+      "categoria": "material",
+      "categoria_motor": "object",
+      "descripcion": "Cuero envejecido con poros y leve crackling. Sillones, libros, sofás."
+    },
+    {
+      "id": "pared_concreto_pulido",
+      "categoria": "material",
+      "categoria_motor": "wall",
+      "descripcion": "Concreto pulido industrial — gris speckled con manchas sutiles. Loft / oficina / parking.",
+      "params": {
+        "darkness": 0.5,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "pared_madera_oscura",
+      "categoria": "material",
+      "categoria_motor": "wall",
+      "descripcion": "Madera oscura con vetas — despacho, biblioteca, boiserie clásica.",
+      "params": {
+        "darkness": 0.6,
+        "grainScale": 8
+      }
+    },
+    {
+      "id": "piso_marmol_blanco",
+      "categoria": "material",
+      "categoria_motor": "floor",
+      "descripcion": "Mármol blanco pulido — galería, lobby, baño premium. Vetas sutiles.",
+      "params": {
+        "veinIntensity": 0.3
+      }
+    },
+    {
+      "id": "metal_oxidado",
+      "categoria": "material",
+      "categoria_motor": "object",
+      "descripcion": "Metal con óxido naranja — esculturas industriales, fierros viejos, ambientes rústicos.",
+      "params": {
+        "rustAmount": 0.5
+      }
+    },
+    {
+      "id": "metal_bronce_pulido",
+      "categoria": "material",
+      "categoria_motor": "object",
+      "descripcion": "Bronce cobrizo cálido con shimmer animado — herrajes, candelabros, decoración premium.",
+      "params": {
+        "shimmer": 0.5
+      }
+    },
+    {
+      "id": "vidrio_esmerilado",
+      "categoria": "material",
+      "categoria_motor": "object",
+      "descripcion": "Vidrio esmerilado emulado (sin transmisión real — limitación v0.1). Mamparas, lámparas, ventanas.",
+      "params": {
+        "clarity": 0.5
+      }
+    },
+    {
+      "id": "pedestal_marmol",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Pedestal de mármol blanco con aristas redondeadas — base para esculturas, escaparates.",
+      "params": {
+        "cornerRadius": 0.05
+      }
+    },
+    {
+      "id": "lampara_colgante",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Lámpara colgante emisiva — luz cálida inline (sin contribución real a la escena, v0.1).",
+      "params": {
+        "glowIntensity": 0.8,
+        "length": 0.4
+      }
+    },
+    {
+      "id": "esfera_decorativa",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Esfera decorativa blanco mate con iridiscencia sutil — escultura genérica, decoración."
+    },
+    {
+      "id": "cubo_basico",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Cubo gris básico — bloque de construcción para prototipado de escenas."
+    }
+  ]
+}

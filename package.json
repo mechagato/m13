@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "export-concepts": "tsx tools/export-concepts.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
