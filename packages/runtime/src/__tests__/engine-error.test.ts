@@ -20,22 +20,25 @@ import { dirname, resolve } from 'node:path';
 // ── Mock del módulo renderer ────────────────────────────────────────────────
 
 vi.mock('../renderer/index.js', () => ({
-  initRenderer: vi.fn().mockImplementation(async () => ({
+  initRendererCore: vi.fn().mockImplementation(async () => ({
     device: { destroy: vi.fn(), queue: { writeBuffer: vi.fn() } },
     context: { unconfigure: vi.fn(), getCurrentTexture: vi.fn() },
     format: 'bgra8unorm',
-    pipeline: {},
     uniformBuffer: { destroy: vi.fn() },
-    matParamsBuffer: null,
-    bindGroup: {},
     canvas: {},
   })),
+  buildSceneResources: vi.fn().mockImplementation(async () => ({
+    pipeline: {},
+    matParamsBuffer: null,
+    bindGroup: {},
+  })),
+  destroySceneResources: vi.fn(),
+  destroyRendererCore: vi.fn(),
   renderFrame: vi.fn(),
   writeUniforms: vi.fn().mockImplementation(() => {
     throw new Error('GPU device perdido (simulado)');
   }),
   writeMatParams: vi.fn(),
-  destroyRenderer: vi.fn(),
 }));
 
 // ── Fixtures ────────────────────────────────────────────────────────────────

@@ -14,22 +14,25 @@ import { dirname, resolve } from 'node:path';
  */
 
 // Mock de renderer ANTES de importar engine (vi.mock se hoistea).
+// API D-3004 (B3/B4): core persistente + recursos por escena (LRU en el engine).
 vi.mock('../renderer/index.js', () => ({
-  initRenderer: vi.fn().mockImplementation(async () => ({
+  initRendererCore: vi.fn().mockImplementation(async () => ({
     device: {} as GPUDevice,
     context: {} as GPUCanvasContext,
     format: 'bgra8unorm' as GPUTextureFormat,
-    pipeline: {} as GPURenderPipeline,
     uniformBuffer: {} as GPUBuffer,
-    matParamsBuffer: null,
-    bindGroup: {} as GPUBindGroup,
     canvas: {} as HTMLCanvasElement,
   })),
+  buildSceneResources: vi.fn().mockImplementation(async () => ({
+    pipeline: {} as GPURenderPipeline,
+    matParamsBuffer: null,
+    bindGroup: {} as GPUBindGroup,
+  })),
+  destroySceneResources: vi.fn(),
+  destroyRendererCore: vi.fn(),
   renderFrame: vi.fn(),
   writeUniforms: vi.fn(),
   writeMatParams: vi.fn(),
-  // loadScene destruye el renderer anterior en cache-miss (fix de leak GPU).
-  destroyRenderer: vi.fn(),
 }));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -44,13 +47,13 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('primera carga: cache miss + initRenderer llamado 1 vez', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer } = await import('../renderer/index.js');
+    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
     await engine.loadScene(loadScene('sala_galeria.m13'));
 
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
     const info = engine.getLastLoadInfo();
     expect(info).not.toBeNull();
     expect(info!.reusedPipeline).toBe(false);
@@ -59,7 +62,7 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('re-carga de la misma escena: cache hit + initRenderer NO llamado de nuevo', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer } = await import('../renderer/index.js');
+    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
@@ -70,7 +73,7 @@ describe('M13Engine — shader cache (T-013)', () => {
     await engine.loadScene(yaml);
     // (vista cliente — la misma carga produce cache hit)
 
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
     const info = engine.getLastLoadInfo();
     expect(info!.reusedPipeline).toBe(true);
     expect(info!.wgslHash).toBe(firstHash);
@@ -78,7 +81,7 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('cargar escena distinta tras una previa: cache miss + initRenderer llamado 2 veces', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer } = await import('../renderer/index.js');
+    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
@@ -88,34 +91,56 @@ describe('M13Engine — shader cache (T-013)', () => {
     await engine.loadScene(loadScene('templo_mexica.m13'));
     const secondHash = engine.getWgslHash();
 
-    expect(initRenderer).toHaveBeenCalledTimes(2);
+    expect(buildSceneResources).toHaveBeenCalledTimes(2);
     expect(firstHash).not.toBe(secondHash);
     expect(engine.getLastLoadInfo()!.reusedPipeline).toBe(false);
-    // El renderer del primer shader debe destruirse al reemplazarlo (anti-leak).
-    const { destroyRenderer } = await import('../renderer/index.js');
-    expect(destroyRenderer).toHaveBeenCalledTimes(1);
+    // B3/D-3004: el core (device) NO se recrea al cambiar de escena y la
+    // escena anterior queda CACHEADA (no destruida) en el LRU.
+    expect(initRendererCore).toHaveBeenCalledTimes(1);
+    const { destroySceneResources } = await import('../renderer/index.js');
+    expect(destroySceneResources).toHaveBeenCalledTimes(0);
   });
 
-  it('cargar A → B → A: el cache solo retiene la ULTIMA escena (no es LRU multi-entry)', async () => {
+  it('cargar A → B → A: LRU multi-entry (B3) — la tercera carga es hit, cero rebuilds', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer } = await import('../renderer/index.js');
+    const { buildSceneResources } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
     const yamlA = loadScene('sala_galeria.m13');
     const yamlB = loadScene('oficina_neonodos.m13');
 
-    await engine.loadScene(yamlA); // miss → 1 init
-    await engine.loadScene(yamlB); // miss → 2 init
-    await engine.loadScene(yamlA); // miss otra vez (cache solo retiene B)
+    await engine.loadScene(yamlA); // miss → 1 build
+    await engine.loadScene(yamlB); // miss → 2 build
+    await engine.loadScene(yamlA); // HIT del LRU — alternar A↔B ya no reconstruye nada
 
-    expect(initRenderer).toHaveBeenCalledTimes(3);
-    expect(engine.getLastLoadInfo()!.reusedPipeline).toBe(false);
+    expect(buildSceneResources).toHaveBeenCalledTimes(2);
+    expect(engine.getLastLoadInfo()!.reusedPipeline).toBe(true);
+  });
+
+  it('LRU con capacidad 4: la 5ª escena distinta desaloja a la más vieja (1 destroy)', async () => {
+    const { M13Engine } = await import('../engine.js');
+    const { buildSceneResources, destroySceneResources } = await import('../renderer/index.js');
+    const engine = new M13Engine({} as HTMLCanvasElement);
+
+    const scenes = [
+      'sala_galeria.m13',
+      'oficina_neonodos.m13',
+      'templo_mexica.m13',
+      'cocina_industrial.m13',
+      '_concepts_showcase.m13',
+    ];
+    for (const s of scenes) {
+      await engine.loadScene(loadScene(s));
+    }
+
+    expect(buildSceneResources).toHaveBeenCalledTimes(5);
+    expect(destroySceneResources).toHaveBeenCalledTimes(1); // solo la más vieja
   });
 
   it('hash es estable: cargar misma escena 10 veces seguidas = 1 init + 9 hits', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer } = await import('../renderer/index.js');
+    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
@@ -124,7 +149,7 @@ describe('M13Engine — shader cache (T-013)', () => {
       await engine.loadScene(yaml);
     }
 
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
   });
 
   it('getWgslHash() retorna null antes de loadScene', async () => {

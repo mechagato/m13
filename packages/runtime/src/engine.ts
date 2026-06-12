@@ -2,12 +2,16 @@ import { parseScene } from './parser/index.js';
 import type { M13Scene } from './parser/schema.js';
 import { compileScene, hashWgsl, type CompiledScene } from './compiler/index.js';
 import {
-  initRenderer,
+  initRendererCore,
+  buildSceneResources,
+  destroySceneResources,
+  destroyRendererCore,
   renderFrame,
   writeUniforms,
   writeMatParams,
-  destroyRenderer,
   type RendererState,
+  type RendererCore,
+  type SceneResources,
 } from './renderer/index.js';
 import { FlyCamera, type FlyCameraOptions } from './camera/fly-camera.js';
 import { MicAudioInput } from './audio/mic-input.js';
@@ -80,6 +84,11 @@ export class M13Engine {
   private canvas: HTMLCanvasElement;
   private opts: M13EngineOptions;
   private renderer: RendererState | null = null;
+  /** Core GPU persistente (device/context/uniformBuffer) — UNA vez por engine (D-3004). */
+  private core: RendererCore | null = null;
+  /** LRU de recursos por escena, keyed por hash WGSL (B3). Map preserva orden de inserción. */
+  private sceneCache = new Map<string, SceneResources>();
+  private static readonly SCENE_CACHE_MAX = 4;
   private compiled: CompiledScene | null = null;
   private camera: FlyCamera | null = null;
   private audio: MicAudioInput | null = null;
@@ -143,32 +152,61 @@ export class M13Engine {
     }
 
     const cacheHit = this.renderer !== null && newHash === this.lastWgslHash;
+    // reusedPipeline también es true cuando la escena vino del LRU (B3)
+    let reusedPipeline = cacheHit;
 
     if (!cacheHit) {
-      // Mientras se reemplaza el renderer, el tick NO debe llamar getCurrentTexture:
-      // el contexto pasa por un estado no-configurado durante la transición.
-      this.loading = true;
-      try {
-        // Cache-miss con renderer previo: destruirlo ANTES de crear el nuevo.
-        // Sin esto, cada cambio de shader filtra un GPUDevice completo. Y el orden
-        // importa: ambos renderers comparten el MISMO GPUCanvasContext — destruir
-        // el viejo después de configurar el nuevo lo des-configura (canvas negro).
-        if (this.renderer) {
-          destroyRenderer(this.renderer);
-          this.renderer = null;
-          this.lastWgslHash = null;
+      // D-3004 (B3/B4): el core GPU es persistente y el context NUNCA se
+      // des-configura entre escenas — la clase entera de races de canvas
+      // negro (7ec1fc8) desaparece por diseño. Por escena solo se construyen
+      // pipeline/matParams/bindGroup, cacheados en un LRU de 4.
+      if (!this.core) {
+        // Primera escena: crear el core. El flag loading cubre el configure
+        // del context (único momento donde el tick no debe tocarlo).
+        this.loading = true;
+        try {
+          this.core = await initRendererCore(this.canvas);
+        } finally {
+          this.loading = false;
         }
-        const newRenderer = await initRenderer(this.canvas, compiled);
         if (this.disposed) {
-          // dispose() llegó mientras initRenderer creaba el device: liberarlo
-          // de inmediato o queda un GPUDevice huérfano fuera del alcance de dispose().
-          destroyRenderer(newRenderer);
+          // dispose() llegó mientras el core se creaba: liberar de inmediato
+          // o queda un GPUDevice huérfano fuera del alcance de dispose().
+          destroyRendererCore(this.core);
+          this.core = null;
           throw new Error('[m13/engine] dispose() llamado durante loadScene — recursos GPU liberados.');
         }
-        this.renderer = newRenderer;
-        this.lastWgslHash = newHash;
-      } finally {
-        this.loading = false;
+      }
+
+      let resources = this.sceneCache.get(newHash);
+      const reusedFromLru = resources !== undefined;
+      reusedPipeline = reusedFromLru;
+      if (resources) {
+        this.sceneCache.delete(newHash); // touch LRU (se re-inserta al final)
+      } else {
+        // B4: si el WGSL falla en GPU, esto RECHAZA sin haber destruido nada —
+        // la escena que corría sigue viva y el trabajo del usuario no se pierde.
+        resources = await buildSceneResources(this.core, compiled);
+        if (this.disposed) {
+          destroySceneResources(resources);
+          throw new Error('[m13/engine] dispose() llamado durante loadScene — recursos GPU liberados.');
+        }
+      }
+      this.sceneCache.set(newHash, resources);
+      if (this.sceneCache.size > M13Engine.SCENE_CACHE_MAX) {
+        const oldestKey = this.sceneCache.keys().next().value as string;
+        const evicted = this.sceneCache.get(oldestKey)!;
+        this.sceneCache.delete(oldestKey);
+        destroySceneResources(evicted);
+      }
+
+      this.renderer = { ...this.core, ...resources };
+      this.lastWgslHash = newHash;
+
+      // LRU hit: mismo WGSL pero los VALORES de matParams pueden diferir
+      // (mismo concepto, params distintos → mismo shader, otro Float32Array).
+      if (reusedFromLru && compiled.matParams.totalFloats > 0) {
+        writeMatParams(this.renderer, compiled.matParams.values);
       }
     } else if (this.renderer && compiled.matParams.totalFloats > 0) {
       // Cache hit del shader pero los VALORES de matParams pueden haber cambiado
@@ -178,7 +216,7 @@ export class M13Engine {
     }
 
     this.compiled = compiled;
-    this.lastLoadInfo = { wgslHash: newHash, reusedPipeline: cacheHit };
+    this.lastLoadInfo = { wgslHash: newHash, reusedPipeline };
 
     if (this.camera) {
       this.camera.setBounds(boundsForCamera(scene.bounds));
@@ -304,11 +342,16 @@ export class M13Engine {
       this.audio = null;
     }
 
-    // Destruir recursos WebGPU.
-    if (this.renderer) {
-      destroyRenderer(this.renderer);
-      this.renderer = null;
+    // Destruir recursos WebGPU: cada escena cacheada y luego el core.
+    for (const res of this.sceneCache.values()) {
+      destroySceneResources(res);
     }
+    this.sceneCache.clear();
+    if (this.core) {
+      destroyRendererCore(this.core);
+      this.core = null;
+    }
+    this.renderer = null;
 
     // Limpiar el estado de compilación para dejar al engine inerte.
     this.compiled = null;

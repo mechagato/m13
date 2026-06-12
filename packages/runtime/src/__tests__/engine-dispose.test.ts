@@ -30,19 +30,24 @@ function makeFakeRenderer() {
   const matParamsBufferDestroy = vi.fn();
 
   return {
-    state: {
+    core: {
       device: { destroy: deviceDestroy, queue: { writeBuffer: vi.fn() } } as unknown as GPUDevice,
       context: { unconfigure: contextUnconfigure, getCurrentTexture: vi.fn() } as unknown as GPUCanvasContext,
       format: 'bgra8unorm' as GPUTextureFormat,
-      pipeline: {} as GPURenderPipeline,
       uniformBuffer: { destroy: uniformBufferDestroy } as unknown as GPUBuffer,
+      canvas: {} as HTMLCanvasElement,
+    },
+    resources: {
+      pipeline: {} as GPURenderPipeline,
       matParamsBuffer: { destroy: matParamsBufferDestroy } as unknown as GPUBuffer,
       bindGroup: {} as GPUBindGroup,
-      canvas: {} as HTMLCanvasElement,
     },
     spies: { deviceDestroy, contextUnconfigure, uniformBufferDestroy, matParamsBufferDestroy },
   };
 }
+
+type FakeCore = ReturnType<typeof makeFakeRenderer>['core'];
+type FakeResources = ReturnType<typeof makeFakeRenderer>['resources'];
 
 // ── Mock del módulo renderer ────────────────────────────────────────────────
 // IMPORTANTE: vi.mock se hoistea al tope del módulo por Vitest, así que la
@@ -51,17 +56,19 @@ function makeFakeRenderer() {
 let currentFakeRenderer = makeFakeRenderer();
 
 vi.mock('../renderer/index.js', () => ({
-  initRenderer: vi.fn().mockImplementation(async () => currentFakeRenderer.state),
+  initRendererCore: vi.fn().mockImplementation(async () => currentFakeRenderer.core),
+  buildSceneResources: vi.fn().mockImplementation(async () => currentFakeRenderer.resources),
   renderFrame: vi.fn(),
   writeUniforms: vi.fn(),
   writeMatParams: vi.fn(),
-  destroyRenderer: vi.fn().mockImplementation((state: ReturnType<typeof makeFakeRenderer>['state']) => {
-    // Replica la lógica real de destroyRenderer para que los spies del state
-    // específico sean invocados correctamente.
-    state.uniformBuffer.destroy();
-    if (state.matParamsBuffer) state.matParamsBuffer.destroy();
-    state.context.unconfigure();
-    state.device.destroy();
+  // Replican la lógica real para que los spies del fixture se invoquen.
+  destroySceneResources: vi.fn().mockImplementation((res: FakeResources) => {
+    res.matParamsBuffer?.destroy();
+  }),
+  destroyRendererCore: vi.fn().mockImplementation((core: FakeCore) => {
+    core.uniformBuffer.destroy();
+    core.context.unconfigure();
+    core.device.destroy();
   }),
 }));
 
@@ -102,14 +109,15 @@ describe('M13Engine — dispose() (T-068)', () => {
 
   it('dispose() tras loadScene: llama device.destroy() y context.unconfigure()', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { destroyRenderer } = await import('../renderer/index.js');
+    const { destroyRendererCore, destroySceneResources } = await import('../renderer/index.js');
     const engine = new M13Engine({} as HTMLCanvasElement);
 
     await engine.loadScene(loadScene('sala_galeria.m13'));
     engine.dispose();
 
-    // destroyRenderer debe haberse llamado 1 vez con el state del renderer.
-    expect(destroyRenderer).toHaveBeenCalledTimes(1);
+    // dispose libera la escena cacheada Y el core, una vez cada uno.
+    expect(destroySceneResources).toHaveBeenCalledTimes(1);
+    expect(destroyRendererCore).toHaveBeenCalledTimes(1);
 
     // Los spies internos del state falso confirman que destroy/unconfigure se ejecutaron.
     expect(currentFakeRenderer.spies.deviceDestroy).toHaveBeenCalledTimes(1);
@@ -119,7 +127,7 @@ describe('M13Engine — dispose() (T-068)', () => {
 
   it('dispose() es idempotente — doble dispose no lanza error ni destruye dos veces', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { destroyRenderer } = await import('../renderer/index.js');
+    const { destroyRendererCore } = await import('../renderer/index.js');
     const engine = new M13Engine({} as HTMLCanvasElement);
 
     await engine.loadScene(loadScene('sala_galeria.m13'));
@@ -127,8 +135,8 @@ describe('M13Engine — dispose() (T-068)', () => {
     engine.dispose(); // segunda llamada: debe ser no-op
 
     expect(engine.isDisposed()).toBe(true);
-    // destroyRenderer solo se llama la primera vez.
-    expect(destroyRenderer).toHaveBeenCalledTimes(1);
+    // El core solo se destruye la primera vez.
+    expect(destroyRendererCore).toHaveBeenCalledTimes(1);
     expect(currentFakeRenderer.spies.deviceDestroy).toHaveBeenCalledTimes(1);
   });
 

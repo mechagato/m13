@@ -52,10 +52,30 @@ function alignedUniformSize(bytes: number): number {
   return Math.max(16, Math.ceil(bytes / 16) * 16);
 }
 
-export async function initRenderer(
-  canvas: HTMLCanvasElement,
-  compiled: CompiledScene,
-): Promise<RendererState> {
+/**
+ * Core persistente del renderer (D-3004, auditoría 06-12 B3/B4):
+ * device + context + uniformBuffer viven UNA vez por canvas. Los recursos por
+ * escena (pipeline/matParams/bindGroup) se construyen aparte y se cachean en
+ * el engine (LRU). Beneficios: cambiar de escena ya no recrea el GPUDevice
+ * (B3) y un shader que falla en GPU ya no destruye la escena que sí corría (B4)
+ * — el context nunca se des-configura entre escenas.
+ */
+export interface RendererCore {
+  device: GPUDevice;
+  context: GPUCanvasContext;
+  format: GPUTextureFormat;
+  uniformBuffer: GPUBuffer;
+  canvas: HTMLCanvasElement;
+}
+
+/** Recursos por escena — lo que el LRU del engine cachea por hash de WGSL. */
+export interface SceneResources {
+  pipeline: GPURenderPipeline;
+  matParamsBuffer: GPUBuffer | null;
+  bindGroup: GPUBindGroup;
+}
+
+export async function initRendererCore(canvas: HTMLCanvasElement): Promise<RendererCore> {
   if (!('gpu' in navigator)) {
     throw new Error('[m13/renderer] WebGPU no disponible en este navegador');
   }
@@ -73,7 +93,7 @@ export async function initRenderer(
   if (typeof device.lost?.then === 'function') {
     void device.lost.then((info) => {
       if (info.reason === 'destroyed') {
-        // Pérdida esperada: destroyRenderer()/dispose() llamó device.destroy().
+        // Pérdida esperada: destroyRendererCore()/dispose() llamó device.destroy().
         console.info('[m13/renderer] GPUDevice destruido (dispose intencional).');
       } else {
         console.error(
@@ -102,7 +122,21 @@ export async function initRenderer(
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  // Segundo uniform buffer para MatParams (T-019) — solo si la escena lo necesita.
+  return { device, context, format, uniformBuffer, canvas };
+}
+
+/**
+ * Construye los recursos GPU de UNA escena sobre el core existente.
+ * B4: si el WGSL es inválido, esto RECHAZA (createRenderPipelineAsync) sin
+ * haber tocado nada del estado anterior — la escena que corría sigue viva.
+ */
+export async function buildSceneResources(
+  core: RendererCore,
+  compiled: CompiledScene,
+): Promise<SceneResources> {
+  const { device, format, uniformBuffer } = core;
+
+  // Buffer de MatParams (T-019) — solo si la escena lo necesita.
   let matParamsBuffer: GPUBuffer | null = null;
   if (compiled.matParams.totalFloats > 0) {
     if (compiled.matParams.totalFloats > MAT_PARAMS_MAX_FLOATS) {
@@ -118,8 +152,6 @@ export async function initRenderer(
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       label: 'm13-mat-params',
     });
-    // Escribimos los valores iniciales una sola vez al cargar la escena.
-    // Si el editor necesita updates en vivo, expondremos writeMatParams en Fase 2.
     // `.buffer` pasa el ArrayBuffer directo y evita el mismatch genérico de
     // Float32Array<ArrayBufferLike> vs Float32Array<ArrayBuffer> en TS 5.7+.
     device.queue.writeBuffer(
@@ -136,7 +168,7 @@ export async function initRenderer(
     label: `m13-shader-${compiled.scene.name}`,
   });
 
-  const pipeline = device.createRenderPipeline({
+  const descriptor: GPURenderPipelineDescriptor = {
     layout: 'auto',
     vertex: { module: shaderModule, entryPoint: 'vs_main' },
     fragment: {
@@ -145,7 +177,19 @@ export async function initRenderer(
       targets: [{ format }],
     },
     primitive: { topology: 'triangle-list' },
-  });
+  };
+  // Async cuando existe: un WGSL inválido RECHAZA aquí (capturable) en lugar de
+  // producir un pipeline inválido + uncapturederror silencioso.
+  let pipeline: GPURenderPipeline;
+  try {
+    pipeline =
+      typeof device.createRenderPipelineAsync === 'function'
+        ? await device.createRenderPipelineAsync(descriptor)
+        : device.createRenderPipeline(descriptor);
+  } catch (err) {
+    matParamsBuffer?.destroy();
+    throw err;
+  }
 
   // Bind group: siempre incluye binding(0) — uniforms base. Solo agrega binding(1)
   // si el shader lo declaró (cuando matParamsBuffer existe). El layout 'auto' del
@@ -163,16 +207,39 @@ export async function initRenderer(
     label: 'm13-bind-group',
   });
 
-  return {
-    device,
-    context,
-    format,
-    pipeline,
-    uniformBuffer,
-    matParamsBuffer,
-    bindGroup,
-    canvas,
-  };
+  return { pipeline, matParamsBuffer, bindGroup };
+}
+
+/** Libera los recursos de UNA escena (eviction del LRU). El pipeline y el bind
+ * group no tienen destroy() — el driver los recoge; el buffer sí se destruye. */
+export function destroySceneResources(res: SceneResources): void {
+  res.matParamsBuffer?.destroy();
+}
+
+/** Libera el core completo: uniform buffer, swap-chain del context y device. */
+export function destroyRendererCore(core: RendererCore): void {
+  core.uniformBuffer.destroy();
+  core.context.unconfigure();
+  core.device.destroy();
+}
+
+/**
+ * Conveniencia de compatibilidad: core + escena en un paso.
+ * El engine ya NO la usa (maneja core/escena por separado para el LRU);
+ * se conserva para consumidores externos del runtime.
+ */
+export async function initRenderer(
+  canvas: HTMLCanvasElement,
+  compiled: CompiledScene,
+): Promise<RendererState> {
+  const core = await initRendererCore(canvas);
+  try {
+    const res = await buildSceneResources(core, compiled);
+    return { ...core, ...res };
+  } catch (err) {
+    destroyRendererCore(core);
+    throw err;
+  }
 }
 
 export function writeUniforms(state: RendererState, u: UniformInputs): void {

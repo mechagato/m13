@@ -55,18 +55,22 @@ vi.mock('@m13/synth', () => {
   };
 });
 
-// Mock del renderer con tracking de llamadas.
+// Mock del renderer con tracking de llamadas (API D-3004).
 vi.mock('../renderer/index.js', () => ({
-  initRenderer: vi.fn().mockImplementation(async () => ({
+  initRendererCore: vi.fn().mockImplementation(async () => ({
     device: {} as GPUDevice,
     context: {} as GPUCanvasContext,
     format: 'bgra8unorm' as GPUTextureFormat,
-    pipeline: {} as GPURenderPipeline,
     uniformBuffer: {} as GPUBuffer,
-    matParamsBuffer: {} as GPUBuffer, // simulamos que se creó porque hay params
-    bindGroup: {} as GPUBindGroup,
     canvas: {} as HTMLCanvasElement,
   })),
+  buildSceneResources: vi.fn().mockImplementation(async () => ({
+    pipeline: {} as GPURenderPipeline,
+    matParamsBuffer: {} as GPUBuffer, // simulamos que se creó porque hay params
+    bindGroup: {} as GPUBindGroup,
+  })),
+  destroySceneResources: vi.fn(),
+  destroyRendererCore: vi.fn(),
   renderFrame: vi.fn(),
   writeUniforms: vi.fn(),
   writeMatParams: vi.fn(),
@@ -94,32 +98,32 @@ objects:
         roughness: ${roughness}
 `;
 
-  it('primera carga con params: initRenderer 1×, writeMatParams 0× (el writeBuffer va dentro de initRenderer)', async () => {
+  it('primera carga con params: buildSceneResources 1×, writeMatParams 0× (el writeBuffer va dentro del build)', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer, writeMatParams } = await import('../renderer/index.js');
+    const { buildSceneResources, writeMatParams } = await import('../renderer/index.js');
     const engine = new M13Engine({} as HTMLCanvasElement);
 
     await engine.loadScene(sceneYaml(0.3));
 
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
     expect(writeMatParams).toHaveBeenCalledTimes(0);
     expect(engine.getLastLoadInfo()?.reusedPipeline).toBe(false);
   });
 
-  it('cache hit + params cambiados: initRenderer NO se vuelve a llamar, writeMatParams SÍ', async () => {
+  it('cache hit + params cambiados: buildSceneResources NO se vuelve a llamar, writeMatParams SÍ', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer, writeMatParams } = await import('../renderer/index.js');
+    const { buildSceneResources, writeMatParams } = await import('../renderer/index.js');
     const engine = new M13Engine({} as HTMLCanvasElement);
 
     await engine.loadScene(sceneYaml(0.3));
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
 
     // Cargar misma estructura pero con roughness distinto.
     // Mismo WGSL (T-020 verifica que es idéntico) → cache hit.
     // Pero values del Float32Array son distintos → writeMatParams debe llamarse.
     await engine.loadScene(sceneYaml(0.9));
 
-    expect(initRenderer).toHaveBeenCalledTimes(1); // no recreado
+    expect(buildSceneResources).toHaveBeenCalledTimes(1); // no recreado
     expect(writeMatParams).toHaveBeenCalledTimes(1);
     expect(engine.getLastLoadInfo()?.reusedPipeline).toBe(true);
 
@@ -130,16 +134,16 @@ objects:
     expect(passedValues[0]).toBeCloseTo(0.9);
   });
 
-  it('cargar 5 veces la misma escena (mismos params): 1 initRenderer + 4 writeMatParams', async () => {
+  it('cargar 5 veces la misma escena (mismos params): 1 build + 4 writeMatParams', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { initRenderer, writeMatParams } = await import('../renderer/index.js');
+    const { buildSceneResources, writeMatParams } = await import('../renderer/index.js');
     const engine = new M13Engine({} as HTMLCanvasElement);
 
     for (let i = 0; i < 5; i++) {
       await engine.loadScene(sceneYaml(0.5));
     }
 
-    expect(initRenderer).toHaveBeenCalledTimes(1);
+    expect(buildSceneResources).toHaveBeenCalledTimes(1);
     // writeMatParams se llama en cada cache hit (4 después del primer init)
     expect(writeMatParams).toHaveBeenCalledTimes(4);
   });
