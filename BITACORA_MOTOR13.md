@@ -2409,3 +2409,72 @@ Gate de Fase 1 actualizado: SC-1 ✅ · SC-2 ✅ · SC-3 ✅ · SC-4 ✅ · SC-5
 SC-6 pendiente (Quest 3 — Gato lo está cargando este momento) · SC-7 ✅ **6 de 7 criterios PASS.**
 
 *Sesión registrada · 2026-06-12 · phi + Claude Sonnet 4.6*
+
+## Entrada 026 · 2026-06-12 · Hora Fable al máximo — MCP server + fix Quest 3 + infra Fase 1
+
+Sesión intensiva con Fable 5 + ultracode (orden de Gato: "avanza con todo lo que puedas").
+10 commits. Trabajo en 3 frentes paralelos (6 subagentes de workflow + trabajo inline).
+
+### 1. SC-6 Quest 3 — primer intento FALLÓ, root cause y fix deployado
+
+Gato probó motor13.neonodos.com en el Quest 3: "se bugeaba hasta el explorador, no pude
+mover el visor, hacía zoom en lugar de algo más". Root cause (3 problemas):
+- FlyCamera SOLO conocía pointer lock + WASD + mouse — en Quest no hay teclado y el
+  trigger arrastra; además pedía pointer lock en CUALQUIER click del canvas (hasta en Crear).
+- El pinch/gesto zoomeaba la PÁGINA (viewport sin user-scalable=no, canvas sin touch-action).
+- DPR nativo del Quest (~1.5+) multiplicaba el costo del raymarch por pixel.
+
+**Fix (commit con D-2109/D-2110), YA DEPLOYADO:**
+- **D-2109:** FlyCamera con controles de arrastre sin pointer lock — esquema FPS móvil:
+  arrastre lado derecho = mirar, touch lado izquierdo = joystick de movimiento proporcional,
+  multi-pointer simultáneo vía pointerId + setPointerCapture. Pointer lock ahora es opt-in
+  y auto-desactivado en dispositivos coarse-pointer (matchMedia hover+fine). Esto también
+  arregla MÓVIL (el pitch dice "corre en tu celular" y tampoco se podía mover ahí).
+- **D-2110:** DPR cap por dispositivo: Quest 1.0 · móvil 1.5 · desktop 2.0.
+- Página sin zoom: viewport user-scalable=no + touch-action none + overscroll none.
+- Hints táctiles reemplazan los de teclado en dispositivos touch.
+**SC-6 pendiente de RETEST por Gato con el deploy nuevo.**
+
+### 2. MCP server @m13/mcp — Idea 3 EJECUTADA (orden de Gato 2026-06-11)
+
+packages/mcp/ — cualquier LLM (Claude/ChatGPT) se vuelve front-end de m13. 5 tools stdio:
+generate_m13_scene · validate_m13_scene · share_m13_scene · list_m13_concepts ·
+get_m13_format_guide (catálogo generado en vivo desde @m13/synth — cero drift).
+17 tests vitest + smoke E2E real por stdio (initialize → tools/list → tools/call) verificado.
+Editor-time puro — Constitution §3 ok. Conectar: ver packages/mcp/README.md
+(`claude mcp add m13 -- pnpm --dir .../packages/mcp exec tsx src/cli.ts`).
+
+### 3. Share links #scene= — "la URL es la escena"
+
+El botón "compartir" del panel Receta codifica el .m13 en base64url en el hash de la URL:
+quien abre el link recibe el mundo 3D caminable completo SIN backend y sin descarga.
+Round-trip validado (770 bytes → URL de 1,063 chars). El MCP genera estos mismos links.
+FPS ahora visible en el statusbar en TODAS las vistas (sin teclado — para el test Quest).
+
+### 4. Infra Fase 1 (tasks paralelizables cerradas vía workflow de 6 agentes)
+
+- **T-069/070 CI:** .github/workflows/ci.yml — typecheck + test + build + guard de peso
+  del bundle runtime (60KB limit, actual ~39KB).
+- **T-071 lint:** prettier + eslint flat config; pnpm lint exit 0 (0 errors, 5 warns
+  intencionales). format:check NO va en CI aún (código sin prettier-format histórico).
+- **T-072 CHANGELOG.md** v0.1.0 + **T-074 docs/TROUBLESHOOTING.md** (7 problemas reales).
+- **T-075 auditoría seguridad:** docs/security/phase-1-editor-audit.md. Veredicto clave:
+  la cadena share link → YAML arbitrario → WGSL es SEGURA (compiler valida concept ids
+  contra registry antes de emitir WGSL; escapeHtml cubre el render de receta).
+  **H-01 (ALTO, no explotable hoy):** editor expone token LLM vía NEXT_PUBLIC_ — solo
+  riesgo si se deploya público con token real. Fix: route handler server-side. EN COLA.
+- **T-077 smoke test:** tools/smoke-test.mjs — 18/18 PASS contra producción (con guard
+  anti SPA-fallback de CF Pages).
+
+### 5. Refactor: @m13/generator extraído de examples (paquete standalone, lo consume el MCP).
+### 6. packageManager → pnpm@9.15.9 (lockfile v9). README con "Numbers that matter".
+
+### Verificación global: typecheck 6/6 Done · 133/133 tests · lint 0 errors · smoke 18/18.
+
+### Próximos pasos
+1. **Gato: RETEST Quest 3** con el deploy nuevo (pasos en docs/DEPLOY.md §T-061).
+2. H-01: route handler del editor (cuando se vaya a deployar público).
+3. MCP: registrar el server en Claude Code de Cerebro4 + evaluar publicación.
+4. Idea 6: empezar a persistir escenas generadas como dataset (decisión de storage pendiente).
+
+*Sesión registrada · 2026-06-12 · phi + Claude Fable 5 (ultracode, 6 subagentes)*
