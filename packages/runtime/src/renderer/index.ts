@@ -1,6 +1,9 @@
 import type { CompiledScene } from '../compiler/index.js';
 
-const UNIFORM_BYTES = 160;
+// Layout v2 (Fase 2): 160 base + 16 quality + 16 audioBands.
+// REGLA D-108: si tocas esto, actualiza struct Uniforms (shaders/common.ts) y
+// writeUniforms en el MISMO commit. El test uniform-layout.test.ts lo verifica.
+export const UNIFORM_BYTES = 192;
 
 /**
  * Budget máximo del buffer MAT_PARAMS — 64 f32 = 256 bytes.
@@ -38,6 +41,10 @@ export interface UniformInputs {
   fogColor: [number, number, number];
   fogDensity: number;
   tint: [number, number, number];
+  /** [maxSteps, shadowSteps, aoSamples, octaveCap] — presets en engine (T-213) */
+  quality: [number, number, number, number];
+  /** [bass, mid, treble, amplitude] — bandas FFT en P4; amplitude = compat */
+  audioBands: [number, number, number, number];
 }
 
 /** Redondea bytes al múltiplo de 16 más cercano (mínimo 16). WebGPU lo exige para uniform buffers. */
@@ -221,7 +228,17 @@ export function writeUniforms(state: RendererState, u: UniformInputs): void {
   dv.setFloat32(o, u.tint[0], true); o += 4;
   dv.setFloat32(o, u.tint[1], true); o += 4;
   dv.setFloat32(o, u.tint[2], true); o += 4;
-  // o += 4; // final pad
+  o += 4; // pad _p6
+  // quality (layout v2)
+  dv.setFloat32(o, u.quality[0], true); o += 4;
+  dv.setFloat32(o, u.quality[1], true); o += 4;
+  dv.setFloat32(o, u.quality[2], true); o += 4;
+  dv.setFloat32(o, u.quality[3], true); o += 4;
+  // audioBands (layout v2)
+  dv.setFloat32(o, u.audioBands[0], true); o += 4;
+  dv.setFloat32(o, u.audioBands[1], true); o += 4;
+  dv.setFloat32(o, u.audioBands[2], true); o += 4;
+  dv.setFloat32(o, u.audioBands[3], true); o += 4;
   state.device.queue.writeBuffer(state.uniformBuffer, 0, buf);
 }
 

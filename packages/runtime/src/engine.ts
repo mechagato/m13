@@ -318,6 +318,10 @@ export class M13Engine {
       fogColor: [...scene.ambient.fogColor],
       fogDensity: scene.ambient.fogDensity,
       tint: [...scene.ambient.tint],
+      // Layout v2: defaults = comportamiento actual exacto (T-212/T-213 los
+      // vuelven configurables; P4 escribe las bandas reales)
+      quality: [128, 32, 5, 5],
+      audioBands: [0, 0, 0, amp],
     });
     renderFrame(this.renderer);
 

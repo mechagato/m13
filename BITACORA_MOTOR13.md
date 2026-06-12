@@ -2626,3 +2626,17 @@ T-215 (retest Quest preset quality), T-235 (video laptop).
   `--store-dir ~/.local/share/pnpm/store/v3` explícito. Si reaparece: mismo flag.
 
 **Siguiente: P3 (T-211 uniform layout v2 — quality + audioBands en una sola migración).**
+
+### Adendum 027-c — 2026-06-12 — T-211 COMPLETA: uniform layout v2 (la migración crítica)
+
+- **D-3002 ejecutada:** struct Uniforms amplía 160 → 192 bytes en UNA sola pasada:
+  `quality: vec4` (maxSteps/shadowSteps/aoSamples/octaveCap) + `audioBands: vec4`
+  (bass/mid/treble/amplitude). P3 y P4 ya no vuelven a tocar la zona D-108.
+- WGSL (common.ts) + writeUniforms + UNIFORM_BYTES actualizados en el MISMO commit.
+- Defaults en engine = comportamiento actual EXACTO ([128,32,5,5], bands en 0 + amp).
+- **Test guardia nuevo** (`uniform-layout.test.ts`): parsea el struct del WGSL real,
+  calcula su tamaño con las reglas de alineación de WGSL y lo compara contra
+  UNIFORM_BYTES → si alguien edita uno sin el otro, CI truena ANTES de corromper
+  memoria. La regla D-108 dejó de ser disciplina manual: ahora es un test.
+- 135/135 tests (133 + 2 nuevos) · typecheck 6/6.
+- Siguiente: T-212 (raymarch lee quality) → T-213 (setQuality + presets).

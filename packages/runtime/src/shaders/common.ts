@@ -33,6 +33,12 @@ struct Uniforms {
   _p5: f32,
   tint: vec3<f32>,
   _p6: f32,
+  // Layout v2 (Fase 2, D-3002 — quality y audioBands entran JUNTOS para una
+  // sola migración de la zona de riesgo D-108):
+  // quality: x=maxSteps, y=shadowSteps, z=aoSamples, w=octaveCap
+  quality: vec4<f32>,
+  // audioBands: x=bass, y=mid, z=treble, w=amplitude (compat con audioAmp)
+  audioBands: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;
