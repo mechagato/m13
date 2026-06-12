@@ -1,0 +1,152 @@
+# muneco_fake — objeto físico capturado con Kinect → metaballs m13
+# Generado por depth2m13.py (m13-live / kinect-bridge)
+
+version: "0.1"
+name: muneco_fake
+description: "Objeto físico escaneado con Kinect y esculpido como SDFs en m13"
+
+bounds: [4.5, 2.7, 4.5]
+spawn: [0, 0, -3.6]
+
+ambient:
+  background: [0.05, 0.055, 0.06]
+  ambientColor: [0.16, 0.17, 0.18]
+  tint: [1.0, 1.0, 1.0]
+  fogColor: [0.05, 0.055, 0.06]
+  fogDensity: 0.012
+
+light:
+  position: [0.8, 2.4, -1.2]
+  color: [1.0, 0.96, 0.9]
+  intensity: 1.5
+
+walls:
+  concept: pared_concreto_pulido
+
+floor:
+  concept: piso_concreto_industrial
+
+ceiling:
+  concept: pared_yeso_blanco
+
+objects:
+  - id: blob_00
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.136, -2.501, -0.020]
+    scale: 0.149
+  - id: blob_01
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.120, -2.492, -0.005]
+    scale: 0.148
+  - id: blob_02
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.023, -2.375, 0.091]
+    scale: 0.124
+  - id: blob_03
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.294, -2.330, -0.047]
+    scale: 0.143
+  - id: blob_04
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.239, -2.327, 0.015]
+    scale: 0.141
+  - id: blob_05
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.161, -2.302, 0.073]
+    scale: 0.122
+  - id: blob_06
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.094, -2.206, 0.098]
+    scale: 0.122
+  - id: blob_07
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.079, -2.171, 0.095]
+    scale: 0.122
+  - id: blob_08
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.290, -2.148, -0.052]
+    scale: 0.147
+  - id: blob_09
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.258, -2.122, -0.029]
+    scale: 0.138
+  - id: blob_10
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.131, -2.056, 0.030]
+    scale: 0.122
+  - id: blob_11
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.068, -2.032, 0.033]
+    scale: 0.122
+  - id: blob_12
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.183, -1.937, -0.083]
+    scale: 0.129
+  - id: blob_13
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.205, -1.903, -0.091]
+    scale: 0.133
+  - id: blob_14
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.053, -1.893, 0.004]
+    scale: 0.122
+  - id: blob_15
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.095, -1.833, 0.022]
+    scale: 0.122
+  - id: blob_16
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.175, -1.738, -0.003]
+    scale: 0.126
+  - id: blob_17
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.007, -1.714, 0.062]
+    scale: 0.122
+  - id: blob_18
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.204, -1.713, -0.033]
+    scale: 0.132
+  - id: blob_19
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.120, -1.597, 0.001]
+    scale: 0.125
+  - id: blob_20
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.096, -1.571, -0.005]
+    scale: 0.128
+  - id: blob_21
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.064, -1.439, -0.055]
+    scale: 0.124
+  - id: blob_22
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0.091, -1.343, -0.054]
+    scale: 0.142
+  - id: blob_23
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [-0.075, -1.283, -0.046]
+    scale: 0.133
