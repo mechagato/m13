@@ -269,6 +269,12 @@ afectan a cualquier trabajo futuro en Fase 2+:
 - **D-2105 (FlowCAD, sesion 22-may):** Backend NeoCAD dejo de invocar Blender en flujo SSE.
   Motor m13 sobre WebGPU es la ruta de visualizacion principal.
 - **D-2106 (FlowCAD, sesion 22-may):** `glb_to_usdz.py` se mantiene aislado con graceful skip. No afecta flujo principal.
+- **D-2109 (runtime, 2026-06-12):** FlyCamera soporta controles de arrastre sin pointer lock
+  (derecha=mirar, izquierda=joystick). Pointer lock es opt-in, auto-desactivado en
+  dispositivos coarse-pointer (Quest/movil). Todo consumidor del runtime (FlowCAD incl.)
+  hereda controles touch gratis.
+- **D-2110 (examples, 2026-06-12):** DPR cap por dispositivo para el raymarch:
+  Quest 1.0 · movil 1.5 · desktop 2.0. El costo por pixel del SDF no tolera dpr nativo en XR standalone.
 
 ### Convencion de codigos D (resuelta 2026-06-11)
 
@@ -317,7 +323,12 @@ Estas surgieron en conversaciones con Gato. No están en el plan de Fase 1 actua
 - Cocinas Domus con voz (cliente describe cocina, m13 sintetiza)
 - Educativas para niños (tutor IA en mundo 3D)
 
-### Idea 3 — MCP de m13 + app en ChatGPT/Claude (PRIORIDAD ALTA, orden de Gato 2026-06-11)
+### Idea 3 — MCP de m13 + app en ChatGPT/Claude — ✅ SERVIDOR IMPLEMENTADO 2026-06-12
+
+**HECHO:** `packages/mcp/` (@m13/mcp) — 5 tools stdio (generate/validate/share/concepts/
+format-guide), 17 tests, E2E verificado. Ver `packages/mcp/README.md` para conectarlo.
+Pendiente: registrarlo en Claude Code de Cerebro4 + variante app ChatGPT + publicación.
+Contexto original de la orden:
 
 **Origen:** pregunta de inversionista sobre canales de distribución.
 **Directiva de Gato:** "estos se deben lanzar desde el inicio para llegar a sectores
