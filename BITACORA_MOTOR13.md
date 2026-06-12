@@ -2357,3 +2357,17 @@ se conserva por compatibilidad de paths/crons).
   Hecho vía API de Cloudflare (CLOUDFLARE_API_TOKEN del .env): dominio agregado al
   proyecto Pages + CNAME proxied en zona neonodos.com + cert Google emitido.
   Stopper #2 del gate cerrado sin intervención manual de Gato.
+
+### Adendum 025-d — 2026-06-12 — Canvas negro resuelto + primera validación visual real
+
+- **Bug crítico encontrado y resuelto con Gato como tester:** dos loadScene concurrentes
+  (boot + auto-generación al entrar) compartían el GPUCanvasContext; el unconfigure de
+  una aterrizaba tras el configure de la otra → "context is not configured" → el error
+  guard (de esta misma sesión) detenía el motor → canvas negro. El guard convirtió un
+  bug latente de concurrencia en un error visible con stack trace — funcionó como diseñado.
+- **Fix:** loadScene serializado vía promise chain + flag `loading` que aparta al tick
+  del contexto durante el reemplazo del renderer. Test de concurrencia nuevo.
+  116/116 tests verdes. Commit 7ec1fc8, deploy 39c6964d.
+- **PRIMERA VALIDACIÓN VISUAL EN GPU REAL:** Gato confirmó ("funcionó") el render de
+  motor13.neonodos.com en su laptop Windows — generación por chips/prompt + render en vivo.
+  SC-1 parcialmente cerrado: render real OK; número de FPS aún pendiente de reporte.
