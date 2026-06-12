@@ -2504,3 +2504,45 @@ El Quest 3 trae sensor de profundidad y WebXR lo expone (depth-sensing API).
   a veces flag). Si no jala en el visor de Gato → plan B Kinect (pipeline listo,
   stopper = adaptador de corriente naranja, ya identificado en MercadoLibre).
 - Verificación: 133/133 tests, typecheck limpio, /scan responde 200 en producción.
+
+### Adendum 026-d — 2026-06-12 — Análisis PWA/ADB anotado + AUDITORÍA DE COMPLETITUD FASE 1
+
+**Análisis app Quest (pregunta de Gato, anotado por orden suya):**
+- ✅ Ruta correcta: **PWA empaquetada como APK** (oficial de Meta) — ícono en la biblioteca
+  del visor, fullscreen sin barra, mismo motor Chromium/WebGPU, CERO reescritura.
+  Flujo: manifest.json + service worker → `ovr-platform-util createpwa` → APK → sideload
+  por adb → después Horizon Store/App Lab. Es la **Idea 1 del plan (primera tarea de Fase 2)**.
+- ❌ App nativa (Vulkan/OpenXR): reescribir el motor = meses + mata la tesis web-first. NO.
+- 📅 Fase 5 (julio) = WebXR inmersivo con el mismo motor. PWA + Fase 5 se complementan.
+- **ADB a Quest:** adb v34 ya instalado en Cerebro4. Para conectar el visor: (1) Modo
+  desarrollador ON en app Meta Horizon (cuenta dev gratis en developer.meta.com),
+  (2) cable USB-C a Cerebro4, (3) aceptar "Permitir depuración USB" en el visor.
+  Después: diagnóstico completo + adb inalámbrico (adb connect por Wi-Fi, sin cable).
+
+**Auditoría de completitud Fase 1 (orden de Gato: "que no falte nada antes de Fase 2"):**
+
+| Ítem | Estado | Veredicto |
+|---|---|---|
+| SC-1 fps laptop | 60 vsync ✅ | CERRADO |
+| SC-2 escenas <50KB | ✅ smoke 18/18 | CERRADO |
+| SC-3 live reload <500ms | ✅ (250ms por diseño, sin E2E automatizado — aceptado) | CERRADO |
+| SC-4 LLM eval ≥70% | ✅ 100%×3 | CERRADO |
+| SC-5 benchmark >10× | ✅ 30.8× | CERRADO |
+| **SC-6 Quest ≥72fps** | render confirmado, **FALTA NÚMERO FPS** | ⚠️ ÚNICO BLOQUEANTE — Gato, 2 min |
+| SC-7 no-técnico | ✅ live-edit | CERRADO |
+| NFR-1..NFR-5 | ✅ (local-only, bundle 58.6KB gzip, sin Three, strict TS) | CERRADO |
+| NFR-6 coverage >70% parser/compiler | ✅ parser 100% / compiler 98.3% | CERRADO |
+| **NFR-7 Quest 90fps** | mismo dato pendiente que SC-6 (90 > 72: criterio más duro) | ⚠️ mismo retest |
+| NFR-2 editor offline (PWA) | NO hecho — el plan lo resolvió moviéndolo a Idea 1 = **1ª task Fase 2** | DOCUMENTADO |
+| T-055/056/073/076 | OPCIONALES declarados, no ejecutados | OK así |
+| T-060 QR | ✅ (qr.png en vista "Por qué m13") | CERRADO |
+| T-078 gate visual con Gato | cumplido de facto (SC-1 laptop + Quest render confirmados por Gato) | CERRADO |
+| H-01 token editor NEXT_PUBLIC_ | fix en cola — trigger: ANTES de deploy público del editor | EN COLA |
+| Licencia (README/constitution §8.4) | **TBD — decisión de Gato** (importa para publicar/Innovafest) | DECISIÓN GATO |
+| Deuda auditoría (~44 hallazgos sin verif. adversarial) | documentada en deep-review-2026-06-10.md | DOCUMENTADO |
+| Prettier histórico + eslint 8/@eslint-js 10 | cosmético, documentado | OK |
+| MCP: registrar en Claude Code Cerebro4 | se cierra en esta sesión | EN CURSO |
+
+**Conclusión: lo ÚNICO que bloquea formalmente el 100% de Fase 1 es el número de FPS
+del Quest 3 (SC-6 ≥72 / NFR-7 90). Todo lo demás está cerrado, en cola con trigger
+claro, o es decisión de Gato (licencia).**
