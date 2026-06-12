@@ -30,6 +30,7 @@
     "globals": "^17.6.0",
     "prettier": "^3.8.4",
     "qrcode": "^1.5.4",
+    "sharp": "^0.35.1",
     "tsx": "^4.22.3",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.61.0",

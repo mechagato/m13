@@ -174,12 +174,28 @@ function printSummary() {
   return failed === 0;
 }
 
+// PWA (T-204): manifest y service worker servidos correctamente
+async function checkPwa() {
+  console.log('\n[4/4] PWA — manifest + service worker');
+  for (const path of ['/manifest.webmanifest', '/sw.js', '/icons/icon-192.png']) {
+    const res = await fetchWithTimeout(baseUrl + path);
+    if (!res.ok) {
+      record(`GET ${path}`, false, res.error);
+      continue;
+    }
+    // El SPA fallback de Pages regresa index.html con 200 — eso es FAIL aquí
+    const isHtmlFallback = res.contentType.includes('text/html');
+    record(`GET ${path}`, res.status === 200 && !isHtmlFallback, `${res.status} ${res.contentType}`);
+  }
+}
+
 async function main() {
   console.log(`m13 smoke test post-deploy · target: ${baseUrl}`);
 
   const html = await checkIndex();
   await checkAssets(html);
   await checkScenes();
+  await checkPwa();
 
   const allPass = printSummary();
   process.exit(allPass ? 0 : 1);

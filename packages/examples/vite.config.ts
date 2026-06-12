@@ -1,4 +1,15 @@
 import { defineConfig } from 'vite';
+import { execSync } from 'node:child_process';
+
+// Hash del commit para versionar el service worker (T-202).
+// Fallback a timestamp del build si git no está disponible (CI shallow, etc.).
+function buildHash(): string {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    return Date.now().toString(36);
+  }
+}
 
 /**
  * @m13/examples — Vite config para dev + producción.
@@ -9,6 +20,9 @@ import { defineConfig } from 'vite';
  * assets estáticos servidos desde public/ — no se procesan ni bundlean.
  */
 export default defineConfig({
+  define: {
+    __BUILD_HASH__: JSON.stringify(buildHash()),
+  },
   server: {
     port: 5173,
     strictPort: false,

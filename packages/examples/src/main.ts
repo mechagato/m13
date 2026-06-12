@@ -621,6 +621,48 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
+// PWA — registro del service worker + instalar (T-202/T-203)
+// ============================================
+declare const __BUILD_HASH__: string;
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.register('/sw.js?v=' + __BUILD_HASH__).catch(() => {
+    /* sin SW no pasa nada — la app funciona igual online */
+  });
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if ((e.data as { type?: string })?.type === 'm13-updated') {
+      taskIdle('nueva versión de m13 disponible — recarga cuando gustes');
+    }
+  });
+}
+
+let installPrompt: (Event & { prompt: () => Promise<void> }) | null = null;
+const installBtn = $<HTMLButtonElement>('installBtn');
+const installSep = $('installSep');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e as Event & { prompt: () => Promise<void> };
+  installBtn.hidden = false;
+  installSep.hidden = false;
+});
+
+installBtn.addEventListener('click', () => {
+  if (installPrompt) {
+    void installPrompt.prompt();
+    installPrompt = null;
+    installBtn.hidden = true;
+    installSep.hidden = true;
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.hidden = true;
+  installSep.hidden = true;
+  taskDone('m13 instalada como app ✓');
+});
+
+// ============================================
 // Boot
 // ============================================
 refreshLlmStatus();

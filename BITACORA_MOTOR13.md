@@ -2603,3 +2603,26 @@ camino: T-221 (Gato ve el A/B del detalle continuo ANTES de migrar conceptos),
 T-215 (retest Quest preset quality), T-235 (video laptop).
 
 *Sesión registrada · 2026-06-12 · phi + Claude Fable 5*
+
+### Adendum 027-b — 2026-06-12 — P1 PWA COMPLETO (T-201..T-204) — primer entregable Fase 2
+
+- **T-201:** manifest.webmanifest + icons 192/512/favicon generados con sharp desde SVG
+  (`tools/gen-icons.ts`, **D-3003:** sharp como devDep raíz — único rasterizador
+  confiable sin browser; alternativas evaluadas: canvas (deps nativas pesadas),
+  resvg (otra dep), SVG directo en manifest (soporte parcial).)
+- **T-202:** `public/sw.js` a mano (**D-3001 confirmada:** cero deps vs vite-plugin-pwa).
+  Navegación network-first con fallback cache · assets cache-first · versionado por
+  `?v=<git hash>` inyectado via Vite define → activate purga caches viejos.
+- **T-203:** botón "⬇ instalar app" en statusbar (beforeinstallprompt) + aviso de
+  nueva versión en la taskline + appinstalled feedback.
+- **T-204:** `tools/pwa-offline-test.mjs` (puppeteer + vite preview): SW activo ✓ y
+  **la app abre OFFLINE tras primera carga ✓**. Smoke test extendido a 21 checks
+  (manifest/sw/icon con guard anti SPA-fallback): **21/21 PASS contra producción.**
+- **NFR-2 de Fase 1 (offline tras primera carga): CERRADO** para el demo público
+  (alcance confirmado por Gato en OQ-4: solo demo).
+- Deployado a motor13.neonodos.com. Typecheck 6/6 · 133/133 tests.
+- Pendiente P1: T-205 (APK Quest via ovr-platform-util — requiere Quest por adb, Gato).
+- Nota infra: pnpm store divergió por snap de VSCode (~/snap/code/247/...) — se usó
+  `--store-dir ~/.local/share/pnpm/store/v3` explícito. Si reaparece: mismo flag.
+
+**Siguiente: P3 (T-211 uniform layout v2 — quality + audioBands en una sola migración).**

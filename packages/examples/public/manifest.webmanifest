@@ -1,0 +1,14 @@
+{
+  "name": "m13 — mundos 3D de 2KB",
+  "short_name": "m13",
+  "description": "Motor de síntesis semántica de mundos 3D. La IA escribe recetas de 2KB, tu dispositivo sintetiza el mundo gratis para siempre.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050807",
+  "theme_color": "#050807",
+  "lang": "es",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

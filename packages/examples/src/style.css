@@ -369,6 +369,12 @@ body[data-view="porque"] .doc-error, body[data-view="ajustes"] .doc-error { disp
 .sb-sep { opacity: 0.5; }
 #llmStatus.connected { color: var(--neon); }
 .sb-fps { color: var(--neon); min-width: 110px; }
+.sb-install {
+  background: transparent; border: 1px solid var(--neon-dim); border-radius: 6px;
+  color: var(--neon); padding: 2px 8px; font-family: inherit; font-size: 9px;
+  letter-spacing: 0.06em; cursor: pointer; transition: background 0.18s;
+}
+.sb-install:hover { background: var(--neon-faint); }
 
 /* el composer solo aplica a Crear */
 body:not([data-view="crear"]) .composer-zone .composer,
