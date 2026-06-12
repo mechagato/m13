@@ -208,8 +208,21 @@ function setView(view: ViewId): void {
   } else if (view === 'porque') {
     taskIdle('por qué m13 — benchmark real vs Three.js');
   }
+  // B13: el canvas queda tapado en "porqué"/"ajustes" — pausar el raymarch
+  // (batería/calor en el dispositivo del juez InnovaFest)
+  if (engineOk) {
+    if (view === 'porque' || view === 'ajustes') engine.stop();
+    else engine.start();
+  }
   requestAnimationFrame(resize);
 }
+
+// B13: pestaña oculta = motor pausado; al volver, reanuda solo si la vista renderiza
+document.addEventListener('visibilitychange', () => {
+  if (!engineOk) return;
+  if (document.hidden) engine.stop();
+  else if (activeView === 'crear' || activeView === 'explorar') engine.start();
+});
 
 rail.addEventListener('click', (e) => {
   const btn = (e.target as HTMLElement).closest('button');

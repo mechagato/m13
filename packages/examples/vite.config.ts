@@ -1,5 +1,10 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { execSync } from 'node:child_process';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const configDir = dirname(fileURLToPath(import.meta.url));
 
 // Hash del commit para versionar el service worker (T-202).
 // Fallback a timestamp del build si git no está disponible (CI shallow, etc.).
@@ -19,7 +24,31 @@ function buildHash(): string {
  * (target T-058: `dist/` < 500 KB). Las escenas .m13 son tratadas como
  * assets estáticos servidos desde public/ — no se procesan ni bundlean.
  */
+// B12 (auditoría 06-12): el SW precachea TODAS las escenas .m13 para que el
+// demo viva sin red (WiFi de venue). La lista se inyecta al build — sw.js es
+// estático en public/ y no puede conocerla solo.
+function injectScenePrecache(): Plugin {
+  return {
+    name: 'm13-sw-scene-precache',
+    apply: 'build',
+    closeBundle() {
+      const scenesDir = resolve(configDir, 'public/scenes');
+      const scenes = readdirSync(scenesDir)
+        .filter((f) => f.endsWith('.m13'))
+        .map((f) => '/scenes/' + f);
+      const swPath = resolve(configDir, 'dist/sw.js');
+      const src = readFileSync(swPath, 'utf8');
+      if (!src.includes('__PRECACHE_SCENES__')) {
+        throw new Error('[sw-precache] placeholder __PRECACHE_SCENES__ no encontrado en sw.js');
+      }
+      writeFileSync(swPath, src.replace('__PRECACHE_SCENES__', JSON.stringify(scenes)));
+      console.log(`[sw-precache] ${scenes.length} escenas inyectadas al precache del SW`);
+    },
+  };
+}
+
 export default defineConfig({
+  plugins: [injectScenePrecache()],
   define: {
     __BUILD_HASH__: JSON.stringify(buildHash()),
   },
