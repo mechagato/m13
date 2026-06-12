@@ -2640,3 +2640,21 @@ T-215 (retest Quest preset quality), T-235 (video laptop).
   memoria. La regla D-108 dejó de ser disciplina manual: ahora es un test.
 - 135/135 tests (133 + 2 nuevos) · typecheck 6/6.
 - Siguiente: T-212 (raymarch lee quality) → T-213 (setQuality + presets).
+
+### Adendum 027-d — 2026-06-12 — Inventario GitHub verificado (orden de Gato: revisar ANTES de crear nada)
+
+**Los 2 repos del ecosistema m13 YA EXISTEN — no crear repos nuevos sin revisar
+`gh repo list mechagato` primero:**
+- `mechagato/m13` (privado) — el motor. Sincronizado a a9e90f2 hoy.
+- `mechagato/flowcad` (privado) — "Render m13 (WebGPU) + kernel OpenCASCADE +
+  framework .phi. Modelo de ejecución híbrido." El caso de uso primario.
+
+Otros relacionados: `mechagato/phi-mcp` (MCP de phi — NO confundir con @m13/mcp que
+vive dentro del repo m13) · `mechagato/phi-main` · `mechagato/neonodos` (Torre AURAI).
+
+Dato nuevo: **`gh` ya está autenticado** (mechagato, keyring, protocolo https) — el
+stopper de "tokens gh inválidos" de la sesión anterior quedó resuelto.
+
+Pendiente SIN ejecutar (decisión de Gato): `m13-live` (kinect-bridge) sigue commiteado
+solo LOCAL, sin remote. Opciones: (a) repo nuevo `mechagato/m13-live`, (b) integrarlo
+a uno existente. No se crea nada hasta que Gato decida.
