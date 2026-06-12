@@ -2546,3 +2546,15 @@ El Quest 3 trae sensor de profundidad y WebXR lo expone (depth-sensing API).
 **Conclusión: lo ÚNICO que bloquea formalmente el 100% de Fase 1 es el número de FPS
 del Quest 3 (SC-6 ≥72 / NFR-7 90). Todo lo demás está cerrado, en cola con trigger
 claro, o es decisión de Gato (licencia).**
+
+### Adendum 026-e — 2026-06-12 — Primera medición FPS Quest 3 + D-2112
+
+**Medición de Gato en Quest 3 (motor13.neonodos.com):** 37-48 fps · 28 ms/frame ·
+1584×918. SC-6 (≥72) FAIL en primer intento — pero el dato revela la causa: la ventana
+del Quest browser es grande y a dpr 1.0 son 1.45M pixeles de raymarch.
+
+**D-2112 (deployado):** escala de render del Quest baja de 1.0 → 0.7 (≈2× menos
+pixeles → proyección 75-95 fps). Se agrega override `?dpr=` por query param para
+afinar en vivo sin redeploy (clamp 0.3..2). Si 0.7 no alcanza 72: siguiente palanca
+es steps del raymarch (128→96) y octaves FBM (mitigaciones #1/#3 de DEPLOY.md).
+Pendiente: retest de Gato.

@@ -276,10 +276,18 @@ function updateSelector(): void {
 // ============================================
 // Resize — el canvas vive dentro del "documento"
 // ============================================
+// D-2112: la ventana del Quest browser es grande (medido: 1584×918 a dpr 1 →
+// 37-48 fps). Escala 0.7 = mitad de pixeles → proyectado 75-95 fps. Override
+// para afinar sin redeploy: ?dpr=0.6 (clamp 0.3..2).
+const DPR_OVERRIDE = (() => {
+  const q = parseFloat(new URLSearchParams(window.location.search).get('dpr') ?? '');
+  return Number.isFinite(q) ? Math.min(2, Math.max(0.3, q)) : null;
+})();
+
 function resize(): void {
-  // D-2110: Quest 3 renderiza el raymarch a dpr 1 (el browser reporta ~1.5+ y
-  // el costo por pixel del SDF no lo vale en standalone); móvil cap 1.5; desktop 2.
-  const dprCap = IS_QUEST ? 1 : HAS_FINE_POINTER ? 2 : 1.5;
+  // D-2110/D-2112: cap de resolución de render por dispositivo —
+  // Quest 0.7 · móvil 1.5 · desktop 2. El costo por pixel del SDF manda.
+  const dprCap = DPR_OVERRIDE ?? (IS_QUEST ? 0.7 : HAS_FINE_POINTER ? 2 : 1.5);
   const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = doc.clientWidth || 1;
   const h = doc.clientHeight || 1;
