@@ -231,11 +231,44 @@ describe('synth — Concept registry y manifest', () => {
     }
   });
 
-  it('FR-2.2: seeds asignados secuencialmente por orden alfabético de id desde 1001', () => {
-    const sorted = [...listConcepts()].sort((a, b) => a.id.localeCompare(b.id));
-    sorted.forEach((c, i) => {
-      expect(c.seed, `${c.id} seed esperado ${1001 + i}`).toBe(1001 + i);
-    });
+  // B11 (auditoría 06-12): el mapa está CONGELADO — agregar un concepto nuevo
+  // NO renumera a los existentes (eso rompía el determinismo: banda_transportadora
+  // habría renumerado 16 de 18). Conceptos nuevos: agregar AQUÍ con el siguiente
+  // número libre (1019+).
+  const FROZEN_SEEDS: Record<string, number> = {
+    cubo_basico: 1001,
+    cuero_vintage: 1002,
+    esfera_decorativa: 1003,
+    lampara_colgante: 1004,
+    marmol_blanco_vetas: 1005,
+    metal_bronce_pulido: 1006,
+    metal_dorado_pulido: 1007,
+    metal_oxidado: 1008,
+    pared_concreto_pulido: 1009,
+    pared_ladrillo_viejo: 1010,
+    pared_madera_oscura: 1011,
+    pared_yeso_blanco: 1012,
+    pedestal_marmol: 1013,
+    piedra_volcanica: 1014,
+    piso_concreto_industrial: 1015,
+    piso_madera_envejecida: 1016,
+    piso_marmol_blanco: 1017,
+    vidrio_esmerilado: 1018,
+  };
+
+  it('FR-2.2/B11: seeds únicos y CONGELADOS — los existentes nunca se renumeran', () => {
+    const seen = new Set<number>();
+    for (const c of listConcepts()) {
+      expect(seen.has(c.seed), `seed ${c.seed} duplicado (${c.id})`).toBe(false);
+      seen.add(c.seed);
+      const frozen = FROZEN_SEEDS[c.id];
+      if (frozen !== undefined) {
+        expect(c.seed, `${c.id} debe conservar su seed congelado ${frozen}`).toBe(frozen);
+      } else {
+        // concepto nuevo: número fuera del rango congelado, y hay que agregarlo al mapa
+        expect(c.seed, `${c.id} es nuevo — su seed debe ser >= 1019 y agregarse a FROZEN_SEEDS`).toBeGreaterThanOrEqual(1019);
+      }
+    }
   });
 
   it('FR-2.2: audioReactivity refleja el uso real de audioAmp en el WGSL', () => {

@@ -90,10 +90,11 @@ export interface Concept {
   /** Material signature (FR-2.2) — color base, roughness, variación, audio reactivity */
   signature: MaterialSignature;
   /**
-   * Procedural seed (FR-2.2) — entero único por concepto, asignado secuencialmente
-   * por orden alfabético de id (1001, 1002, ...). Reserva la base para variación
-   * procedural por-instancia en Fase 2; el WGSL aún no lo consume (eso requiere
-   * validación visual con GPU).
+   * Procedural seed (FR-2.2) — entero único y CONGELADO por concepto (B11):
+   * los 18 originales conservan 1001..1018 para siempre; un concepto nuevo toma
+   * el siguiente número libre y NUNCA se renumeran los existentes (renumerar
+   * rompería el determinismo prometido). El test de manifest verifica el mapa
+   * congelado, no una secuencia alfabética.
    */
   seed: number;
   /** Fragmento WGSL que define `fn mat_<id>(p, n, audioAmp) -> vec3<f32>` */
@@ -199,9 +200,15 @@ function attachManifest(raw: Concept): Concept {
   };
 }
 
-const REGISTRY: Record<string, Concept> = Object.fromEntries(
-  RAW_CONCEPTS.map((raw) => [raw.id, attachManifest(raw)]),
-);
+// B10 (auditoría 06-12): Object.fromEntries sobreescribía ids repetidos EN
+// SILENCIO. Construcción explícita con detección de duplicados.
+const REGISTRY: Record<string, Concept> = {};
+for (const raw of RAW_CONCEPTS) {
+  if (REGISTRY[raw.id]) {
+    throw new Error(`[m13/synth] concepto duplicado en el registry: "${raw.id}"`);
+  }
+  REGISTRY[raw.id] = attachManifest(raw);
+}
 
 // ============================================================
 // API pública
