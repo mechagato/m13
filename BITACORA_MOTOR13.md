@@ -2576,3 +2576,30 @@ Gato dio la orden: "continúa con las fases" (y rechazó configurar endpoint LLM
 - 4 open questions para Gato (OQ-1..OQ-4) — el gate §9 requiere su confirmación antes
   de generar plan/tasks. NO se toca código de Fase 2 hasta entonces (regla del repo).
 - CLAUDE.md actualizado: sección "Próximos pasos" refleja el despause.
+
+## Entrada 027 · 2026-06-12 · FASE 2 ABIERTA — spec aprobado, plan + tasks generados
+
+Gato resolvió las 4 open questions del spec:
+1. **5 prioridades + orden P1→P3→P2→P4→P5: CONFIRMADOS.**
+2. **Showcase: "mucho más grande, campo abierto, NO habitación — las pirámides de
+   Chichén Itzá."** → FR-2.6 nuevo: soporte de escenas exteriores (walls/ceiling
+   opcionales, cielo, fog atmosférico, cameraSpeed). El Castillo es la narrativa
+   microtonal perfecta: monolito → plataformas → bloques → grano de piedra.
+3. **Video zoom: primero laptop.** + Directiva estratégica registrada: **Innovafest
+   prioriza m13 CON FlowCAD (caso industrial domina Nuevo León)** → CLAUDE.md.
+4. **PWA: solo demo público.**
+
+Artefactos Spec Kit completos (flujo sin brincos, como ordenó Gato):
+- `docs/spec/phase-2-spec.md` v1.1 — OQs resueltas, gate §9 checkeado (solo queda
+  el FPS del Quest corriendo en paralelo, no bloquea implementación)
+- `docs/plans/phase-2-plan.md` — arquitectura por prioridad, grafo de dependencias,
+  decisiones propuestas D-3001 (SW a mano, cero deps) y D-3002 (uniform layout v2
+  UNA sola vez: quality + audioBands juntos, evita doble pasada por riesgo D-108)
+- `docs/tasks/phase-2-tasks.md` — serie T-201..T-263, critical path marcado,
+  PWA ∥ schema exteriores ∥ FFT bandas paralelizables desde el inicio
+
+Siguiente: implementación arranca con T-201 (PWA manifest). Gates humanos en el
+camino: T-221 (Gato ve el A/B del detalle continuo ANTES de migrar conceptos),
+T-215 (retest Quest preset quality), T-235 (video laptop).
+
+*Sesión registrada · 2026-06-12 · phi + Claude Fable 5*

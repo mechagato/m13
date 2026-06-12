@@ -69,8 +69,15 @@ de Fase 2", "seeds por instancia", "uniforms de calidad"), y D-1504 (updateMatPa
   no romper NFR-fps.
 - FR-2.4 Anti-aliasing procedural: las frecuencias que exceden el footprint del pixel
   se atenúan (filtrado analítico), no se muestrean (nada de shimmer al moverse).
-- FR-2.5 Una **escena showcase nueva** (`sonido13_zoom.m13`) diseñada para demostrar
-  el zoom continuo — el material revela 3+ "registros" de detalle al acercarse.
+- FR-2.5 Una **escena showcase nueva: `chichen_itza.m13`** (orden de Gato 2026-06-12) —
+  El Castillo en **campo abierto, escala monumental** (~30m de pirámide, bounds grandes).
+  De lejos: monolito. A media distancia: las 9 plataformas y escalinatas. De cerca: cada
+  bloque de piedra. Pegado: el grano de la piedra volcánica. Ese recorrido ES la
+  narrativa microtonal del pitch.
+- FR-2.6 **Soporte de escenas exteriores** (requisito del showcase): `walls`/`ceiling`
+  opcionales en el schema (hoy obligatorios — schema.ts:119-121), cielo con gradiente
+  de horizonte, suelo extendido, fog atmosférico de distancia, velocidad de cámara
+  escalada al tamaño de la escena. 100% retro-compatible (escenas room intactas).
 
 ### FR-3 — Uniforms de calidad (P3)
 - FR-3.1 Struct de calidad en uniforms: `maxSteps`, `shadowSteps`, `aoSamples`,
@@ -174,25 +181,23 @@ no dirige.
 
 ---
 
-## 8. Open questions (para Gato antes del Plan)
+## 8. Open questions — RESUELTAS por Gato 2026-06-12
 
-- **OQ-1:** ¿Confirmas las 5 prioridades y su orden (P1 PWA → P3 quality → P2 core →
-  P4 FFT → P5 seeds como orden de implementación)? Nota: P3 antes que P2 es deliberado
-  (R2) aunque P2 sea el corazón.
-- **OQ-2:** ¿La escena showcase (FR-2.5) es nueva o prefieres evolucionar
-  `templo_mexica` (ya tiene identidad fuerte para el zoom de piedra)?
-- **OQ-3:** ¿El video del zoom (SC2-1) lo grabamos en tu laptop (mejor GPU) o en
-  Quest (mejor narrativa)?
-- **OQ-4:** PWA: ¿solo demo público o también el editor Next.js? (NFR-2 de Fase 1
-  hablaba del editor; el valor inmediato está en el demo.)
+- **OQ-1 ✅** 5 prioridades y orden P1→P3→P2→P4→P5 confirmados.
+- **OQ-2 ✅** Showcase NUEVO y "mucho más grande": **las pirámides de Chichén Itzá en
+  campo abierto, NO en habitación** → FR-2.5/FR-2.6 actualizados.
+- **OQ-3 ✅** Video primero en laptop; si alcanza ahí, le damos. **Directiva estratégica
+  adicional de la misma respuesta: la prioridad en Innovafest es mostrar m13 CON
+  FlowCAD — el caso de negocio industrial domina en Nuevo León.** (También en CLAUDE.md.)
+- **OQ-4 ✅** PWA solo demo público por ahora.
 
 ---
 
 ## 9. Decisión gate para arrancar implementación
 
-- [ ] Gato confirma las 5 prioridades y resuelve OQ-1..OQ-4
+- [x] Gato confirma las 5 prioridades y resuelve OQ-1..OQ-4 (2026-06-12)
 - [ ] SC-6/NFR-7 de Fase 1 cerrado con número (retest 0.7 pendiente — corre en paralelo)
-- [ ] `docs/plans/phase-2-plan.md` generado a partir de este spec
-- [ ] `docs/tasks/phase-2-tasks.md` generado (serie T-2xx, decisiones serie D-3xxx)
+- [x] `docs/plans/phase-2-plan.md` generado a partir de este spec
+- [x] `docs/tasks/phase-2-tasks.md` generado (serie T-2xx, decisiones serie D-3xxx)
 
 *Cualquier desvío de este documento se registra en BITACORA_MOTOR13.md con su D-3xxx.*

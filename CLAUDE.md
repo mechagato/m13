@@ -39,6 +39,7 @@ m13 es el proyecto **#1 prioritario** del catálogo NeoNodos desde junio a dicie
 
 - **m13 (Claude Code + Gato):** desarrollo técnico exclusivo. Gato dedica ≥60% de su tiempo. Claude Code es el agente principal.
 - **FlowCAD (ex-NeoCAD) = CASO DE USO PRIMARIO de m13.** No es proyecto separado en modo mantenimiento — es el showcase principal. m13 le da el render engine para que piezas CAD se vean en navegador sin instalar nada. Pitch ganador de Innovafest: "CAD-killer (vs SolidWorks/Blender) que corre en browser gracias a m13".
+  **Reconfirmado por Gato 2026-06-12: la prioridad en Innovafest es mostrar m13 CON FlowCAD — el caso de negocio industrial domina en Nuevo León.** El material demo (videos, showcase) se planea con ese ángulo.
 - **Otros proyectos NeoNodos (INMA, NeoPos, NeoPets, SyShops, ArinStudio, PanteroSecurity, Cocinas Domus, neonodos.com v2, etc):** **modo mantenimiento bajo el orquestador phi**.
   - Solo continuidad de clientes existentes
   - Cero features nuevas excepto críticas
@@ -89,7 +90,7 @@ Si una propuesta de cambio viola alguno de estos puntos, **detente y pregunta a 
 |---|---|---|
 | 0 | Proof of principle SDF raymarching | COMPLETED (demos HTML standalone) |
 | 1 | Lenguaje .m13 + librería conceptos | COMPLETED (gate cerrado 2026-05-28) |
-| 2 | Detalle continuo (Sonido 13 visual) | PENDING |
+| 2 | Detalle continuo (Sonido 13 visual) | IN PROGRESS (spec aprobado 2026-06-12) |
 | 3 | Síntesis neural local con ONNX | PENDING |
 | 4 | Gaussian Splatting híbrido | PENDING |
 | 5 | WebXR + Quest 3 + voz | PENDING |
