@@ -48,6 +48,8 @@ const recipeCode = $('recipeCode');
 const recipeName = $('recipeName');
 const recipeWeight = $('recipeWeight');
 const recipeCopy = $('recipeCopy');
+const recipeShare = $<HTMLButtonElement>('recipeShare');
+const sbFps = $('sbFps');
 const recipeEdit = $<HTMLButtonElement>('recipeEdit');
 const recipeTextarea = $<HTMLTextAreaElement>('recipeTextarea');
 const editHint = $('editHint');
@@ -237,6 +239,7 @@ enterBtn.addEventListener('click', () => {
 const engine = new M13Engine(canvas, {
   onFrame: (s) => {
     fpsEl.textContent = Math.round(s.fps).toString();
+    sbFps.textContent = Math.round(s.fps) + ' fps · ' + s.ms.toFixed(1) + ' ms';
     msEl.textContent = s.ms.toFixed(1);
     resEl.textContent = canvas.width + '×' + canvas.height;
     cxEl.textContent = s.cameraPos[0].toFixed(2);
@@ -377,6 +380,7 @@ function showRecipe(yaml: string, fileName = 'escena.m13'): void {
   recipeWeight.textContent = `esta escena pesa ${bytes.toLocaleString('es-MX')} bytes — una imagen equivalente pesa ~60 KB`;
   recipePanel.dataset.empty = 'false';
   recipeEdit.hidden = false;
+  recipeShare.hidden = false;
 }
 
 // ============================================
@@ -451,6 +455,49 @@ promptForm.addEventListener('submit', (e) => {
     taskDone(FALLBACK_NOTE);
     promptBtn.disabled = false;
   })();
+});
+
+// ============================================
+// Share links — la URL ES la escena (local-first,
+// cero backend: base64url del YAML en el hash)
+// ============================================
+function encodeSceneHash(yaml: string): string {
+  const bytes = new TextEncoder().encode(yaml);
+  let bin = '';
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeSceneHash(encoded: string): string {
+  const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function readSharedScene(): string | null {
+  const m = window.location.hash.match(/^#scene=(.+)$/);
+  if (!m) return null;
+  try {
+    return decodeSceneHash(m[1]!);
+  } catch {
+    return null;
+  }
+}
+
+recipeShare.addEventListener('click', () => {
+  if (!currentYaml) return;
+  const url = window.location.origin + window.location.pathname + '#scene=' + encodeSceneHash(currentYaml);
+  void navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      recipeShare.textContent = 'link copiado ✓';
+      taskDone('link copiado — quien lo abra recibe el mundo 3D completo en la URL, sin backend');
+      setTimeout(() => (recipeShare.textContent = 'compartir'), 1800);
+    })
+    .catch(() => {
+      recipeShare.textContent = 'error';
+    });
 });
 
 // Copiar receta
@@ -552,11 +599,25 @@ loadSettings();
   }
   resize();
   engine.attachFlyCamera();
+  const shared = readSharedScene();
   try {
-    await loadIdx(0);
+    if (shared !== null) {
+      // Link compartido: la URL trae el mundo completo — entrar directo
+      entryScreen.classList.add('hidden');
+      setView('crear');
+      sceneNameEl.textContent = 'escena compartida';
+      sceneDescEl.textContent = 'Mundo 3D recibido por URL — cero descarga, cero backend.';
+      showRecipe(shared, 'compartida.m13');
+      await engine.loadScene(shared);
+      const bytes = new TextEncoder().encode(shared).length;
+      taskDone(`mundo recibido por link · ${bytes.toLocaleString('es-MX')} bytes viajaron en la URL`);
+    } else {
+      await loadIdx(0);
+    }
     engine.start();
     engineOk = true;
-  } catch {
-    /* ya manejado en loadIdx */
+  } catch (err) {
+    if (shared !== null) fail((err as Error).message ?? String(err));
+    /* loadIdx ya maneja su propio error */
   }
 })();

@@ -365,6 +365,7 @@ body[data-view="porque"] .doc-error, body[data-view="ajustes"] .doc-error { disp
 }
 .sb-sep { opacity: 0.5; }
 #llmStatus.connected { color: var(--neon); }
+.sb-fps { color: var(--neon); min-width: 110px; }
 
 /* el composer solo aplica a Crear */
 body:not([data-view="crear"]) .composer-zone .composer,
