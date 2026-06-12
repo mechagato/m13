@@ -65,6 +65,10 @@ export class M13Engine {
   private lastWgslHash: string | null = null;
   /** Info de la última operación loadScene (cache hit/miss + hash). */
   private lastLoadInfo: SceneLoadInfo | null = null;
+  /** Cola de serialización de loadScene — nunca corren dos cargas en paralelo. */
+  private loadChain: Promise<unknown> = Promise.resolve();
+  /** true mientras una carga reemplaza el renderer — el tick no toca el contexto. */
+  private loading = false;
 
   constructor(canvas: HTMLCanvasElement, opts: M13EngineOptions = {}) {
     this.canvas = canvas;
@@ -77,8 +81,19 @@ export class M13Engine {
    * Aplica caché de pipeline GPU: si el WGSL del nuevo shader es idéntico al
    * último cargado (mismo hash SHA-256), se reutiliza el `RendererState` y se
    * evita `initRenderer` (que es el costo dominante de un re-load).
+   *
+   * SERIALIZADO: dos llamadas concurrentes se encolan. Ambas comparten el mismo
+   * GPUCanvasContext — sin la cola, el unconfigure de una aterriza después del
+   * configure de la otra y el canvas queda negro con "context is not configured".
    */
   async loadScene(yamlOrUrl: string): Promise<M13Scene> {
+    const run = this.loadChain.then(() => this.doLoadScene(yamlOrUrl));
+    // La cadena nunca se rompe: un fallo no debe bloquear cargas futuras.
+    this.loadChain = run.catch(() => undefined);
+    return run;
+  }
+
+  private async doLoadScene(yamlOrUrl: string): Promise<M13Scene> {
     if (this.disposed) {
       throw new Error('[m13/engine] El engine ya fue liberado con dispose() — crea una nueva instancia.');
     }
@@ -96,20 +111,31 @@ export class M13Engine {
     const cacheHit = this.renderer !== null && newHash === this.lastWgslHash;
 
     if (!cacheHit) {
-      const newRenderer = await initRenderer(this.canvas, compiled);
-      if (this.disposed) {
-        // dispose() llegó mientras initRenderer creaba el device: liberarlo
-        // de inmediato o queda un GPUDevice huérfano fuera del alcance de dispose().
-        destroyRenderer(newRenderer);
-        throw new Error('[m13/engine] dispose() llamado durante loadScene — recursos GPU liberados.');
+      // Mientras se reemplaza el renderer, el tick NO debe llamar getCurrentTexture:
+      // el contexto pasa por un estado no-configurado durante la transición.
+      this.loading = true;
+      try {
+        // Cache-miss con renderer previo: destruirlo ANTES de crear el nuevo.
+        // Sin esto, cada cambio de shader filtra un GPUDevice completo. Y el orden
+        // importa: ambos renderers comparten el MISMO GPUCanvasContext — destruir
+        // el viejo después de configurar el nuevo lo des-configura (canvas negro).
+        if (this.renderer) {
+          destroyRenderer(this.renderer);
+          this.renderer = null;
+          this.lastWgslHash = null;
+        }
+        const newRenderer = await initRenderer(this.canvas, compiled);
+        if (this.disposed) {
+          // dispose() llegó mientras initRenderer creaba el device: liberarlo
+          // de inmediato o queda un GPUDevice huérfano fuera del alcance de dispose().
+          destroyRenderer(newRenderer);
+          throw new Error('[m13/engine] dispose() llamado durante loadScene — recursos GPU liberados.');
+        }
+        this.renderer = newRenderer;
+        this.lastWgslHash = newHash;
+      } finally {
+        this.loading = false;
       }
-      // Cache-miss con renderer previo: destruir el anterior antes de reemplazarlo.
-      // Sin esto, cada cambio de shader filtra un GPUDevice completo.
-      if (this.renderer) {
-        destroyRenderer(this.renderer);
-      }
-      this.renderer = newRenderer;
-      this.lastWgslHash = newHash;
     } else if (this.renderer && compiled.matParams.totalFloats > 0) {
       // Cache hit del shader pero los VALORES de matParams pueden haber cambiado
       // (mismo concepto, params distintos → mismo WGSL, distinto Float32Array).
@@ -262,7 +288,9 @@ export class M13Engine {
       this.fpsTimer = 0;
     }
 
-    if (!this.renderer || !this.compiled) return;
+    // `loading`: hay un reemplazo de renderer en vuelo — el contexto puede estar
+    // sin configurar y getCurrentTexture lanzaría InvalidStateError.
+    if (this.loading || !this.renderer || !this.compiled) return;
     const scene = this.compiled.scene;
 
     const cam = this.camera
