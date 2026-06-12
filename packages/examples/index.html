@@ -189,9 +189,14 @@
           <div class="file-card">
             <div class="file-head">
               <span class="file-name" id="recipeName">escena.m13</span>
-              <button class="file-copy" id="recipeCopy">copiar</button>
+              <div class="file-actions">
+                <button class="file-edit" id="recipeEdit" hidden>editar</button>
+                <button class="file-copy" id="recipeCopy">copiar</button>
+              </div>
             </div>
             <div class="code" id="recipeCode"><div class="code-empty">genera una escena para ver su receta .m13</div></div>
+            <textarea class="recipe-textarea" id="recipeTextarea" spellcheck="false" hidden></textarea>
+            <div class="edit-hint" id="editHint" hidden>↑ cambia cualquier número y el mundo 3D se actualiza en tiempo real</div>
           </div>
           <div class="recipe-weight" id="recipeWeight"></div>
           <div class="render-note" id="renderNote"></div>

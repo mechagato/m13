@@ -48,6 +48,9 @@ const recipeCode = $('recipeCode');
 const recipeName = $('recipeName');
 const recipeWeight = $('recipeWeight');
 const recipeCopy = $('recipeCopy');
+const recipeEdit = $<HTMLButtonElement>('recipeEdit');
+const recipeTextarea = $<HTMLTextAreaElement>('recipeTextarea');
+const editHint = $('editHint');
 const pitchBytes = $('pitchBytes');
 const sidepanel = $('sidepanel');
 const panelToggle = $('panelToggle');
@@ -65,6 +68,8 @@ const settingsStatus = $('settingsStatus');
 let currentSceneIdx = 0;
 let engineOk = false; // WebGPU inicializado y renderizando
 let currentYaml = ''; // receta actual (raw) — para copiar
+let editMode = false;
+let editDebounce: ReturnType<typeof setTimeout> | null = null;
 
 type ViewId = 'crear' | 'explorar' | 'porque' | 'ajustes';
 let activeView: ViewId = 'crear';
@@ -102,6 +107,52 @@ function taskIdle(text: string): void {
   taskText.textContent = text;
   taskLine.classList.remove('busy', 'done');
 }
+
+// ============================================
+// Modo edición del panel Receta (SC-7)
+// ============================================
+function enterEditMode(): void {
+  editMode = true;
+  recipeCode.hidden = true;
+  recipeTextarea.value = currentYaml;
+  recipeTextarea.hidden = false;
+  editHint.hidden = false;
+  recipeEdit.textContent = 'vista';
+  recipeEdit.classList.add('active');
+  recipeTextarea.focus();
+}
+
+function exitEditMode(): void {
+  if (!editMode) return;
+  editMode = false;
+  if (editDebounce) { clearTimeout(editDebounce); editDebounce = null; }
+  recipeTextarea.hidden = true;
+  editHint.hidden = true;
+  recipeCode.hidden = false;
+  recipeEdit.textContent = 'editar';
+  recipeEdit.classList.remove('active');
+}
+
+recipeEdit.addEventListener('click', () => {
+  if (editMode) exitEditMode();
+  else enterEditMode();
+});
+
+recipeTextarea.addEventListener('input', () => {
+  if (editDebounce) clearTimeout(editDebounce);
+  editDebounce = setTimeout(() => {
+    editDebounce = null;
+    const yaml = recipeTextarea.value;
+    currentYaml = yaml;
+    const bytes = new TextEncoder().encode(yaml).length;
+    setSceneBytes(bytes);
+    recipeWeight.textContent = `esta escena pesa ${bytes.toLocaleString('es-MX')} bytes — editada en vivo`;
+    if (!engineOk) return;
+    void engine.loadScene(yaml).catch((err: Error) => {
+      taskIdle('error en receta: ' + err.message);
+    });
+  }, 250);
+});
 
 // ============================================
 // Status bar — indicador LLM
@@ -311,6 +362,7 @@ function highlightYamlLine(line: string): string {
 }
 
 function showRecipe(yaml: string, fileName = 'escena.m13'): void {
+  exitEditMode(); // volver a vista si estaba editando
   currentYaml = yaml;
   const bytes = new TextEncoder().encode(yaml).length;
   setSceneBytes(bytes);
@@ -324,6 +376,7 @@ function showRecipe(yaml: string, fileName = 'escena.m13'): void {
   recipeName.textContent = `${fileName} · ${bytes.toLocaleString('es-MX')} bytes`;
   recipeWeight.textContent = `esta escena pesa ${bytes.toLocaleString('es-MX')} bytes — una imagen equivalente pesa ~60 KB`;
   recipePanel.dataset.empty = 'false';
+  recipeEdit.hidden = false;
 }
 
 // ============================================

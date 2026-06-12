@@ -394,14 +394,16 @@ body:not([data-view="crear"]) .composer-zone .chips { display: none; }
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 7px 10px; border-bottom: 1px solid var(--border-soft); background: var(--bg-window);
 }
-.file-name { font-size: 10px; color: var(--text); letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-copy {
+.file-name { font-size: 10px; color: var(--text); letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.file-actions { display: flex; gap: 5px; align-items: center; flex: none; }
+.file-copy, .file-edit {
   flex: none; background: transparent; border: 1px solid var(--border);
   border-radius: 6px; color: var(--text-dim); padding: 3px 10px;
   font-family: inherit; font-size: 9px; letter-spacing: 0.1em;
   text-transform: uppercase; cursor: pointer; transition: all 0.18s;
 }
-.file-copy:hover { color: var(--neon); border-color: var(--neon-dim); }
+.file-copy:hover, .file-edit:hover { color: var(--neon); border-color: var(--neon-dim); }
+.file-edit.active { color: var(--neon); border-color: var(--neon-dim); background: var(--neon-faint); }
 .code {
   max-height: 42vh; overflow: auto; font-size: 10px; line-height: 1.6;
   padding: 8px 0; white-space: pre;
@@ -417,6 +419,17 @@ body:not([data-view="crear"]) .composer-zone .chips { display: none; }
 .tok-str { color: var(--str); }
 .tok-num { color: var(--numv); }
 .tok-comment { color: #4a6354; }
+.recipe-textarea {
+  display: block; width: 100%; max-height: 42vh; min-height: 80px;
+  background: transparent; border: none; outline: none; resize: none;
+  color: var(--text); caret-color: var(--neon);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; line-height: 1.6;
+  padding: 8px 12px; overflow: auto; white-space: pre;
+  transition: background 0.15s;
+}
+.recipe-textarea:focus { background: rgba(45, 212, 118, 0.03); }
+.edit-hint { margin-top: 6px; font-size: 9px; color: var(--neon); opacity: 0.7; line-height: 1.5; letter-spacing: 0.03em; }
 .recipe-weight { margin-top: 8px; font-size: 10px; color: var(--neon); line-height: 1.6; }
 .render-note { margin-top: 4px; font-size: 10px; color: var(--text-dim); line-height: 1.6; }
 .sp-receta[data-empty="true"] .recipe-weight { display: none; }
