@@ -6,8 +6,8 @@
  * SDF-based 3D environments with procedural materials.
  */
 
-export { M13Engine } from './engine.js';
-export type { M13EngineOptions, SceneLoadInfo } from './engine.js';
+export { M13Engine, QUALITY_PRESETS, detectQualityPreset } from './engine.js';
+export type { M13EngineOptions, SceneLoadInfo, Quality, QualityPreset } from './engine.js';
 
 export { writeMatParams, destroyRenderer } from './renderer/index.js';
 

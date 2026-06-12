@@ -1,4 +1,5 @@
-import { M13Engine } from '@m13/runtime';
+import { M13Engine, QUALITY_PRESETS, detectQualityPreset } from '@m13/runtime';
+import type { QualityPreset } from '@m13/runtime';
 import { SCENES } from './scenes.js';
 import { STYLES, generateScene, generateFromPrompt } from '@m13/generator';
 import type { StyleId } from '@m13/generator';
@@ -76,11 +77,23 @@ let editDebounce: ReturnType<typeof setTimeout> | null = null;
 type ViewId = 'crear' | 'explorar' | 'porque' | 'ajustes';
 let activeView: ViewId = 'crear';
 
-// Dispositivo: Quest usa puntero "coarse" y su browser reporta OculusBrowser.
-// En touch/Quest no hay teclado → manda el control de arrastre (D-2109) y
-// bajamos resolución de render para sostener fps (D-2110).
-const IS_QUEST = /OculusBrowser|Quest/i.test(navigator.userAgent);
+// Dispositivo: en touch/Quest no hay teclado → manda el control de arrastre
+// (D-2109). La calidad de render por dispositivo la decide el preset del
+// engine (T-213, absorbe D-2110/D-2112).
 const HAS_FINE_POINTER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+function resolveQualityPreset(): QualityPreset {
+  const q = new URLSearchParams(window.location.search).get('quality');
+  if (q && q in QUALITY_PRESETS) return q as QualityPreset;
+  try {
+    const saved = window.localStorage.getItem('m13_quality');
+    if (saved && saved in QUALITY_PRESETS) return saved as QualityPreset;
+  } catch {
+    /* noop */
+  }
+  return detectQualityPreset();
+}
+let activePreset: QualityPreset = resolveQualityPreset();
 
 function fail(msg: string): void {
   errorMsg.textContent = msg;
@@ -254,6 +267,7 @@ const engine = new M13Engine(canvas, {
     ampEl.textContent = s.audioAmplitude.toFixed(2);
   },
 });
+engine.setQuality(activePreset);
 const audio = engine.attachAudioInput();
 
 // Árbol de escenas (panel derecho)
@@ -276,18 +290,15 @@ function updateSelector(): void {
 // ============================================
 // Resize — el canvas vive dentro del "documento"
 // ============================================
-// D-2112: la ventana del Quest browser es grande (medido: 1584×918 a dpr 1 →
-// 37-48 fps). Escala 0.7 = mitad de pixeles → proyectado 75-95 fps. Override
-// para afinar sin redeploy: ?dpr=0.6 (clamp 0.3..2).
+// Override fino de resolución sin redeploy: ?dpr=0.6 (clamp 0.3..2).
+// Sin override, manda el renderScale del preset de calidad activo (T-213).
 const DPR_OVERRIDE = (() => {
   const q = parseFloat(new URLSearchParams(window.location.search).get('dpr') ?? '');
   return Number.isFinite(q) ? Math.min(2, Math.max(0.3, q)) : null;
 })();
 
 function resize(): void {
-  // D-2110/D-2112: cap de resolución de render por dispositivo —
-  // Quest 0.7 · móvil 1.5 · desktop 2. El costo por pixel del SDF manda.
-  const dprCap = DPR_OVERRIDE ?? (IS_QUEST ? 0.7 : HAS_FINE_POINTER ? 2 : 1.5);
+  const dprCap = DPR_OVERRIDE ?? engine.getQuality().renderScale;
   const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = doc.clientWidth || 1;
   const h = doc.clientHeight || 1;
@@ -579,6 +590,27 @@ settingsForm.addEventListener('submit', (e) => {
   }
   refreshLlmStatus();
   setTimeout(() => (settingsStatus.textContent = ''), 2500);
+});
+
+// Selector de calidad (T-214) — cambia preset EN VIVO sin recargar escena
+const qualitySelect = $<HTMLSelectElement>('qualitySelect');
+try {
+  qualitySelect.value = window.localStorage.getItem('m13_quality') ?? 'auto';
+} catch {
+  /* noop */
+}
+qualitySelect.addEventListener('change', () => {
+  const v = qualitySelect.value;
+  activePreset = v === 'auto' ? detectQualityPreset() : (v as QualityPreset);
+  engine.setQuality(activePreset);
+  resize();
+  try {
+    if (v === 'auto') window.localStorage.removeItem('m13_quality');
+    else window.localStorage.setItem('m13_quality', v);
+  } catch {
+    /* noop */
+  }
+  taskDone(`calidad: ${activePreset} · ${engine.getQuality().maxSteps} steps · escala ${engine.getQuality().renderScale}`);
 });
 
 settingsClear.addEventListener('click', () => {

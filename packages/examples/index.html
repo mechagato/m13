@@ -149,6 +149,16 @@
             <div class="ajustes-inner">
               <div class="pane-title">// ajustes</div>
               <p class="ajustes-sub">Endpoint LLM opcional (editor-time, Constitution §3). Sin endpoint, el generador paramétrico local funciona igual — $0, sin red.</p>
+              <label class="quality-row">
+                <span>Calidad de render</span>
+                <select id="qualitySelect">
+                  <option value="auto">auto (detectar dispositivo)</option>
+                  <option value="quest">quest — XR standalone</option>
+                  <option value="mobile">mobile</option>
+                  <option value="desktop">desktop</option>
+                  <option value="ultra">ultra</option>
+                </select>
+              </label>
               <form id="settingsForm" class="settings-form">
                 <label>
                   <span>URL del endpoint</span>

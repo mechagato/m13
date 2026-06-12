@@ -2658,3 +2658,28 @@ stopper de "tokens gh inválidos" de la sesión anterior quedó resuelto.
 Pendiente SIN ejecutar (decisión de Gato): `m13-live` (kinect-bridge) sigue commiteado
 solo LOCAL, sin remote. Opciones: (a) repo nuevo `mechagato/m13-live`, (b) integrarlo
 a uno existente. No se crea nada hasta que Gato decida.
+
+### Adendum 027-e — 2026-06-12 — m13-live integrado + T-212/T-213/T-214 COMPLETAS
+
+**Integración m13-live → repo m13 (orden de Gato: "intégralo al de m13"):**
+- Verificado ANTES: GitHub idéntico a local (ni adelante ni atrás) — seguro proceder.
+- `git subtree` → ahora vive en `<m13>/live/` con su historia de 3 commits PRESERVADA.
+- Paths actualizados (M13_ROOT ahora relativo al archivo); pipeline kinect-bridge
+  re-verificado desde la nueva ubicación (24 metaballs, escena válida).
+- Repo viejo `~/neonodos-core/m13-live` archivado con MOVED.md. Gap de respaldo CERRADO:
+  m13-live ahora respaldado vía mechagato/m13.
+
+**P3 calidad — T-212/T-213/T-214 (3 de 5 tasks de la prioridad):**
+- T-212: raymarch.ts lee `u.quality` — loops dinámicos (maxSteps/shadowSteps/aoSamples).
+  Defaults = comportamiento histórico exacto. La nota de auditoría 06-10 queda saldada.
+- T-213: `engine.setQuality(preset|parcial)` + `getQuality()` + `QUALITY_PRESETS`
+  (quest 96/16/3/oct3/escala0.7 · mobile · desktop=histórico · ultra) +
+  `detectQualityPreset()` — absorbe D-2110/D-2112: examples ya no decide dpr a mano,
+  lo decide el preset (con ?dpr= y ?quality= como overrides).
+- T-214: selector de calidad en Ajustes con persistencia localStorage + cambio EN VIVO
+  (uniforms, sin recompilar shader).
+- Verificación: typecheck 6/6 · 135/135 tests · deploy a producción · smoke 21/21.
+
+**Sprint actual de Fase 2: S1 (P1+P3 infraestructura) — P1 ✅ 4/5 (falta T-205 APK,
+requiere Quest por adb) · P3 3/5 (faltan T-215 retest Quest [GATO] y nada más de código).
+Siguiente: S2 = P2 detalle continuo, arrancando con T-221 (prototipo + GATE de Gato).**

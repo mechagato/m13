@@ -33,6 +33,39 @@ export interface SceneLoadInfo {
 }
 
 /**
+ * Calidad de render (T-213) — se aplica vía uniforms SIN recompilar el shader.
+ * renderScale es informativo para la app (el canvas lo dimensiona la app).
+ */
+export interface Quality {
+  maxSteps: number;
+  shadowSteps: number;
+  aoSamples: number;
+  /** Tope de octaves para el detalle continuo (P2 lo consume) */
+  octaveCap: number;
+  /** Multiplicador de resolución sugerido (la app lo aplica al canvas) */
+  renderScale: number;
+}
+
+export type QualityPreset = 'quest' | 'mobile' | 'desktop' | 'ultra';
+
+export const QUALITY_PRESETS: Record<QualityPreset, Quality> = {
+  // Quest 3 standalone: medido 37-48fps a dpr 1 (D-2112) — presupuesto agresivo
+  quest: { maxSteps: 96, shadowSteps: 16, aoSamples: 3, octaveCap: 3, renderScale: 0.7 },
+  mobile: { maxSteps: 112, shadowSteps: 24, aoSamples: 4, octaveCap: 4, renderScale: 1.5 },
+  // desktop = comportamiento histórico exacto del motor (pre-T-212)
+  desktop: { maxSteps: 128, shadowSteps: 32, aoSamples: 5, octaveCap: 5, renderScale: 2 },
+  ultra: { maxSteps: 192, shadowSteps: 48, aoSamples: 8, octaveCap: 7, renderScale: 2 },
+};
+
+/** Heurística de preset por dispositivo (absorbe D-2110/D-2112). */
+export function detectQualityPreset(): QualityPreset {
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return 'desktop';
+  if (/OculusBrowser|Quest/i.test(navigator.userAgent)) return 'quest';
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return 'mobile';
+  return 'desktop';
+}
+
+/**
  * M13Engine — clase principal del motor.
  *
  * Uso típico:
@@ -52,6 +85,7 @@ export class M13Engine {
   private audio: MicAudioInput | null = null;
   private running = false;
   private disposed = false;
+  private quality: Quality = { ...QUALITY_PRESETS.desktop };
   private rafId = 0;
   private lastTime = 0;
   private t0 = 0;
@@ -176,6 +210,21 @@ export class M13Engine {
   attachAudioInput(): MicAudioInput {
     this.audio = new MicAudioInput();
     return this.audio;
+  }
+
+  /**
+   * Cambia la calidad de render EN VIVO — vía uniforms, sin recompilar shader
+   * (T-213). Acepta un preset por nombre o un parcial de Quality.
+   * Nota: renderScale es sugerido — la app dimensiona el canvas (ver resize()).
+   */
+  setQuality(q: QualityPreset | Partial<Quality>): Quality {
+    const next = typeof q === 'string' ? QUALITY_PRESETS[q] : q;
+    this.quality = { ...this.quality, ...next };
+    return { ...this.quality };
+  }
+
+  getQuality(): Quality {
+    return { ...this.quality };
   }
 
   resize(): void {
@@ -318,9 +367,8 @@ export class M13Engine {
       fogColor: [...scene.ambient.fogColor],
       fogDensity: scene.ambient.fogDensity,
       tint: [...scene.ambient.tint],
-      // Layout v2: defaults = comportamiento actual exacto (T-212/T-213 los
-      // vuelven configurables; P4 escribe las bandas reales)
-      quality: [128, 32, 5, 5],
+      quality: [this.quality.maxSteps, this.quality.shadowSteps, this.quality.aoSamples, this.quality.octaveCap],
+      // P4 escribirá las bandas FFT reales; mientras, amplitude en .w (compat)
       audioBands: [0, 0, 0, amp],
     });
     renderFrame(this.renderer);

@@ -7,13 +7,13 @@
  */
 
 export const RAYMARCH_WGSL = /* wgsl */ `
-// NOTA (auditoría 2026-06-10): constantes de calidad hardcodeadas en este shader,
-// candidatas a convertirse en uniforms de calidad configurables en Fase 2
-// (requieren validación visual antes de cambiarlas — NO tocar en Cerebro4):
-//   - 128 pasos máximos de raymarch (loop en fn raymarch)
-//   - 32 pasos de soft shadow (loop en fn softShadow)
-//   - 5 taps de ambient occlusion (loop en fn calcAO)
-//   - t > 80.0 distancia máxima de marcha · epsilon 0.001 de hit
+// T-212 (Fase 2): la calidad ya NO está hardcodeada — viene de u.quality:
+//   u.quality.x = pasos máximos de raymarch   (default 128)
+//   u.quality.y = pasos de soft shadow        (default 32)
+//   u.quality.z = taps de ambient occlusion   (default 5)
+//   u.quality.w = octaveCap para fbm continuo (default 5 — lo consume P2)
+// Defaults idénticos al comportamiento pre-T-212. Presets en engine (T-213).
+// Constantes que siguen fijas: t > 80.0 distancia máxima · epsilon 0.001 de hit.
 fn calcNormal(p: vec3<f32>) -> vec3<f32> {
   let e = vec2<f32>(0.0005, 0.0);
   return normalize(vec3<f32>(
@@ -29,7 +29,8 @@ fn raymarch(ro: vec3<f32>, rd: vec3<f32>) -> Hit {
   var t: f32 = 0.001;
   var out: Hit;
   out.hit = false;
-  for (var i = 0; i < 128; i++) {
+  let maxSteps = i32(u.quality.x);
+  for (var i = 0; i < maxSteps; i++) {
     let p = ro + rd * t;
     let d = map(p);
     if (abs(d) < 0.001) {
@@ -47,7 +48,8 @@ fn raymarch(ro: vec3<f32>, rd: vec3<f32>) -> Hit {
 fn softShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) -> f32 {
   var res: f32 = 1.0;
   var t: f32 = mint;
-  for (var i = 0; i < 32; i++) {
+  let shadowSteps = i32(u.quality.y);
+  for (var i = 0; i < shadowSteps; i++) {
     if (t > maxt) { break; }
     let h = map(ro + rd * t);
     if (h < 0.001) { return 0.0; }
@@ -60,8 +62,9 @@ fn softShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) -> f32
 fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
   var occ: f32 = 0.0;
   var sca: f32 = 1.0;
-  for (var i = 0; i < 5; i++) {
-    let h = 0.01 + 0.15 * f32(i) / 4.0;
+  let aoSamples = i32(u.quality.z);
+  for (var i = 0; i < aoSamples; i++) {
+    let h = 0.01 + 0.15 * f32(i) / max(f32(aoSamples - 1), 1.0);
     let d = map(p + n * h);
     occ = occ + (h - d) * sca;
     sca = sca * 0.9;
