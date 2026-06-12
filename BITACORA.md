@@ -23,3 +23,8 @@ Orden de Gato: "preparar todo para conectar el Kinect y renderizar un objeto fí
   conectar el Kinect + correr `setup-drivers.sh` (pide sudo). Después: capture-v1.sh.
 - Scope: esto es crowd-mirror v0 (captura estática). El bridge WebSocket en vivo
   (SDFs dinámicos por storage buffer) sigue siendo post-Fase 2 según VISION.md.
+
+## 2026-06-12 — Nota de respaldo
+Repo commiteado solo LOCAL (sin remote). Gato indicó que ya existen 2 repos del
+ecosistema (mechagato/m13 + mechagato/flowcad) — NO crear repo nuevo sin su orden.
+Decisión pendiente: respaldo de m13-live (repo propio vs integrarlo a uno existente).
