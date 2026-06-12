@@ -31,16 +31,25 @@ fn raymarch(ro: vec3<f32>, rd: vec3<f32>) -> Hit {
   out.hit = false;
   let maxSteps = i32(u.quality.x);
   for (var i = 0; i < maxSteps; i++) {
+    // B7: el check de distancia va ANTES de pagar el map()
+    if (t > 80.0) {
+      out.t = t;
+      return out;
+    }
     let p = ro + rd * t;
     let d = map(p);
-    if (abs(d) < 0.001) {
+    // B7: epsilon proporcional a t — los rayos lejanos no exigen precisión de cerca
+    if (abs(d) < 0.001 * max(t, 1.0)) {
       out.hit = true;
       out.t = t;
       return out;
     }
-    if (t > 80.0) { break; }
-    t = t + d * 0.7;
+    // B7: clamp del paso — con d<0 (interior) el rayo oscilaba sin avanzar
+    t = t + max(d * 0.7, 0.0005);
   }
+  // B7: agotar pasos sin salir de rango = rayo rasante pegado a una superficie.
+  // Tratarlo como hit elimina los huecos "comidos" en las siluetas.
+  out.hit = true;
   out.t = t;
   return out;
 }
