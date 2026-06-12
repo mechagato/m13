@@ -206,12 +206,15 @@ pnpm --filter @m13/synth typecheck     # typecheck solo de synth
 
 ## Proximos pasos prioritarios (Fase 2)
 
-Fase 1 cerrada el 2026-05-28. La Fase 2 (Sonido 13 visual) es la siguiente segun el
-roadmap revisado (CLAUDE.md seccion "Directiva Estrategica").
+**FASE 2 DESPAUSADA por orden directa de Gato 2026-06-12 ("continúa con las fases").**
+Spec borrador v1 en `docs/spec/phase-2-spec.md` — 5 prioridades reconstruidas
+(P1 PWA · P2 detalle continuo · P3 uniforms calidad · P4 FFT audio · P5 seeds por
+instancia), esperando confirmacion de Gato (OQ-1..OQ-4 del spec §8) para generar
+Plan → Tasks → Implement. Decisiones de Fase 2 = serie D-3xxx, tasks = serie T-2xx.
 
-IMPORTANTE: el spec de Fase 2 (`docs/spec/phase-2-spec.md`) esta EN PAUSA por orden
-de Gato. T-066 fue cancelada. No crear ni borradorear ese spec sin instruccion directa
-de Gato. El contenido y direccion de Fase 2 se define cuando Gato lo indique.
+Pendiente en paralelo (no bloquea el spec): numero FPS del retest Quest con escala
+0.7 (D-2112) — cierra SC-6/NFR-7 de Fase 1. Auditoria de completitud Fase 1:
+BITACORA adendum 026-d (unico bloqueante formal = ese numero).
 
 Blockers que requieren accion de Gato antes de abrir Fase 2:
 

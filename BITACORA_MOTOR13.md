@@ -2558,3 +2558,21 @@ pixeles → proyección 75-95 fps). Se agrega override `?dpr=` por query param p
 afinar en vivo sin redeploy (clamp 0.3..2). Si 0.7 no alcanza 72: siguiente palanca
 es steps del raymarch (128→96) y octaves FBM (mitigaciones #1/#3 de DEPLOY.md).
 Pendiente: retest de Gato.
+
+### Adendum 026-f — 2026-06-12 — FASE 2 DESPAUSADA · spec borrador v1 listo
+
+Gato dio la orden: "continúa con las fases" (y rechazó configurar endpoint LLM personal
+— el prompt del demo queda en modo local honesto; FPS del retest 0.7 lo pasa después).
+
+- `docs/spec/phase-2-spec.md` BORRADOR v1 creado siguiendo Spec Kit (mismo formato
+  que phase-1-spec.md). Tesis: detalle continuo microtonal (octaves como función
+  continua del footprint del pixel, blending fraccional = el microtono).
+- 5 prioridades reconstruidas de referencias documentadas (la lista numerada nunca se
+  escribió; única referencia dura: "FFT = prioridad 4" en m13-live/VISION.md):
+  P1 PWA (Idea 1, cierra NFR-2) · P2 detalle continuo (core) · P3 uniforms de calidad
+  (deuda auditoría + necesidad Quest D-2112) · P4 FFT 3 bandas · P5 seeds por instancia.
+- Orden de implementación propuesto: P1 → P3 → P2 → P4 → P5 (P3 antes que P2 por
+  riesgo R2: presupuesto GPU Quest).
+- 4 open questions para Gato (OQ-1..OQ-4) — el gate §9 requiere su confirmación antes
+  de generar plan/tasks. NO se toca código de Fase 2 hasta entonces (regla del repo).
+- CLAUDE.md actualizado: sección "Próximos pasos" refleja el despause.
