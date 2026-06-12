@@ -2478,3 +2478,12 @@ FPS ahora visible en el statusbar en TODAS las vistas (sin teclado — para el t
 4. Idea 6: empezar a persistir escenas generadas como dataset (decisión de storage pendiente).
 
 *Sesión registrada · 2026-06-12 · phi + Claude Fable 5 (ultracode, 6 subagentes)*
+
+### Adendum 026-b — 2026-06-12 — SC-6 FUNCIONAL en Quest 3 (confirmado por Gato)
+
+Gato retesteó motor13.neonodos.com en el Quest 3 tras el fix D-2109/D-2110:
+**"confirmo que sí funcionó"** — el render WebGPU corre en el navegador del Quest.
+Feedback: navegación dentro del render aún incómoda con los controles de arrastre.
+Acciones: (1) soporte de thumbsticks vía Gamepad API en FlyCamera, (2) FPS numérico
+pendiente de reporte para cierre formal del criterio (≥72 en sala_galeria).
+Gate: SC-1..SC-5 ✅ · SC-7 ✅ · SC-6 render confirmado, FPS por documentar.
