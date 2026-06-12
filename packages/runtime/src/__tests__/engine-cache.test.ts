@@ -47,7 +47,7 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('primera carga: cache miss + initRenderer llamado 1 vez', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
+    const { buildSceneResources } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
@@ -62,7 +62,7 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('re-carga de la misma escena: cache hit + initRenderer NO llamado de nuevo', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
+    const { buildSceneResources } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 
@@ -140,7 +140,7 @@ describe('M13Engine — shader cache (T-013)', () => {
 
   it('hash es estable: cargar misma escena 10 veces seguidas = 1 init + 9 hits', async () => {
     const { M13Engine } = await import('../engine.js');
-    const { buildSceneResources, initRendererCore } = await import('../renderer/index.js');
+    const { buildSceneResources } = await import('../renderer/index.js');
     const fakeCanvas = {} as HTMLCanvasElement;
     const engine = new M13Engine(fakeCanvas);
 

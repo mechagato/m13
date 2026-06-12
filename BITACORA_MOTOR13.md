@@ -2683,3 +2683,54 @@ a uno existente. No se crea nada hasta que Gato decida.
 **Sprint actual de Fase 2: S1 (P1+P3 infraestructura) — P1 ✅ 4/5 (falta T-205 APK,
 requiere Quest por adb) · P3 3/5 (faltan T-215 retest Quest [GATO] y nada más de código).
 Siguiente: S2 = P2 detalle continuo, arrancando con T-221 (prototipo + GATE de Gato).**
+
+## Entrada 028 · 2026-06-12 · AUDITORÍA INVERSA EJECUTADA — 14 bugs procesados (equipo phi de 10)
+
+Fuente: `~/phi-main/bitacoras/AUDITORIA_PHI_A_M13_2026-06-12.md` (lista de trabajo) +
+`AUDITORIA_M13_PHI_2026-06-12.md` (contexto, sin cambios requeridos). Orden de ataque
+seguido tal cual. 8 commits, suite corrida tras cada grupo.
+
+### Veredicto por bug (vigencia verificada contra HEAD real)
+
+| Bug | Vigencia | Acción |
+|---|---|---|
+| B1 quality muerto | **NO VIGENTE** — la copia auditada se congeló antes de T-212/T-213 (hoy) | Documentado. Los presets ya leen u.quality |
+| B2 schema drift | VIGENTE (40 líneas) | Regenerado + drift-guard en CI. Las 4 escenas que fallaban ahora validan (verificado con jsonschema) |
+| B3 cache 1 entrada | VIGENTE | **D-3004**: core GPU persistente + LRU de 4 SceneResources por hash. A↔B↔A = 2 builds, 3ª es hit |
+| B4 falla destructiva | VIGENTE — pero el sketch del auditor era INCORRECTO (invertir el orden revive el canvas negro de 7ec1fc8 por el context compartido) | Resuelto BIEN con el mismo split D-3004: createRenderPipelineAsync rechaza ANTES de tocar nada; el context jamás se des-configura entre escenas |
+| B5 editor no valida LLM | VIGENTE | Retry ×2 con parseScene+compileScene strict y error accionable de vuelta al LLM |
+| B6 catálogo hardcodeado | VIGENTE | `buildConceptCatalog()` en @m13/synth — editor, MCP y eval consumen la misma fuente |
+| B7 siluetas comidas | VIGENTE | Epsilon ∝ t + agotamiento-como-hit + clamp del paso + check antes del map() |
+| B8 material por esfera | VIGENTE — bloqueador factory | Radio = distancia real a esquina (vec3) + amplitud de animación (bob/pulse). **banda_transportadora desbloqueada** |
+| B9 spec miente ×4 | VIGENTE | 4 correcciones al doc + **modo strict recursivo** `parseScene({strict})` cableado en validate-scene y editor |
+| B10 registry/colisiones | VIGENTE | Registry lanza en id duplicado + test que escanea TODOS los fn de common+raymarch+18 conceptos (hoy: cero colisiones) |
+| B11 trampa de seeds | VIGENTE | Mapa CONGELADO 1001..1018; test exige único+congelado; nuevos ≥1019. Prerequisito factory cerrado |
+| B12 SW miente/demo muere | VIGENTE | 10 escenas precacheadas (inyección al build) + stale-while-revalidate real para .m13. Offline E2E PASS |
+| B13 RAF sin pausa | VIGENTE | visibilitychange + stop() en vistas que tapan el canvas |
+| B14 fugas menores | VIGENTE (5) | attach con detach previo · extractYaml unificado (eval = producción) · share URL límite 16KB · 2 descripciones corregidas · NEXT_PUBLIC = H-01 ya en cola con trigger |
+
+### Lo respetado (instrucciones b y c)
+- **Rechazados de los escépticos**: CERO implementados (no BVH, no streaming, no CRC
+  embebido, no naga en CI, no LRU de renderers — se hizo de pipelines como pedía Lucía).
+- **6 conceptos factory**: NO implementados (skip rules de Fase 2 vigentes). Sus 3
+  prerequisitos (B8, B10, B11) quedaron reparados — listos para el slot InnovaFest.
+- **P-perf bounding-spheres**: diferido según el propio orden de ataque ("cuando
+  FlowCAD lo exija"). La C/R precomputada de B8 ya deja la base.
+- **Firma Ed25519 + undo/redo G13**: propuestas documentadas, no ordenadas — sin tocar.
+
+### Contrato phi-main (tarea d) — NUEVO
+- `pnpm export-concepts` emite `m13-spec/m13_concepts.json` (espejo de listManifests(),
+  mismo shape que la copia de phi — paridad 18/18 verificada) + flag `--out` para que
+  la sesión de phi refresque su copia. Drift-guard en CI junto al de B2.
+- ⚠️ **AVISO A LA SESIÓN DE PHI-MAIN**: B14 corrigió 2 descripciones de conceptos →
+  su copia `phi_production/phi/m13_concepts.json` quedó desactualizada. Refrescar con:
+  `pnpm export-concepts -- --out ~/phi-main/phi_production/phi/m13_concepts.json`
+  (este repo NO tocó ~/phi-main, por la restricción de la orden).
+
+### Pendientes que dejó la auditoría
+1. Re-correr eval LLM (gateway :9095 offline hoy) — B5/B6 cambiaron la fuente del catálogo.
+2. H-01 route handler del editor (trigger: deploy público del editor).
+3. Validación visual en GPU real de B7/B8 (cambios de shader — siguiente vez que Gato abra el demo).
+
+### Verificación final: typecheck 6/6 · **137/137 tests** (124→137: +guardia layout,
++colisiones WGSL, +LRU×2, +seeds congelados) · lint 0 errors · build + sw-precache OK.
