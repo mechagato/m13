@@ -1,0 +1,20 @@
+# Artefactos de build y deps
+node_modules
+dist
+coverage
+.next
+pnpm-lock.yaml
+tsconfig.tsbuildinfo
+
+# Generados por frameworks
+packages/editor/next-env.d.ts
+
+# Assets estáticos servidos tal cual (escenas .m13, bundles)
+packages/examples/public
+
+# Demos standalone de Fase 0 — HTML con WGSL embebido, no se reformatean
+m13-phase0.html
+m13-phase0-multiscene.html
+
+# Docs en markdown: la BITACORA y specs tienen formato manual intencional
+*.md
