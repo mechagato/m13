@@ -2383,3 +2383,9 @@ Evidencia (screenshot de Gato, motor13.neonodos.com, laptop Windows):
 
 Gate de Fase 1 actualizado: SC-1 ✅ · SC-2 ✅ · SC-3 ✅ · SC-4 ✅ · SC-5 ✅ ·
 SC-6 pendiente (Quest 3) · SC-7 pendiente (usuario no-técnico). **5 de 7 criterios PASS.**
+
+### Adendum 025-f — dato citable para pitch (medido por Gato)
+Screenshot PNG del templo_generado: 462 KB. La escena .m13 que renderiza: 769 bytes.
+**La captura de pantalla pesa 601× más que el mundo 3D completo que muestra.**
+(Y la captura es un ángulo congelado; la escena es caminable, animada y a 60fps.)
+Usar en pitch de inversionistas / Innovafest — más intuitivo que el benchmark formal.
