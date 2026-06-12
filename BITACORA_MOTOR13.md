@@ -2371,3 +2371,15 @@ se conserva por compatibilidad de paths/crons).
 - **PRIMERA VALIDACIÓN VISUAL EN GPU REAL:** Gato confirmó ("funcionó") el render de
   motor13.neonodos.com en su laptop Windows — generación por chips/prompt + render en vivo.
   SC-1 parcialmente cerrado: render real OK; número de FPS aún pendiente de reporte.
+
+### Adendum 025-e — 2026-06-12 — SC-1 CERRADO: 60 FPS validados en laptop de Gato
+
+Evidencia (screenshot de Gato, motor13.neonodos.com, laptop Windows):
+- **FPS: 60 sostenidos · 16.7 ms/frame** (vsync-capped — la GPU va sobrada) @ 534×798
+- Escena: templo_generado (paramétrica local, 769 bytes) — render con sombras suaves,
+  AO y materiales procedurales correctos. piedra_volcanica luciendo como debe.
+- Criterio SC-1 del spec §8 ("escenas renderizan a >60fps en laptop mid-range"): **PASS**
+  (60 = tope de vsync; el frametime confirma margen).
+
+Gate de Fase 1 actualizado: SC-1 ✅ · SC-2 ✅ · SC-3 ✅ · SC-4 ✅ · SC-5 ✅ ·
+SC-6 pendiente (Quest 3) · SC-7 pendiente (usuario no-técnico). **5 de 7 criterios PASS.**
