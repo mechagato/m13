@@ -1,0 +1,39 @@
+{
+  "name": "@m13/mcp",
+  "version": "0.1.0",
+  "description": "m13 MCP server — any LLM becomes an m13 front-end. Editor-time only (Constitution §3).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "bin": {
+    "m13-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --root ../.. packages/mcp",
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@m13/generator": "workspace:*",
+    "@m13/runtime": "workspace:*",
+    "@m13/synth": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.4.5"
+  }
+}
