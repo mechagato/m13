@@ -76,6 +76,12 @@ let editDebounce: ReturnType<typeof setTimeout> | null = null;
 type ViewId = 'crear' | 'explorar' | 'porque' | 'ajustes';
 let activeView: ViewId = 'crear';
 
+// Dispositivo: Quest usa puntero "coarse" y su browser reporta OculusBrowser.
+// En touch/Quest no hay teclado → manda el control de arrastre (D-2109) y
+// bajamos resolución de render para sostener fps (D-2110).
+const IS_QUEST = /OculusBrowser|Quest/i.test(navigator.userAgent);
+const HAS_FINE_POINTER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 function fail(msg: string): void {
   errorMsg.textContent = msg;
   errorScreen.classList.add('show');
@@ -271,7 +277,10 @@ function updateSelector(): void {
 // Resize — el canvas vive dentro del "documento"
 // ============================================
 function resize(): void {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // D-2110: Quest 3 renderiza el raymarch a dpr 1 (el browser reporta ~1.5+ y
+  // el costo por pixel del SDF no lo vale en standalone); móvil cap 1.5; desktop 2.
+  const dprCap = IS_QUEST ? 1 : HAS_FINE_POINTER ? 2 : 1.5;
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = doc.clientWidth || 1;
   const h = doc.clientHeight || 1;
   canvas.width = Math.floor(w * dpr);
@@ -286,10 +295,11 @@ if ('ResizeObserver' in window) {
 }
 
 // ============================================
-// Pointer lock UX (solo en vista Explorar)
+// Pointer lock UX (solo en vista Explorar, solo desktop)
+// En touch/Quest no hay lock: el FlyCamera maneja arrastre directo
 // ============================================
 canvas.addEventListener('click', async () => {
-  if (activeView !== 'explorar') return;
+  if (activeView !== 'explorar' || !HAS_FINE_POINTER) return;
   try {
     await canvas.requestPointerLock();
   } catch {
@@ -302,6 +312,27 @@ document.addEventListener('pointerlockchange', () => {
   prompt.classList.toggle('hidden', locked);
   crosshair.classList.toggle('active', locked);
 });
+
+// Hints según dispositivo + ocultar el prompt al primer toque (sin lock no
+// hay pointerlockchange que lo esconda)
+if (!HAS_FINE_POINTER) {
+  $('promptMain').textContent = 'toca y arrastra para explorar';
+  $('promptSub').textContent = 'derecha: mirar · izquierda: caminar';
+  const hudControls = document.querySelector('.hud-controls');
+  if (hudControls) {
+    hudControls.innerHTML =
+      '<div class="row"><span class="key">arrastra →</span> mirar alrededor</div>' +
+      '<div class="row"><span class="key">arrastra ←</span> caminar (joystick)</div>' +
+      '<div class="row">escenas: panel derecho ▥</div>';
+  }
+  canvas.addEventListener(
+    'pointerdown',
+    () => {
+      if (activeView === 'explorar') prompt.classList.add('hidden');
+    },
+    { passive: true },
+  );
+}
 
 // ============================================
 // Audio toggle

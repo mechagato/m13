@@ -29,8 +29,11 @@ html, body {
   color: var(--text);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 body { position: fixed; inset: 0; }
+/* sin gestos de página sobre el visor — el canvas es dueño del touch (Quest/móvil) */
+#canvas { touch-action: none; }
 
 /* grain global sutil */
 body::after {
