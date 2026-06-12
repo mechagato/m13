@@ -215,10 +215,12 @@ de Gato. El contenido y direccion de Fase 2 se define cuando Gato lo indique.
 
 Blockers que requieren accion de Gato antes de abrir Fase 2:
 
-1. Quest 3 test (T-061): criterio de Fase 1 aun pendiente. Requiere hardware Quest 3.
+1. Quest 3 test (T-061): criterio SC-6 pendiente. Requiere hardware Quest 3.
    Instrucciones en `docs/DEPLOY.md` (setup Tailscale + navegador Quest + FPS validation).
-2. Custom domain `motor13.neonodos.com`: accion en Cloudflare Pages dashboard.
-3. Validacion visual WebGPU real (FPS >60fps): requiere laptop de Gato con GPU compatible.
+   **2026-06-12: Gato cargando el Quest 3 — pendiente de validacion en esta sesion.**
+2. ~~Custom domain `motor13.neonodos.com`~~ — COMPLETADO 2026-06-11 (API Cloudflare).
+3. ~~Validacion visual WebGPU real (FPS >60fps)~~ — COMPLETADO SC-1 ✅ 2026-06-12 (60fps laptop Gato).
+8. ~~SC-7 usuario no-tecnico~~ — COMPLETADO 2026-06-12: modo edicion live-reload en panel Receta.
 4. ~~LLM eval batch T-052/T-053~~ — COMPLETADO 2026-06-11: **100% pass rate en 3 corridas**
    (baseline 93.3%, una iteracion del system prompt). Ver BITACORA entrada 025.
 5. ~~Benchmark vs Three.js (T-062..T-064)~~ — COMPLETADO 2026-06-11: **H1 validada, 30.8×**
