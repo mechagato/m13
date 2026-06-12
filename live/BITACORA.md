@@ -28,3 +28,8 @@ Orden de Gato: "preparar todo para conectar el Kinect y renderizar un objeto fí
 Repo commiteado solo LOCAL (sin remote). Gato indicó que ya existen 2 repos del
 ecosistema (mechagato/m13 + mechagato/flowcad) — NO crear repo nuevo sin su orden.
 Decisión pendiente: respaldo de m13-live (repo propio vs integrarlo a uno existente).
+
+## 2026-06-12 — Integrado al repo m13 (orden de Gato)
+m13-live vive ahora en `<m13>/live/` (subtree con historia completa preservada).
+El repo local viejo `~/neonodos-core/m13-live` queda como archivo con nota MOVED.
+Respaldo en GitHub: ahora via mechagato/m13. Decisión de respaldo CERRADA.

@@ -9,7 +9,7 @@ captura estática de UN objeto. El paso 2 (público en vivo por WebSocket) viene
 ## Flujo para Gato (5 minutos)
 
 ```bash
-cd ~/neonodos-core/m13-live/kinect-bridge
+cd ~/neonodos-core/NeoNodos_System/m13/live/kinect-bridge
 
 # 1. Conecta el Kinect a Cerebro4 (v1: adaptador naranja + USB · v2: adaptador + USB 3.0 azul)
 bash detect-kinect.sh          # te dice qué Kinect es y qué sigue

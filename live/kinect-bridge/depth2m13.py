@@ -31,7 +31,8 @@ import numpy as np
 from scipy import ndimage
 from sklearn.cluster import MiniBatchKMeans
 
-M13_ROOT = Path("/home/isai1618/neonodos-core/NeoNodos_System/m13")
+# Raíz del repo m13 — este archivo vive en <m13>/live/kinect-bridge/
+M13_ROOT = Path(__file__).resolve().parents[2]
 SHARE_BASE = "https://motor13.neonodos.com/#scene="
 
 # Intrínsecas del depth registrado (valores estándar de calibración de fábrica)
