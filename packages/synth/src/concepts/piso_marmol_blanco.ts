@@ -5,7 +5,7 @@ import type { Concept } from '../index.js';
  * T-027 — Piso de mármol blanco pulido.
  *
  * Variante floor-optimizada del `marmol_blanco_vetas` original: vetas
- * más sutiles y veteado más fino para que el piso no compita visualmente
+ * más sutiles y veteado más amplio y tenue para que el piso no compita visualmente
  * con los objetos de la escena.
  *
  * Params:

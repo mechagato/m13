@@ -31,7 +31,18 @@ const utf8Bytes = (text: string): number => new TextEncoder().encode(text).lengt
  * La URL ES la escena: base64url del YAML en el hash, cero backend.
  * Mismo esquema que el botón "compartir" del demo (packages/examples/src/main.ts).
  */
+// B14: límite práctico — los browsers truncan URLs gigantes (Chrome ~32K es
+// seguro; 16K de YAML → ~21K de URL deja margen). Las escenas reales pesan 2-12KB.
+const SHARE_MAX_YAML_BYTES = 16 * 1024;
+
 export function buildShareUrl(yaml: string): string {
+  const bytes = Buffer.byteLength(yaml, 'utf8');
+  if (bytes > SHARE_MAX_YAML_BYTES) {
+    throw new Error(
+      `[m13/mcp] escena demasiado grande para share URL: ${bytes} bytes (límite ${SHARE_MAX_YAML_BYTES}). ` +
+        'Reduce objetos o usa un archivo .m13.',
+    );
+  }
   return `${SHARE_BASE_URL}#scene=${Buffer.from(yaml, 'utf8').toString('base64url')}`;
 }
 

@@ -16,7 +16,7 @@ if (!file) {
 
 try {
   const yaml = readFileSync(file, 'utf8');
-  const scene = parseScene(yaml);
+  const scene = parseScene(yaml, { strict: true });
   compileScene(scene);
   console.log(`VALID · ${scene.objects?.length ?? 0} objetos · ${Buffer.byteLength(yaml)} bytes`);
 } catch (err) {

@@ -236,6 +236,8 @@ export class M13Engine {
   }
 
   attachFlyCamera(opts: FlyCameraOptions = {}): FlyCamera {
+    // B14: attach repetido sin detach dejaba listeners huérfanos en canvas/document
+    this.camera?.detach();
     const scene = this.compiled?.scene;
     this.camera = new FlyCamera(this.canvas, {
       ...opts,
@@ -246,6 +248,8 @@ export class M13Engine {
   }
 
   attachAudioInput(): MicAudioInput {
+    // B14: attach repetido sin stop dejaba el stream del mic anterior vivo
+    if (this.audio) void this.audio.stop();
     this.audio = new MicAudioInput();
     return this.audio;
   }

@@ -93,11 +93,9 @@ async function callGateway(userPrompt: string): Promise<string> {
 }
 
 /** Extrae YAML de la respuesta: fence ```yaml ... ``` o el texto completo. */
-function extractYaml(text: string): string {
-  const fence = text.match(/```(?:yaml|yml)?\s*\n([\s\S]*?)```/);
-  if (fence) return fence[1].trim();
-  return text.trim();
-}
+// B14 (auditoría 06-12): extractYaml duplicado y divergente medía un pipeline
+// distinto al de producción — ahora el eval importa EL MISMO del llm-client.
+import { extractYaml } from '../lib/llm-client';
 
 function shortError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);

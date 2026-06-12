@@ -54,7 +54,7 @@ export function NLPrompt({ onGenerated }: NLPromptProps): JSX.Element {
           throw new Error('El LLM no devolvió YAML válido en su respuesta.');
         }
         try {
-          compileScene(parseScene(yaml)); // validación real, no eyeballing
+          compileScene(parseScene(yaml, { strict: true })); // validación real + typos anidados (B9)
           onGenerated(yaml);
           setLastTelemetry(res.telemetry);
           return;

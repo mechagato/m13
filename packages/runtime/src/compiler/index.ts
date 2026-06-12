@@ -460,12 +460,26 @@ function generateMaterialFunction(scene: M13Scene): string {
   lines.push(`    return mat_${ceilingId}(p, n, u.audioAmp);`);
   lines.push(`  }`);
 
-  // objetos: por posición + radio aproximado
+  // objetos: por posición + radio aproximado.
+  // B8 (auditoría 06-12): el radio incluye (1) distancia real a la esquina del
+  // bound — length(scale) en vez de max(scale)*1.4, que con boxes planos
+  // [3,0.2,0.5] generaba esferas gigantes que se tragaban materiales vecinos —
+  // y (2) la amplitud de animación: un bob con amplitud > 0.4·scale salía de
+  // su esfera a media animación y perdía su material.
   scene.objects.forEach((obj) => {
     const [px, py, pz] = obj.position;
     const matId = effectiveConceptId(obj);
-    const scale = typeof obj.scale === 'number' ? obj.scale : Math.max(...obj.scale);
-    const r = scale * 1.4;
+    const baseRadius =
+      typeof obj.scale === 'number'
+        ? obj.scale * 1.4 // scalar (esferas/uniformes): comportamiento histórico
+        : Math.hypot(...obj.scale) * 1.15; // vec3: distancia a la esquina + margen
+    let animPad = 0;
+    if (obj.animate?.mode === 'bob') {
+      animPad = obj.animate.amplitude; // desplaza la posición ±amplitude
+    } else if (obj.animate?.mode === 'pulse') {
+      animPad = baseRadius * Math.min(obj.animate.amplitude, 0.9); // escala el SDF
+    }
+    const r = baseRadius + animPad;
     lines.push(`  if (length(p - vec3<f32>(${f(px)}, ${f(py)}, ${f(pz)})) < ${f(r)}) {`);
     lines.push(`    return mat_${matId}(p, n, u.audioAmp);`);
     lines.push(`  }`);

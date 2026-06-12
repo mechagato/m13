@@ -3,7 +3,7 @@ import type { Concept } from '../index.js';
 export const metalDoradoPulido: Concept = {
   id: 'metal_dorado_pulido',
   category: 'object',
-  description: 'Dorado mate audio-reactivo con shimmer animado. La "esfera m13".',
+  description: 'Dorado satinado audio-reactivo con shimmer animado. La "esfera m13".',
   // FR-2.2 — base vec3(0.82,0.65,0.18), shimmer fbm 0.3, pulse = audioAmp*0.6 (muy reactivo).
   // Seed reservado para variación per-instancia en Fase 2 (WGSL aún no lo consume).
   signature: {
