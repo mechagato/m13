@@ -1,0 +1,66 @@
+# CI de m13 — typecheck + tests + build de examples + guard de peso del bundle.
+#
+# Notas:
+# - pnpm/action-setup SIN version explícita: lee `packageManager` (pnpm@9.15.9)
+#   del package.json raíz. Una sola fuente de verdad.
+# - El build usa --filter @m13/examples a propósito: `pnpm build` del root corre
+#   -r build en TODOS los packages y el editor (Next.js) es pesado/frágil en CI.
+#   El typecheck sí cubre el monorepo completo, editor incluido.
+# - Size check (T-070): el chunk m13-runtime-*.js hoy pesa ~40KB raw; el límite
+#   de 60KB es un guard contra regresiones de peso, no un target.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (todo el monorepo)
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build examples
+        run: pnpm --filter @m13/examples build
+
+      - name: Size check del bundle m13-runtime (límite 60KB raw)
+        run: |
+          set -euo pipefail
+          LIMIT=61440  # 60KB en bytes
+
+          FILE=$(find packages/examples/dist/assets -maxdepth 1 -name 'm13-runtime-*.js' -type f | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "::error::No se encontró packages/examples/dist/assets/m13-runtime-*.js — ¿cambió el manualChunks del vite.config?"
+            exit 1
+          fi
+
+          SIZE=$(stat -c%s "$FILE")
+          echo "Bundle: $FILE"
+          echo "Peso raw: $SIZE bytes ($(( SIZE / 1024 ))KB) — límite: $LIMIT bytes (60KB)"
+
+          if [ "$SIZE" -gt "$LIMIT" ]; then
+            echo "::error::Regresión de peso: $SIZE bytes > $LIMIT bytes. El runtime debe mantenerse liviano (tesis asset-light)."
+            exit 1
+          fi
+          echo "Size check OK"
