@@ -14,33 +14,12 @@
  * Modelo objetivo: Llama 3.3 70B Instruct (OpenRouter free) — bueno para output estructurado.
  */
 
-const CONCEPT_CATALOG = `
-CONCEPTOS DISPONIBLES (id · categoría · descripción):
+// B6 (auditoría 06-12): el catálogo ya NO se escribe a mano — se genera del
+// registry real de @m13/synth. Una fuente, tres consumidores (editor/MCP/eval).
+// Agregar un concepto al synth lo publica aquí automáticamente, cero drift.
+import { buildConceptCatalog } from '@m13/synth';
 
-Bootstrap (sin params):
-- pared_yeso_blanco · wall · Yeso blanco neutral
-- pared_ladrillo_viejo · wall · Ladrillo rojizo audio-reactivo
-- piso_madera_envejecida · floor · Madera con vetas senoidales
-- piso_concreto_industrial · floor · Concreto pulido speckled
-- marmol_blanco_vetas · universal · Mármol blanco con vetas
-- piedra_volcanica · universal · Piedra oscura prehispánica
-- metal_dorado_pulido · object · Dorado mate audio-reactivo (la "esfera m13")
-- cuero_vintage · object · Cuero envejecido
-
-Con params editables:
-- pared_concreto_pulido · wall · params={darkness:0..1, roughness:0..1}
-- pared_madera_oscura · wall · params={darkness:0..1, grainScale:1..20}
-- piso_marmol_blanco · floor · params={veinIntensity:0..1}
-- metal_oxidado · object · params={rustAmount:0..1}
-- metal_bronce_pulido · object · params={shimmer:0..1}
-- vidrio_esmerilado · object · params={clarity:0..1}
-
-Geométricos (kind: concept):
-- pedestal_marmol · object_geo · params={cornerRadius:0..0.5} · base para esculturas
-- lampara_colgante · object_geo · params={glowIntensity:0..2, length:0.05..2} · luz cálida emisiva
-- esfera_decorativa · object_geo · sin params · sphere blanco con iridiscencia
-- cubo_basico · object_geo · sin params · box gris neutral
-`.trim();
+const CONCEPT_CATALOG = buildConceptCatalog();
 
 const FEW_SHOTS = [
   // 1. Galería minimalista — usa concepts geos + params sutiles

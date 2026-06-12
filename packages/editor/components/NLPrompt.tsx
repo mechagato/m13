@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { chat, extractText, extractYaml, type ChatTelemetry } from '@/lib/llm-client';
 import { FEW_SHOT_MESSAGES, SYSTEM_PROMPT } from '@/lib/system-prompt';
+import { parseScene, compileScene } from '@m13/runtime';
 
 export interface NLPromptProps {
   /** Callback cuando el LLM produce un .m13 válido. El padre lo inserta al Monaco. */
@@ -25,27 +26,52 @@ export function NLPrompt({ onGenerated }: NLPromptProps): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [lastTelemetry, setLastTelemetry] = useState<ChatTelemetry | null>(null);
 
+  // B5 (auditoría 06-12): el editor valida la salida del LLM contra el
+  // parser/compiler REALES y, si falla, regresa el error de Zod al LLM para
+  // que se corrija (máx 2 reintentos) — el mismo patrón del MCP. Antes el
+  // error moría en el ErrorPanel del humano.
+  const MAX_RETRIES = 2;
+
   const submit = async (): Promise<void> => {
     if (!input.trim() || loading) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await chat({
-        model: 'auto', // gateway elige free first, fallback paid
+      const baseRequest = {
+        model: 'auto' as const, // gateway elige free first, fallback paid
         system: SYSTEM_PROMPT,
-        messages: [
-          ...FEW_SHOT_MESSAGES,
-          { role: 'user', content: input.trim() },
-        ],
         max_tokens: 2048,
         temperature: 0.3, // bajo para output estructurado consistente
         project_id: 'm13-editor',
-      });
-      const text = extractText(res);
-      const yaml = extractYaml(text);
-      if (!yaml) {
-        throw new Error('El LLM no devolvió YAML válido en su respuesta.');
+      };
+      const messages = [...FEW_SHOT_MESSAGES, { role: 'user' as const, content: input.trim() }];
+
+      let res = await chat({ ...baseRequest, messages });
+      let yaml = '';
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        yaml = extractYaml(extractText(res)) ?? '';
+        if (!yaml) {
+          throw new Error('El LLM no devolvió YAML válido en su respuesta.');
+        }
+        try {
+          compileScene(parseScene(yaml)); // validación real, no eyeballing
+          onGenerated(yaml);
+          setLastTelemetry(res.telemetry);
+          return;
+        } catch (validationErr) {
+          if (attempt === MAX_RETRIES) break;
+          messages.push(
+            { role: 'assistant' as const, content: yaml },
+            {
+              role: 'user' as const,
+              content: `Tu YAML falló la validación del motor: ${(validationErr as Error).message}. Corrige el problema y devuelve SOLO el YAML completo corregido, sin explicaciones.`,
+            },
+          );
+          res = await chat({ ...baseRequest, messages });
+        }
       }
+      // Agotados los reintentos: entregar el último intento — el ErrorPanel
+      // del editor mostrará el detalle al humano.
       onGenerated(yaml);
       setLastTelemetry(res.telemetry);
     } catch (err) {

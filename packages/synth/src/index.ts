@@ -226,3 +226,46 @@ export function listConceptsByCategory(category: ConceptCategory): Concept[] {
 export function listManifests(): ConceptManifest[] {
   return listConcepts().map((c) => c.manifest!());
 }
+
+// ============================================================
+// Catálogo para prompts LLM (B6, auditoría 2026-06-12)
+// UNA fuente generada del registry — consumida por el editor
+// (system-prompt), el MCP (format-guide) y el eval. Antes el
+// editor lo tenía escrito a mano y drifteaba.
+// ============================================================
+
+function renderParams(m: ConceptManifest): string {
+  const schema = m.paramsJsonSchema as
+    | { definitions?: Record<string, { properties?: Record<string, { minimum?: number; maximum?: number }> }> }
+    | undefined;
+  const def = schema?.definitions?.[`${m.id}_params`];
+  if (!def?.properties) return '';
+  const parts = Object.entries(def.properties).map(([name, p]) =>
+    p.minimum !== undefined && p.maximum !== undefined ? `${name}:${p.minimum}..${p.maximum}` : name,
+  );
+  return ` · params={${parts.join(', ')}}`;
+}
+
+/**
+ * Catálogo de conceptos en texto plano para system prompts de LLM.
+ * Agrupa: materiales sin params / con params / geométricos (kind: concept).
+ */
+export function buildConceptCatalog(): string {
+  const ms = listManifests();
+  const geo = ms.filter((m) => m.hasGeometricSDF);
+  const withParams = ms.filter((m) => !m.hasGeometricSDF && m.hasParams);
+  const plain = ms.filter((m) => !m.hasGeometricSDF && !m.hasParams);
+  const line = (m: ConceptManifest): string => `- ${m.id} · ${m.category} · ${m.description}${renderParams(m)}`;
+  return [
+    'CONCEPTOS DISPONIBLES (id · categoría · descripción):',
+    '',
+    'Materiales (walls/floor/ceiling/objects[].material):',
+    ...plain.map(line),
+    '',
+    'Materiales con params editables:',
+    ...withParams.map(line),
+    '',
+    'Geométricos (objects[] con kind: concept — geometría propia):',
+    ...geo.map(line),
+  ].join('\n');
+}

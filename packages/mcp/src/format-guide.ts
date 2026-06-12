@@ -8,57 +8,16 @@
  * cada llamada — la parte que driftea (los conceptos) nunca puede driftear.
  */
 
-import { listConcepts, type Concept } from '@m13/synth';
+import { buildConceptCatalog as buildConceptCatalogShared } from '@m13/synth';
 import { SUPPORTED_VERSION } from '@m13/runtime';
 
 // ============================================================
 // Catálogo dinámico — generado desde el registry real
 // ============================================================
 
-interface JsonSchemaProp {
-  type?: string;
-  minimum?: number;
-  maximum?: number;
-}
-
-/**
- * Extrae las properties del JSON Schema de params de un concepto.
- * zodToJsonSchema (con `name`) anida bajo `definitions`, así que buscamos
- * en ambos niveles para ser robustos ante cambios de configuración.
- */
-function extractParamProps(schema: Record<string, unknown>): Record<string, JsonSchemaProp> | undefined {
-  if (schema.properties) {
-    return schema.properties as Record<string, JsonSchemaProp>;
-  }
-  const defs = schema.definitions as Record<string, Record<string, unknown>> | undefined;
-  if (defs) {
-    const first = Object.values(defs)[0];
-    if (first?.properties) {
-      return first.properties as Record<string, JsonSchemaProp>;
-    }
-  }
-  return undefined;
-}
-
-function paramsSummary(c: Concept): string {
-  const manifest = c.manifest?.();
-  if (!manifest?.paramsJsonSchema) return 'sin params';
-  const props = extractParamProps(manifest.paramsJsonSchema);
-  if (!props) return 'sin params';
-  const parts = Object.entries(props).map(([name, p]) => {
-    const min = p.minimum !== undefined ? p.minimum : '?';
-    const max = p.maximum !== undefined ? p.maximum : '?';
-    return `${name}:${min}..${max}`;
-  });
-  return parts.length > 0 ? `params={${parts.join(', ')}}` : 'sin params';
-}
-
-function buildConceptCatalog(): string {
-  const lines = listConcepts().map(
-    (c) => `- ${c.id} · ${c.category} · ${c.description} · ${paramsSummary(c)}`,
-  );
-  return lines.join('\n');
-}
+// B6 (auditoría 06-12): catálogo compartido desde @m13/synth — una fuente
+// para editor, MCP y eval. El builder local se eliminó.
+const buildConceptCatalog = buildConceptCatalogShared;
 
 // ============================================================
 // Guía completa
