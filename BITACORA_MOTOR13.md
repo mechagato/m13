@@ -2487,3 +2487,20 @@ Feedback: navegación dentro del render aún incómoda con los controles de arra
 Acciones: (1) soporte de thumbsticks vía Gamepad API en FlyCamera, (2) FPS numérico
 pendiente de reporte para cierre formal del criterio (≥72 en sala_galeria).
 Gate: SC-1..SC-5 ✅ · SC-7 ✅ · SC-6 render confirmado, FPS por documentar.
+
+### Adendum 026-c — 2026-06-12 — Quest 3 como escáner (sin Kinect) + thumbsticks
+
+Pregunta de Gato: "¿con el Quest no podemos hacer este escaneo como el Kinect?" — SÍ.
+El Quest 3 trae sensor de profundidad y WebXR lo expone (depth-sensing API).
+
+- **D-2111:** FlyCamera ahora lee Gamepad API cada frame (stick izq = moverse,
+  stick der = mirar). Responde al feedback de Gato "complicado navegar en el Quest".
+- **https://motor13.neonodos.com/scan** — página standalone de escaneo AR:
+  sesión immersive-ar con depth-sensing cpu-optimized → apuntas al objeto →
+  gatillo → segmentación + voxels → ≤24 metaballs → .m13 → redirige al mundo
+  caminable. 100% client-side en el visor, cero servidor (Constitution §3 ✓).
+  Mismo pipeline que kinect-bridge pero sin hardware extra.
+- EXPERIMENTAL: depende del soporte de depth-sensing del Quest Browser (v57+,
+  a veces flag). Si no jala en el visor de Gato → plan B Kinect (pipeline listo,
+  stopper = adaptador de corriente naranja, ya identificado en MercadoLibre).
+- Verificación: 133/133 tests, typecheck limpio, /scan responde 200 en producción.
