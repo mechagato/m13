@@ -90,6 +90,9 @@ importers:
 
   packages/examples:
     dependencies:
+      '@m13/generator':
+        specifier: workspace:*
+        version: link:../generator
       '@m13/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -106,6 +109,12 @@ importers:
       vite:
         specifier: ^5.2.10
         version: 5.4.21(@types/node@25.9.1)
+
+  packages/generator:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
 
   packages/runtime:
     dependencies:

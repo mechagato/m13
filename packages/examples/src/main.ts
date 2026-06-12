@@ -1,7 +1,7 @@
 import { M13Engine } from '@m13/runtime';
 import { SCENES } from './scenes.js';
-import { STYLES, generateScene, generateFromPrompt } from './generator.js';
-import type { StyleId } from './generator.js';
+import { STYLES, generateScene, generateFromPrompt } from '@m13/generator';
+import type { StyleId } from '@m13/generator';
 import { hasLlmEndpoint, generateWithLlm, getLlmUrl } from './llm.js';
 
 // ============================================

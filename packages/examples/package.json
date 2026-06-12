@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@m13/generator": "workspace:*",
     "@m13/runtime": "workspace:*",
     "@m13/synth": "workspace:*"
   },
