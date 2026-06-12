@@ -3,9 +3,18 @@
 > A local-first world synthesis engine for WebXR and the modern web.
 > Built on semantic representation, signed distance fields, and continuous detail.
 
-**Status:** Research · Phase 1 complete (`.m13` language + runtime + editor) · [Live demo](https://motor13.pages.dev)
+**Status:** Research · Phase 1 complete (`.m13` language + runtime + editor) · [Live demo](https://motor13.neonodos.com)
 **License:** TBD (pending — see `constitution.md` §8.4)
 **Platform:** WebGPU only
+
+---
+
+## Numbers that matter
+
+- **30.8× lighter** than the equivalent Three.js scene (2,014 bytes vs 62,115 — real benchmark, `docs/papers/phase-1-benchmark.md`)
+- **A PNG screenshot of a scene weighs 601× more than the scene itself** (462 KB vs 769 bytes) — and the screenshot is one frozen angle; the scene is walkable, animated, 60 fps
+- **The URL is the world:** scenes travel as `#scene=` share links — zero backend, zero download; whoever opens the link receives the full walkable 3D world
+- **Any LLM becomes a front-end:** the `@m13/mcp` server lets Claude/ChatGPT generate validated `.m13` scenes and return a walkable link (editor-time only — the renderer never calls a cloud)
 
 ---
 
