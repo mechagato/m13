@@ -2,13 +2,12 @@
 
 Pasos para llevar el demo a `https://motor13.neonodos.com` y validar en Quest 3.
 
-## Estado actual (2026-05-21 23:55)
+## Estado actual (2026-06-12)
 
-- ✅ **Deploy técnico HECHO** desde Claude Code vía wrangler CLI.
-- ✅ **URL preview LIVE:** [https://motor13.pages.dev/](https://motor13.pages.dev/) (deploy automático con cada `wrangler pages deploy`)
-- ✅ **URL específica del último deploy:** https://e881d846.motor13.pages.dev/
-- ⏳ **Custom domain pendiente:** `motor13.neonodos.com` (~2 min en dashboard CF, ver §T-059 abajo)
-- ⏳ **Quest 3 test pendiente:** ver §T-061 abajo
+- ✅ **Custom domain LIVE:** [https://motor13.neonodos.com](https://motor13.neonodos.com) (cert + CNAME via API CF, 2026-06-11)
+- ✅ **SC-1 validado:** 60 fps vsync-capped en laptop de Gato (2026-06-12)
+- ✅ **FPS visible sin teclado:** el statusbar (abajo del composer) muestra `fps · ms` en TODAS las vistas — clave para Quest 3
+- ⏳ **Quest 3 test (SC-6) pendiente:** ver §T-061 abajo — ÚLTIMO criterio del gate Fase 1
 
 ---
 
@@ -116,16 +115,16 @@ Esto da cache agresivo a los chunks JS (que tienen hash en el filename) y cache 
    - Sideload Tailscale APK desde https://pkgs.tailscale.com/stable/#android
    - Login con la misma cuenta del Cerebro4
 
-### Test desde URL pública (post T-059)
+### Test desde URL pública (UI actual 2026-06-12 — sin teclado necesario)
 
 1. En el Quest, abrir el Meta Quest Browser
 2. Visitar `https://motor13.neonodos.com`
-3. Click en el canvas → permitir pointer lock
-4. Verificar que renderiza la escena `galería` (la primera)
-5. Navegar con joystick/controles del Quest (o teclado bluetooth si tienes)
-6. Cambiar entre las 5 escenas con `1`-`5` (necesitas teclado o usar el selector en pantalla)
-7. **Tomar screenshot del FPS counter** (HUD esquina inferior derecha)
-8. **Criterio de éxito:** FPS ≥ 72 en `sala_galeria` (la escena más simple). Si <72, ver "Mitigaciones" abajo.
+3. Pulsar **"Entrar →"** — genera una galería al instante y la renderiza
+4. **Leer el FPS en el statusbar** (abajo, junto a "m13 runtime v0.1.0": `NN fps · N.N ms`) — visible en todas las vistas, no requiere teclado
+5. Para el walkthrough: segundo icono del rail izquierdo (**Explorar** ▦) → escenas en el panel derecho (click directo, sin teclas 1-9) → click en el canvas para pointer lock
+6. Probar 2-3 escenas: `sala_galeria` (la más simple) y `templo_mexica`
+7. **Tomar screenshot del statusbar con el FPS visible**
+8. **Criterio SC-6:** FPS ≥ 72 en `sala_galeria`. Si <72, ver "Mitigaciones" abajo.
 
 ### Test desde URL local (sin necesitar T-059)
 
