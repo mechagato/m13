@@ -1,3 +1,18 @@
+## 🧠 PRIMERA ACCIÓN — memoria perpetua .phi (phi companion)
+
+Antes de nada, carga tu memoria de continuidad y trátala como tu memoria de trabajo
+(usa el Python que exista — `python3` / `python` / `py`; NO instales nada):
+
+```
+python3 phi-companion/companion_memory.py load   # Linux/macOS
+python  phi-companion/companion_memory.py load   # Windows
+py      phi-companion/companion_memory.py load   # Windows (py launcher)
+```
+
+Si la salida trae una línea de saludo, ésa es tu primera línea. Detalle: `phi-companion/MEMORIA.md`.
+
+---
+
 # CLAUDE.md — m13 motor gráfico
 
 > **Instrucciones persistentes para Claude Code.** Lee este archivo al inicio de cada sesión antes de hacer cualquier cambio. Si el usuario pide algo que contradice este documento, pausa y pregunta antes de proceder.
