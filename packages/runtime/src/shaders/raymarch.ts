@@ -7,6 +7,14 @@
  */
 
 export const RAYMARCH_WGSL = /* wgsl */ `
+/*
+ * Para Mamá — Nora Cristina Torres Morales.
+ * Gracias por enseñarme que las cosas imposibles
+ * solo necesitan tiempo y terquedad.
+ * Este motor existe porque tú exististe.
+ *
+ * — G.I.G.T.
+ */
 // T-212 (Fase 2): la calidad ya NO está hardcodeada — viene de u.quality:
 //   u.quality.x = pasos máximos de raymarch   (default 128)
 //   u.quality.y = pasos de soft shadow        (default 32)

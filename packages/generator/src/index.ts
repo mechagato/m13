@@ -457,8 +457,59 @@ const KEYWORD_MAP: Array<{ re: RegExp; style: StyleId }> = [
   { re: /minimal|vac[ií]o|simple|limpio|sala|cuarto|habitaci/i, style: 'minimalista' },
 ];
 
+/**
+ * Escena oculta "para papá" — la más cálida y hermosa del catálogo, hecha a mano
+ * (sin RNG). Luz dorada baja, materiales nobles: madera envejecida + piedra natural.
+ * Lleva el metadato `dedicated_to` en su YAML. No se documenta en la UI: solo aparece
+ * cuando el prompt es exactamente "para papá" / "para papa".
+ */
+function genParaPapa(): GenResult {
+  const w = 6;
+  const d = 6;
+  const objects: ObjSpec[] = [
+    { id: 'pedestal', kind: 'concept', concept: 'pedestal_marmol', position: [0, -2.5, 0], scale: [0.45, 0.5, 0.45] },
+    {
+      id: 'corazon',
+      kind: 'sphere',
+      material: 'metal_dorado_pulido',
+      position: [0, -1.45, 0],
+      scale: 0.42,
+      animate: { mode: 'bob', speed: 0.4, amplitude: 0.06 },
+    },
+    { id: 'columna_izq', kind: 'box', material: 'piedra_volcanica', position: [-2.4, -1.5, -1], scale: [0.35, 1.5, 0.35] },
+    { id: 'columna_der', kind: 'box', material: 'piedra_volcanica', position: [2.4, -1.5, -1], scale: [0.35, 1.5, 0.35] },
+    {
+      id: 'aro',
+      kind: 'torus',
+      material: 'metal_bronce_pulido',
+      position: [0, -0.3, 0],
+      scale: [0.5, 0.16, 0.5],
+      animate: { mode: 'rotate', speed: 0.25, amplitude: 0 },
+    },
+  ];
+  return {
+    label: 'para papá',
+    seed: 0,
+    yaml: assemble(
+      [
+        header('para_papa', 'Para Papá — la escena más cálida del catálogo, hecha a mano.', w, 3.6, d),
+        'dedicated_to: "Genaro García Torres — el día que lo veas, ya llegamos."',
+        ambientBlock([1.12, 0.95, 0.74], [0.1, 0.07, 0.04], 0.014),
+        lightBlock([0, 2.6, 0.5], [1.0, 0.82, 0.5], 1.5),
+        surfaces('pared_madera_oscura', 'piso_madera_envejecida', 'pared_madera_oscura'),
+      ],
+      objects,
+    ),
+  };
+}
+
 /** Interpreta un prompt libre SIN IA — matching de keywords hacia plantillas. */
 export function generateFromPrompt(prompt: string): GenResult {
+  // Escena oculta: "para papá" / "para papa" (tolerante a acento, exacto tras trim).
+  // ̀-ͯ = marcas diacríticas combinantes (quita el acento de "papá").
+  const normalized = prompt.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (normalized === 'para papa') return genParaPapa();
+
   const match = KEYWORD_MAP.find((k) => k.re.test(prompt));
   const result = generateScene(match?.style ?? 'sorpresa');
   // Tweaks ligeros por keywords de material/atmósfera

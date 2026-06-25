@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "m13 — local-first world synthesis engine",
+  "description": "Continuous 3D format. For Us, NCTM y GGT (kzdr).",
   "workspaces": [
     "packages/*"
   ],

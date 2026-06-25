@@ -54,6 +54,15 @@ describe('generate_m13_scene — lógica', () => {
     expect(() => parseScene(result.yaml, { silent: true })).not.toThrow();
   });
 
+  it('prompt "para papá" (y "para papa") genera la escena dedicada, válida y compilable', () => {
+    for (const prompt of ['para papá', 'Para Papa', '  PARA PAPÁ  ']) {
+      const result = runGenerateScene({ prompt });
+      expect(result.yaml).toContain('dedicated_to: "Genaro García Torres — el día que lo veas, ya llegamos."');
+      const scene = parseScene(result.yaml, { silent: true });
+      expect(() => compileScene(scene)).not.toThrow();
+    }
+  });
+
   it('incluye bytes (UTF-8 reales) y share_url', () => {
     const result = runGenerateScene({ style: 'templo', seed: 7 });
     expect(result.bytes).toBe(new TextEncoder().encode(result.yaml).length);
