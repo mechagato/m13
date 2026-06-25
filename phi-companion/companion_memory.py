@@ -416,6 +416,19 @@ def cmd_load(args) -> int:
 
 
 def cmd_seal(args) -> int:
+    # PRESERVAR IDENTIDAD: si NO se forzó PHI_AGENT_ID por entorno y ya existe un
+    # memoria.phi, re-sellar con SU mismo agente/usuario. Evita que el hook de cierre
+    # (que corre sin env) colapse la identidad del companion al default
+    # phi_companion_gato cuando la llave de Gato existe en la máquina (p.ej. cerebro4).
+    global AGENT_ID, USER_ID
+    _out0 = Path(args.path) if getattr(args, "path", None) else DEFAULT_PHI
+    if not os.environ.get("PHI_AGENT_ID") and _out0.exists():
+        try:
+            _prev = decode_phi(_out0)["data"]
+            AGENT_ID = _prev.get("agent") or AGENT_ID
+            USER_ID = _prev.get("user") or USER_ID
+        except Exception:
+            pass
     # Por defecto el cierre es NO destructivo: solo re-sella si hay una clave
     # PERSISTENTE (env PHI_SEAL_KEY_* o keystore previo). Sin ella, generar una
     # clave efímera cambiaría la identidad (pubkey) del companion en cada
