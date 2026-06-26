@@ -29,3 +29,19 @@ re-litigarlas en cada sesión.)
 
 - **Easter eggs (notas.txt) en commit aislado `d4f4ba4`**, separados de Fase 2, por instrucción
   explícita de Gato ("solo estos 4 cambios"). Respetada la regla un-commit-un-cambio.
+
+## 2026-06-26 — Decisiones de Fase 2 (barrida autopilot)
+
+- **Detalle continuo como DEFAULT, toggle por SIGNO de `quality.w`:** continuousDetail on = octaveCap
+  positivo, off = negativo. Elegido sobre agregar un campo al uniform (D-3002 fijó el layout). La
+  auditoría señaló el riesgo de octaveCap=0 (-0 IEEE) → se clampa magnitud >=1.
+- **`fbm_norm` + normalización de `fbm_continuous`:** sin normalizar, el rango crecía con las octavas →
+  deriva de luminancia ("la pared cambia de tono al caminar"). Se normaliza por la suma de amplitudes.
+  El modo fijo del A/B usa `fbm_norm` para comparar DETALLE, no brillo.
+- **Modo exterior por AUSENCIA de walls/ceiling** (no un flag explícito): suelo plano + cielo. Las 10
+  escenas interiores quedan byte-idénticas (sky/exterior gating estricto, F10).
+- **Seeds = offset de dominio en el material** (no en la geometría): instancias hermanas, no clones.
+- **Auditoría adversarial multi-agente ANTES de cada deploy de WGSL** (no puedo validar el render sin
+  GPU). Workflow de 4 lentes refutando; aplicar fixes; deploy solo si 0 crit/high.
+- **Pendiente clave: validación VISUAL de Gato** — todo lo visual (look del detalle continuo, Chichén
+  Itzá, F6 Nyquist, micro-detalle) requiere su laptop con WebGPU; Cerebro4 (GT710) no renderiza WebGPU.

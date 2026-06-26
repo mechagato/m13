@@ -2769,3 +2769,53 @@ del sistema (ajeno a los cambios) → smoke por build de producción.
 `material-y-artefactos` actualizadas. **Siguiente acción: retomar Fase 2 → T-221** (prototipo
 fbm_continuous + A/B `?s13=on|off`, gate visual de Gato). Sigue pendiente lo de la entrada 028
 (eval LLM :9095, validación visual B7/B8, número FPS Quest).
+
+---
+
+## 2026-06-26 — Entrada 030 — FASE 2 BARRIDA EN AUTOPILOT (orden de Gato "hazlas todas")
+
+**Sesión companion-m13. Gato: "dale tú, ni preguntes, si en el plan aún hay actividades hazlas".
+Se ejecutó el grueso de Fase 2 de corrido, con auditoría adversarial multi-agente antes de deploy.**
+
+### Implementado (commits d4f4ba4 → 0854d9a, todos en producción m13.phi-core.com)
+- **P2 detalle continuo (T-221→T-224):** `pixelFootprint` + `fbm_continuous`/`fbm_norm` +
+  `fbm_detail` (toggle continuo↔fijo por signo de `quality.w`). Los 4 conceptos del showcase
+  (piedra_volcanica, marmol_blanco_vetas, pared_ladrillo_viejo, metal_oxidado) migrados a
+  detalle continuo. Toggle global `continuousDetail` en Quality/presets; `?s13=on|off` lo controla.
+  Retirado el prototipo `piedra_volcanica_s13` (catálogo vuelve a 18).
+- **P2b exterior (T-231/232/233):** schema walls/ceiling opcionales + `sky` + `cameraSpeed`;
+  compiler modo exterior (suelo plano + cielo + sin techo). **`chichen_itza.m13`** — El Castillo,
+  9 plataformas + templo + escalinata, exterior, piedra con seeds. 2.4KB. Primera del selector.
+- **P5 seeds (T-251/252):** `seed` por objeto → offset de dominio del material (instancias
+  hermanas). Aplicado a las 11 piezas de Chichén.
+- **P4 FFT (T-241/242/243):** `MicAudioInput.getBands()` 3 bandas; `audio_reactive: {band}`;
+  compiler mapea a `u.audioBands.{x,y,z}`. `audio_reactive: true` sigue byte-idéntico.
+- **Fix navegación:** la FlyCamera mira -z al spawn → spawns corregidos a +z. Reset de input
+  al perder pointer lock/foco (tecla pegada). Hint de controles on-screen. Cámara sin pared
+  invisible en exterior (F9).
+
+### Auditoría adversarial (Workflow 4 lentes, 402k tokens)
+0 crit · 0 high · 3 med · 10 low. **Ninguno bloqueó deploy.** Aplicados 9 fixes (F1-F10):
+toggle robusto a octaveCap=0, **fbm normalizado (elimina deriva de luminancia)**, seed `.finite()`,
+setQuality clamp, clamp lo≤cap, footprint anisotrópico, seedOffset sin correlación, cámara
+exterior, sky solo-exterior. F6 (Nyquist −1 octava) queda para validación visual.
+
+### Gate de cierre Fase 2 (T-261)
+| Criterio | Estado |
+|---|---|
+| Detalle continuo (Sonido 13) productivo en 4 conceptos | ✅ código + deploy; **validación visual pendiente (Gato)** |
+| Escena exterior + showcase Chichén Itzá | ✅ LIVE en m13.phi-core.com |
+| Seeds por instancia | ✅ |
+| FFT 3 bandas audio-reactivo | ✅ capacidad (demo requiere micrófono) |
+| typecheck / tests / build / determinismo | ✅ 6/6 · 119 · OK · intacto |
+| Auditoría adversarial pre-deploy | ✅ 0 crit/high, fixes aplicados |
+
+### Pendientes (stoppers de hardware + refinamientos)
+- **T-205** APK Quest · **T-215** FPS Quest · **T-235** video laptop → requieren a Gato.
+- **T-225** micro-detalle <40cm · **T-227** hash-regression CI · **F6** Nyquist → refinamientos
+  que requieren validación visual en GPU (laptop Gato).
+- **Validación visual general del look** (detalle continuo + Chichén Itzá) → Gato en su laptop.
+
+### Dominio
+m13 vive ahora en **m13.phi-core.com** (marca propia, no NeoNodos) — custom domain + CNAME en
+Cloudflare (zona phi-core.com), apuntando al proyecto Pages `motor13`. Fallback: motor13.pages.dev.

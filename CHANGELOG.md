@@ -7,6 +7,30 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-26
+
+**Fase 2 — Sonido 13 visual + exterior + audio.** El detalle deja de ser fijo y se vuelve
+una función continua de la distancia (microtonalismo aplicado a gráficos).
+
+### Added
+- **Detalle continuo (Sonido 13):** `fbm_continuous`/`fbm_detail` — el nº de octavas
+  escala con el footprint del pixel (más detalle de cerca, menos shimmer de lejos), con
+  fade microtonal sin pops. Toggle global `continuousDetail` (`?s13=on|off`).
+- **Escenas de exterior:** `walls`/`ceiling` opcionales → suelo plano + cielo abierto;
+  campos `sky` (gradiente horizonte→cénit) y `cameraSpeed`.
+- **Showcase `chichen_itza.m13`:** El Castillo en campo abierto (2.4KB).
+- **Seeds por instancia:** `seed` por objeto → variación del material sin clonar geometría.
+- **Audio por banda:** `audio_reactive: { band: bass|mid|treble }` + `MicAudioInput.getBands()`.
+- **PWA instalable** + uniforms de calidad por preset (`quest|mobile|desktop|ultra`).
+
+### Fixed
+- Migración de los 4 conceptos del showcase a detalle continuo (fbm normalizado, sin
+  deriva de luminancia). FlyCamera: reset de input al perder foco (tecla pegada) y sin
+  pared invisible en exterior. 9 fixes de auditoría adversarial pre-deploy.
+
+### Notas
+Validación visual en GPU y FPS Quest pendientes de hardware. Demo: **m13.phi-core.com**.
+
 ## [0.1.0] - 2026-06-12
 
 **Fase 1 — lenguaje `.m13` + librería de conceptos.** Primera versión completa del motor:
