@@ -37,6 +37,14 @@ metadata: {type: project}
   opSub/opSmoothUnion ya existe; falta exponerlo al formato `.m13`. Espera "abre el Spec de CSG"
   de Gato. Ver [[decisiones]].
 
+## Orden de Gato (2026-06-26) — post Fase 2
+1. ✅ Revisar FlowCAD (`~/neonodos-core/neocad`) + propuesta → **concluir por separado** (ver [[decisiones]]).
+2. **Chichén Itzá v2 desplegada** (29 objetos: 9 cuerpos+cornisas, templo, escalinata+alfardas) —
+   **pendiente validación visual de Gato** (la v1 "le faltaba mucho"; esta sube proporciones/detalle).
+3. **Ultra-optimizar calidad Quest** (lo último) — hoy 604×364 @68-72fps; palancas: subir resolución
+   aprovechando headroom del detalle continuo, bajar sombras/AO, resolución dinámica, o modo VR Fase 5.
+
 ## Siguiente acción
-Pedir a Gato validación visual del look en su laptop; cerrar stoppers de Quest; luego abrir el
-Spec de CSG. Releer BITACORA (entrada 030) + `git log --oneline -12` al arrancar.
+Pedir a Gato validación visual de Chichén v2; si gusta, seguir afinando o pasar a optimización Quest.
+CSG sigue siendo el gran frente post (FlowCAD lo cierra por su lado con CadQuery). Releer BITACORA
+(entrada 030) + `git log --oneline -14` al arrancar.

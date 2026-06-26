@@ -45,3 +45,24 @@ re-litigarlas en cada sesión.)
   GPU). Workflow de 4 lentes refutando; aplicar fixes; deploy solo si 0 crit/high.
 - **Pendiente clave: validación VISUAL de Gato** — todo lo visual (look del detalle continuo, Chichén
   Itzá, F6 Nyquist, micro-detalle) requiere su laptop con WebGPU; Cerebro4 (GT710) no renderiza WebGPU.
+
+## 2026-06-26 — m13 ↔ FlowCAD: concluir POR SEPARADO (decisión de Gato)
+
+**Hallazgo (revisé `~/neonodos-core/neocad`):** FlowCAD/NeoCAD va muy avanzado (~80% MVP) pero
+**NO usa m13.** Renderiza con **CadQuery/OpenCascade (kernel CAD real) + Three.js (mallas)** —
+genera mallas exactas y exporta STEP/STL. El `.m13` de FlowCAD es un *mesh JSON*, no las escenas
+SDF de m13. La directiva vieja "m13 = render engine de FlowCAD" **ya no aplica**: para CAD de
+fabricación, CadQuery (preciso, exporta) es superior al SDF de m13; forzarlo sería downgrade.
+
+**Decisión de Gato (2026-06-26): concluir cada uno por separado.** FlowCAD cierra su MVP solo
+(deploy + pulido + ensayo, lo lleva su sesión/companion-flowcad). m13 cierra el suyo (Chichén +
+Quest). **El puente m13↔FlowCAD = post-cierre.**
+
+**La jugada correcta para Innovafest (cuando se retome el puente):** m13 NO reemplaza el render de
+FlowCAD; m13 es la **capa de visualización web/XR compartible** — toma el diseño de FlowCAD y lo
+vuelve un link caminable en navegador/Quest sin instalar nada ("la URL es el mundo"). FlowCAD diseña
+(preciso), m13 distribuye/visualiza. Cada uno hace lo que mejor hace.
+
+**Nota:** los docs estratégicos de FlowCAD (READY_INVESTOR, ROADMAP, STRATEGY) son de MAYO (demo
+inversor 21-may, cocinas-builder); el desarrollo de junio pivoteó a flowcad-desktop genérico (piezas
+mecánicas). Su companion debería actualizarlos.
