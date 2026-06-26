@@ -59,6 +59,14 @@ jobs:
           git diff --exit-code m13-spec/m13_concepts.json || {
             echo "::error::m13-spec/m13_concepts.json desincronizado — corre 'pnpm export-concepts' y commitea"; exit 1; }
 
+      # T-227: un cambio del compiler que altere el WGSL de una escena sin actualizar el
+      # baseline = regresión visual silenciosa. El hash congelado lo atrapa aquí.
+      - name: Scene hashes drift-guard (T-227)
+        run: |
+          pnpm gen:hashes
+          git diff --exit-code m13-spec/scene-hashes.json || {
+            echo "::error::m13-spec/scene-hashes.json desincronizado — un cambio alteró el WGSL de una escena; corre 'pnpm gen:hashes', revisa la regresión y commitea"; exit 1; }
+
       - name: Build examples
         run: pnpm --filter @m13/examples build
 
