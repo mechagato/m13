@@ -35,9 +35,6 @@ import { lamparaColgante } from './concepts/lampara_colgante.js';
 import { esferaDecorativa } from './concepts/esfera_decorativa.js';
 import { cuboBasico } from './concepts/cubo_basico.js';
 
-// ---- Fase 2 — prototipos (T-221, gate Sonido 13) ----
-import { piedraVolcanicaS13 } from './concepts/piedra_volcanica_s13.js';
-
 /**
  * Categorías válidas de un concepto. `object_geo` aplica a conceptos que
  * declaran su propia geometría SDF (vs. usar un primitivo + material).
@@ -169,8 +166,6 @@ const RAW_CONCEPTS: Concept[] = [
   lamparaColgante,
   esferaDecorativa,
   cuboBasico,
-  // Fase 2 — prototipos (T-221, gate Sonido 13)
-  piedraVolcanicaS13,
 ];
 
 /**

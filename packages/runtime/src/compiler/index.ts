@@ -334,6 +334,21 @@ function hasStaticRotation(obj: M13Object): boolean {
   return obj.rotation !== undefined && obj.rotation.some((v) => v !== 0);
 }
 
+/**
+ * Offset de dominio determinista desde un seed (P5/T-251). Descorrelaciona el muestreo
+ * de ruido del material → dos instancias del mismo concepto se ven hermanas, no clones.
+ * Mismo seed = mismo offset (determinista); seeds distintos = offsets distintos. K=13
+ * separa lo suficiente para que las vetas/grano no se repitan.
+ */
+function seedOffset(seed: number): [number, number, number] {
+  const h = (x: number): number => {
+    const s = Math.sin(x) * 43758.5453123;
+    return s - Math.floor(s);
+  };
+  const K = 13.0;
+  return [h(seed) * K, h(seed + 1.37) * K, h(seed + 2.71) * K];
+}
+
 function generateMapFunction(scene: M13Scene): string {
   const [bx, by, bz] = scene.bounds;
   const exterior = scene.walls === undefined || scene.ceiling === undefined;
@@ -504,8 +519,16 @@ function generateMaterialFunction(scene: M13Scene): string {
       animPad = baseRadius * Math.min(obj.animate.amplitude, 0.9); // escala el SDF
     }
     const r = baseRadius + animPad;
+    // P5/T-251: seed por instancia → offset de dominio en el muestreo del material.
+    const matArg =
+      obj.seed !== undefined
+        ? (() => {
+            const [ox, oy, oz] = seedOffset(obj.seed);
+            return `p + vec3<f32>(${f(ox)}, ${f(oy)}, ${f(oz)})`;
+          })()
+        : 'p';
     lines.push(`  if (length(p - vec3<f32>(${f(px)}, ${f(py)}, ${f(pz)})) < ${f(r)}) {`);
-    lines.push(`    return mat_${matId}(p, n, u.audioAmp);`);
+    lines.push(`    return mat_${matId}(${matArg}, n, u.audioAmp);`);
     lines.push(`  }`);
   });
 

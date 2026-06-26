@@ -48,17 +48,19 @@ export interface Quality {
   octaveCap: number;
   /** Multiplicador de resolución sugerido (la app lo aplica al canvas) */
   renderScale: number;
+  /** Detalle continuo (Sonido 13) on/off. Off → octavas fijas (look Fase 1). Default on. */
+  continuousDetail: boolean;
 }
 
 export type QualityPreset = 'quest' | 'mobile' | 'desktop' | 'ultra';
 
 export const QUALITY_PRESETS: Record<QualityPreset, Quality> = {
   // Quest 3 standalone: medido 37-48fps a dpr 1 (D-2112) — presupuesto agresivo
-  quest: { maxSteps: 96, shadowSteps: 16, aoSamples: 3, octaveCap: 3, renderScale: 0.7 },
-  mobile: { maxSteps: 112, shadowSteps: 24, aoSamples: 4, octaveCap: 4, renderScale: 1.5 },
+  quest: { maxSteps: 96, shadowSteps: 16, aoSamples: 3, octaveCap: 3, renderScale: 0.7, continuousDetail: true },
+  mobile: { maxSteps: 112, shadowSteps: 24, aoSamples: 4, octaveCap: 4, renderScale: 1.5, continuousDetail: true },
   // desktop = comportamiento histórico exacto del motor (pre-T-212)
-  desktop: { maxSteps: 128, shadowSteps: 32, aoSamples: 5, octaveCap: 5, renderScale: 2 },
-  ultra: { maxSteps: 192, shadowSteps: 48, aoSamples: 8, octaveCap: 7, renderScale: 2 },
+  desktop: { maxSteps: 128, shadowSteps: 32, aoSamples: 5, octaveCap: 5, renderScale: 2, continuousDetail: true },
+  ultra: { maxSteps: 192, shadowSteps: 48, aoSamples: 8, octaveCap: 7, renderScale: 2, continuousDetail: true },
 };
 
 /** Heurística de preset por dispositivo (absorbe D-2110/D-2112). */
@@ -416,7 +418,13 @@ export class M13Engine {
       fogColor: [...scene.ambient.fogColor],
       fogDensity: scene.ambient.fogDensity,
       tint: [...scene.ambient.tint],
-      quality: [this.quality.maxSteps, this.quality.shadowSteps, this.quality.aoSamples, this.quality.octaveCap],
+      // .w lleva el octaveCap; su SIGNO es el toggle de detalle continuo (negativo = octavas fijas).
+      quality: [
+        this.quality.maxSteps,
+        this.quality.shadowSteps,
+        this.quality.aoSamples,
+        this.quality.continuousDetail ? this.quality.octaveCap : -this.quality.octaveCap,
+      ],
       // P4 escribirá las bandas FFT reales; mientras, amplitude en .w (compat)
       audioBands: [0, 0, 0, amp],
     });

@@ -12,6 +12,13 @@ export interface SceneEntry {
 
 export const SCENES: SceneEntry[] = [
   {
+    id: 'chichen',
+    label: 'Chichén Itzá',
+    file: '/scenes/chichen_itza.m13',
+    description:
+      'El Castillo de Chichén Itzá — pirámide escalonada en campo abierto. Camina de lejos a tocar la piedra: el detalle continuo (Sonido 13) afina la roca conforme te acercas. Showcase Innovafest.',
+  },
+  {
     id: 'galeria',
     label: 'galería',
     file: '/scenes/sala_galeria.m13',

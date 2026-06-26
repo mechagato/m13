@@ -17,7 +17,9 @@ export const paredLadrilloViejo: Concept = {
   wgsl: /* wgsl */ `
 fn mat_pared_ladrillo_viejo(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   let brickScale = 4.0 + audioAmp * 3.0;
-  let brick = fbm(p * brickScale, 4);
+  // T-224: textura del ladrillo con detalle continuo.
+  let fp = pixelFootprint(p);
+  let brick = fbm_detail(p * brickScale, fp * brickScale, 2.0, 4);
   let mortarH = fract(p.y * 3.0);
   let mortarV = fract(p.x * 1.5 + step(0.5, mortarH) * 0.5);
   let mortar = clamp(step(0.92, mortarH) + step(0.95, mortarV), 0.0, 1.0);

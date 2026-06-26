@@ -31,7 +31,9 @@ export const metalOxidado: Concept = {
   wgsl: /* wgsl */ `
 fn mat_metal_oxidado(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f32> {
   let rustAmount = matParams.metal_oxidado_rustAmount;
-  let rust = smoothstep(0.4, 0.7, fbm(p * 6.0, 4));
+  // T-224: mancha de óxido con detalle continuo.
+  let fp = pixelFootprint(p);
+  let rust = smoothstep(0.4, 0.7, fbm_detail(p * 6.0, fp * 6.0, 2.0, 4));
   let metal = vec3<f32>(0.55, 0.55, 0.55);
   let rustColor = vec3<f32>(0.62, 0.30, 0.13);
   let speckle = noise3(p * 70.0) * 0.05;

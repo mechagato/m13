@@ -21,6 +21,7 @@ const SCENE_MAX_BYTES = 50 * 1024; // criterio SC-2: cada escena < 50KB
 // Lista de escenas copiada del campo `file` de cada entrada de SCENES en
 // packages/examples/src/scenes.ts — si agregas/quitas escenas ahí, actualiza aquí.
 const SCENE_FILES = [
+  '/scenes/chichen_itza.m13',
   '/scenes/sala_galeria.m13',
   '/scenes/cocina_industrial.m13',
   '/scenes/oficina_neonodos.m13',

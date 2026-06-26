@@ -142,4 +142,19 @@ fn fbm_continuous(p: vec3<f32>, footprint: f32, minOct: f32, cap: f32) -> f32 {
   total = total + amp * lastW * noise3(p * freq);
   return total;
 }
+// Footprint del pixel a la distancia del punto p (T-222): cuánto mundo cubre un pixel
+// ahí. pixelAngle ≈ 2/resY (el raymarcher usa camRight/camUp unitarios; el fov queda
+// absorbido en su magnitud). Es la entrada del detalle continuo.
+fn pixelFootprint(p: vec3<f32>) -> f32 {
+  return length(p - u.camPos) * (2.0 / max(u.resolution.y, 1.0));
+}
+// Detalle adaptativo (T-224): si u.quality.w >= 0 usa detalle CONTINUO (octavas en
+// función del footprint, cap = quality.w); si es NEGATIVO, octavas FIJAS (look Fase 1).
+// El signo es el toggle global del A/B Sonido 13. \`footprint\` ya viene escalado al
+// dominio de \`p\`; \`minOct\` = piso continuo; \`fixedOct\` = octavas del modo fijo.
+fn fbm_detail(p: vec3<f32>, footprint: f32, minOct: f32, fixedOct: i32) -> f32 {
+  let cap = u.quality.w;
+  if (cap < 0.0) { return fbm(p, fixedOct); }
+  return fbm_continuous(p, footprint, minOct, cap);
+}
 `;

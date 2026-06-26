@@ -75,6 +75,9 @@ const objectSchema = z
     /** Rotación estática en grados (Euler XYZ extrínseco, orden de aplicación X→Y→Z). */
     rotation: vec3.optional(),
     scale: z.union([z.number().positive(), positiveVec3]).default(1),
+    /** Seed por instancia (P5/T-251): descorrelaciona el muestreo del material de ESTE
+     *  objeto (offset de dominio) → mismo concepto, vetas/grano distintos. No toca la geometría. */
+    seed: z.number().optional(),
     /** Requerido cuando kind ≠ 'concept'. Para kind:'concept' el material viene del concept. */
     material: materialSchema.optional(),
     audio_reactive: z.boolean().default(false),

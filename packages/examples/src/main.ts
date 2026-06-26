@@ -568,13 +568,13 @@ function buildS13TestScene(matId: string): string {
     'name: s13_test',
     'description: "A/B Sonido 13 — detalle continuo en piedra (T-221)"',
     'bounds: [8, 4, 16]',
-    'spawn: [0, 0, -13]',
+    'spawn: [0, 0, 13]',
     'ambient:',
     '  background: [0.04, 0.035, 0.03]',
     '  fogColor: [0.05, 0.04, 0.03]',
     '  fogDensity: 0.012',
     'light:',
-    '  position: [3, 3.2, -3]',
+    '  position: [3, 3.2, 3]',
     '  color: [1.0, 0.84, 0.58]',
     '  intensity: 1.7',
     `walls: { concept: ${matId} }`,
@@ -589,7 +589,7 @@ function buildS13TestScene(matId: string): string {
     '  - id: muro_glifos',
     '    kind: box',
     `    material: ${matId}`,
-    '    position: [0, -0.6, 4.5]',
+    '    position: [0, -0.6, -4.5]',
     '    scale: [3.2, 2.2, 0.3]',
     '',
   ].join('\n');
@@ -801,18 +801,19 @@ loadSettings();
   const shared = readSharedScene();
   try {
     if (s13Mode !== null) {
-      // Modo A/B Sonido 13 (T-221): escena de prueba de piedra, toggle ?s13=on|off
+      // Modo A/B Sonido 13 (T-224): toggle GLOBAL del detalle continuo. Misma escena de
+      // piedra; on = detalle continuo (default), off = octavas fijas (look Fase 1).
       entryScreen.classList.add('hidden');
       setView('crear');
-      const matId = s13Mode === 'on' ? 'piedra_volcanica_s13' : 'piedra_volcanica';
-      const yaml = buildS13TestScene(matId);
+      const yaml = buildS13TestScene('piedra_volcanica');
       sceneNameEl.textContent = `A/B Sonido 13 — S13 ${s13Mode.toUpperCase()}`;
       sceneDescEl.textContent =
         s13Mode === 'on'
-          ? 'Detalle CONTINUO (fbm_continuous por footprint): menos shimmer de lejos, más detalle de cerca.'
-          : 'Detalle FIJO (5 octavas, como Fase 1). Acércate y aléjate del monolito para comparar.';
+          ? 'Detalle CONTINUO (Sonido 13): menos shimmer de lejos, más finura de cerca.'
+          : 'Detalle FIJO (octavas constantes, look Fase 1). Acércate y aléjate para comparar.';
       showRecipe(yaml, 's13_test.m13');
       await engine.loadScene(yaml);
+      engine.setQuality({ continuousDetail: s13Mode === 'on' });
       showS13Banner(s13Mode);
       taskDone(`modo A/B Sonido 13 — S13 ${s13Mode.toUpperCase()} · usa el banner para alternar`);
     } else if (shared !== null) {
