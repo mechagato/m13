@@ -16,6 +16,8 @@ const KNOWN_ROOT_KEYS = new Set([
   'walls',
   'floor',
   'ceiling',
+  'sky',
+  'cameraSpeed',
   'window',
   'objects',
 ]);

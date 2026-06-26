@@ -221,6 +221,8 @@ export class M13Engine {
     if (this.camera) {
       this.camera.setBounds(boundsForCamera(scene.bounds));
       this.camera.reset(scene.spawn);
+      // T-231: la escena puede fijar su velocidad de cámara (explanadas grandes).
+      if (scene.cameraSpeed !== undefined) this.camera.setSpeed(scene.cameraSpeed);
     }
     return scene;
   }

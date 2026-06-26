@@ -116,9 +116,22 @@ export const m13SceneSchema = z.object({
   spawn: vec3.default([0, 0, -3.5]),
   ambient: ambientSchema.default({}),
   light: lightSchema.default({}),
-  walls: surfaceSchema,
+  // Fase 2 (T-231): walls/ceiling opcionales → escenas de EXTERIOR (campo abierto).
+  // Si falta cualquiera de las dos, el compilador entra en modo exterior: suelo
+  // plano extendido + cielo, sin caja de cuarto. `floor` sigue siendo obligatorio
+  // (siempre hay suelo). Las escenas con walls+ceiling se comportan idénticas (interior).
+  walls: surfaceSchema.optional(),
   floor: surfaceSchema,
-  ceiling: surfaceSchema,
+  ceiling: surfaceSchema.optional(),
+  // Cielo de exterior: gradiente de color horizonte→cénit (T-232 lo consume).
+  sky: z
+    .object({
+      horizon: rgb,
+      zenith: rgb,
+    })
+    .optional(),
+  // Velocidad de cámara (m/s) para la escena. Útil en explanadas grandes; default 2.5.
+  cameraSpeed: z.number().positive().optional(),
   window: z
     .object({
       position: vec3,

@@ -255,3 +255,40 @@ objects:
     expect(compiled.wgsl).toContain('sdTorus(');
   });
 });
+
+describe('compiler — modo exterior (T-232, P2b)', () => {
+  const EXTERIOR = `
+version: "0.1"
+name: exterior_test
+bounds: [60, 25, 60]
+spawn: [0, 0, -50]
+sky: { horizon: [0.9, 0.7, 0.5], zenith: [0.3, 0.45, 0.75] }
+cameraSpeed: 8
+floor: { concept: piedra_volcanica }
+objects:
+  - id: piramide
+    kind: box
+    material: piedra_volcanica
+    position: [0, -23, 0]
+    scale: [10, 2, 10]
+`;
+
+  it('escena sin walls/ceiling compila y usa SUELO PLANO (no caja de cuarto)', () => {
+    const scene = parseScene(EXTERIOR);
+    const compiled = compileScene(scene);
+    // suelo plano en y=-by, sin la caja del cuarto
+    expect(compiled.wgsl).toContain('var d = p.y + 25');
+    expect(compiled.wgsl).not.toContain('let room = -sdBox');
+    // sin techo: el branch de material de techo (n.y < -0.7) no se emite en exterior
+    expect(compiled.wgsl).not.toContain('n.y < -0.7');
+    // el cielo (sky) altera el missColor
+    expect(compiled.wgsl).toContain('fn missColor()');
+  });
+
+  it('la escena interior SIGUE usando la caja de cuarto (no regresión)', () => {
+    const scene = parseScene(loadScene('sala_galeria.m13'));
+    const compiled = compileScene(scene);
+    expect(compiled.wgsl).toContain('let room = -sdBox');
+    expect(compiled.wgsl).toContain('n.y < -0.7'); // techo presente
+  });
+});

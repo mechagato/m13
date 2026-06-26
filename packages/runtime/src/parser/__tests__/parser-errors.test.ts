@@ -59,14 +59,26 @@ ceiling: { concept: pared_yeso_blanco }
     }
   });
 
-  it('walls faltante → error con path "walls"', () => {
+  it('sin walls/ceiling → escena de EXTERIOR válida (T-231), walls/ceiling undefined', () => {
     const yaml = `
 version: "0.1"
-name: sin_walls
+name: exterior_min
 floor: { concept: piso_madera_envejecida }
+`;
+    const scene = parseScene(yaml);
+    expect(scene.walls).toBeUndefined();
+    expect(scene.ceiling).toBeUndefined();
+    expect(scene.floor.concept).toBe('piso_madera_envejecida');
+  });
+
+  it('floor faltante → error (el suelo sigue siendo obligatorio en exterior e interior)', () => {
+    const yaml = `
+version: "0.1"
+name: sin_floor
+walls: { concept: pared_yeso_blanco }
 ceiling: { concept: pared_yeso_blanco }
 `;
-    expect(() => parseScene(yaml)).toThrow(/walls/);
+    expect(() => parseScene(yaml)).toThrow(/floor/);
   });
 
   it('bounds no es vec3 (2 elementos) → path "bounds"', () => {

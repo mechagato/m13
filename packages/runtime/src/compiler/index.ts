@@ -150,9 +150,9 @@ function effectiveConceptId(obj: M13Object): string {
 
 function collectConceptIds(scene: M13Scene): string[] {
   const set = new Set<string>();
-  set.add(scene.walls.concept);
+  if (scene.walls) set.add(scene.walls.concept);
   set.add(scene.floor.concept);
-  set.add(scene.ceiling.concept);
+  if (scene.ceiling) set.add(scene.ceiling.concept);
   for (const obj of scene.objects) {
     set.add(effectiveConceptId(obj));
   }
@@ -179,8 +179,11 @@ function buildMatParamsLayout(
   // 1. Recolectar params por concept (primer object con ese concept gana).
   const sceneParamsByConcept: Record<string, Record<string, unknown>> = {};
 
-  // Superficies (walls/floor/ceiling) — siempre son materiales.
-  const surfaceMats: M13Material[] = [scene.walls, scene.floor, scene.ceiling];
+  // Superficies (walls/floor/ceiling) — materiales. walls/ceiling son opcionales
+  // en exterior (T-231); se filtran los ausentes manteniendo el orden interior.
+  const surfaceMats: M13Material[] = [scene.walls, scene.floor, scene.ceiling].filter(
+    (s): s is NonNullable<typeof s> => s !== undefined,
+  );
   // Objects: si kind ≠ 'concept', su material está definido (parser lo refina).
   // Si kind === 'concept', no hay params explícitos del scene (defaults del concept aplican).
   const objectMats: M13Material[] = scene.objects
@@ -286,10 +289,20 @@ function generateMatParamsStruct(layout: MatParamsLayout): string {
  * renderizaba negro puro ignorando background).
  */
 function generateSceneConstants(scene: M13Scene): string {
-  const [br, bg, bb] = scene.ambient.background;
+  let bg: readonly [number, number, number] = scene.ambient.background;
+  if (scene.sky) {
+    // Cielo de exterior (T-232): por ahora color plano ponderado hacia el cénit.
+    // El gradiente per-pixel horizonte→cénit es mejora futura (requiere pasar la
+    // dirección del rayo al miss, lo que cambiaría el contrato del shader estático).
+    // Sin `sky` el WGSL es byte-idéntico al anterior → hashes interiores intactos.
+    const [hr, hg, hb] = scene.sky.horizon;
+    const [zr, zg, zb] = scene.sky.zenith;
+    bg = [(hr + 2 * zr) / 3, (hg + 2 * zg) / 3, (hb + 2 * zb) / 3];
+  }
+  const [br, bgc, bb] = bg;
   return [
     'fn missColor() -> vec3<f32> {',
-    `  return vec3<f32>(${f(br)}, ${f(bg)}, ${f(bb)});`,
+    `  return vec3<f32>(${f(br)}, ${f(bgc)}, ${f(bb)});`,
     '}',
   ].join('\n');
 }
@@ -323,20 +336,27 @@ function hasStaticRotation(obj: M13Object): boolean {
 
 function generateMapFunction(scene: M13Scene): string {
   const [bx, by, bz] = scene.bounds;
+  const exterior = scene.walls === undefined || scene.ceiling === undefined;
   const lines: string[] = [];
   lines.push('fn map(p: vec3<f32>) -> f32 {');
-  lines.push(`  let room = -sdBox(p, vec3<f32>(${f(bx)}, ${f(by)}, ${f(bz)}));`);
 
-  if (scene.window) {
-    const [wx, wy, wz] = scene.window.position;
-    const [sx, sy, sz] = scene.window.size;
-    lines.push(`  let windowPos = p - vec3<f32>(${f(wx)}, ${f(wy)}, ${f(wz)});`);
-    lines.push(
-      `  let windowCut = sdBox(windowPos, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`,
-    );
-    lines.push('  var d = opSub(room, windowCut);');
+  if (exterior) {
+    // Modo exterior (T-232): suelo plano infinito en y=-by, cielo abierto (sin caja
+    // de cuarto). El cielo es el "miss" del raymarcher, no una superficie.
+    lines.push(`  var d = p.y + ${f(by)};`);
   } else {
-    lines.push('  var d = room;');
+    lines.push(`  let room = -sdBox(p, vec3<f32>(${f(bx)}, ${f(by)}, ${f(bz)}));`);
+    if (scene.window) {
+      const [wx, wy, wz] = scene.window.position;
+      const [sx, sy, sz] = scene.window.size;
+      lines.push(`  let windowPos = p - vec3<f32>(${f(wx)}, ${f(wy)}, ${f(wz)});`);
+      lines.push(
+        `  let windowCut = sdBox(windowPos, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`,
+      );
+      lines.push('  var d = opSub(room, windowCut);');
+    } else {
+      lines.push('  var d = room;');
+    }
   }
 
   scene.objects.forEach((obj, i) => {
@@ -445,9 +465,11 @@ function generateObjectSdf(obj: M13Object, index: number): string {
 
 function generateMaterialFunction(scene: M13Scene): string {
   const [, by] = scene.bounds;
-  const wallsId = scene.walls.concept;
+  const exterior = scene.walls === undefined || scene.ceiling === undefined;
   const floorId = scene.floor.concept;
-  const ceilingId = scene.ceiling.concept;
+  // En exterior no hay paredes/techo; el material por defecto es el del suelo.
+  const wallsId = scene.walls?.concept ?? floorId;
+  const ceilingId = scene.ceiling?.concept ?? floorId;
 
   const lines: string[] = [];
   lines.push('fn material(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {');
@@ -455,10 +477,12 @@ function generateMaterialFunction(scene: M13Scene): string {
   lines.push(`  if (n.y > 0.7 && p.y < -${f(by * 0.83)}) {`);
   lines.push(`    return mat_${floorId}(p, n, u.audioAmp);`);
   lines.push(`  }`);
-  lines.push(`  // Techo (normal hacia abajo)`);
-  lines.push(`  if (n.y < -0.7) {`);
-  lines.push(`    return mat_${ceilingId}(p, n, u.audioAmp);`);
-  lines.push(`  }`);
+  if (!exterior) {
+    lines.push(`  // Techo (normal hacia abajo)`);
+    lines.push(`  if (n.y < -0.7) {`);
+    lines.push(`    return mat_${ceilingId}(p, n, u.audioAmp);`);
+    lines.push(`  }`);
+  }
 
   // objetos: por posición + radio aproximado.
   // B8 (auditoría 06-12): el radio incluye (1) distancia real a la esquina del

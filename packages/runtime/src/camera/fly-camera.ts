@@ -64,6 +64,11 @@ export class FlyCamera {
     this.bounds = bounds;
   }
 
+  /** Velocidad de desplazamiento en m/s (T-231: `cameraSpeed` de la escena). */
+  setSpeed(speed: number): void {
+    this.speed = speed;
+  }
+
   setPosition(pos: Vec3): void {
     this.pos = [...pos];
   }
