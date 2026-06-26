@@ -117,6 +117,21 @@ fn fbm(p: vec3<f32>, octaves: i32) -> f32 {
   }
   return total;
 }
+// fbm NORMALIZADO (rango estable ~[0,1] sin importar el nº de octavas). Lo usa el modo
+// fijo del detalle adaptativo, para que el A/B continuo↔fijo compare DETALLE, no brillo.
+fn fbm_norm(p: vec3<f32>, octaves: i32) -> f32 {
+  var total: f32 = 0.0;
+  var amp: f32 = 0.5;
+  var freq: f32 = 1.0;
+  var ampSum: f32 = 0.0;
+  for (var i = 0; i < octaves; i++) {
+    total = total + amp * noise3(p * freq);
+    ampSum = ampSum + amp;
+    amp = amp * 0.5;
+    freq = freq * 2.0;
+  }
+  return total / max(ampSum, 1e-5);
+}
 // fbm_continuous (Fase 2, Sonido 13 / T-221): el número de octavas es una función
 // CONTINUA del footprint del pixel (cuánto mundo cubre un pixel a esa distancia).
 // Cerca → footprint chico → más octavas (más micro-detalle); lejos → footprint grande
@@ -127,20 +142,24 @@ fn fbm(p: vec3<f32>, octaves: i32) -> f32 {
 // \`footprint\` debe estar en ESE mismo dominio (footprint_mundo * misma escala).
 fn fbm_continuous(p: vec3<f32>, footprint: f32, minOct: f32, cap: f32) -> f32 {
   // Octava más alta resoluble: su longitud de onda (1/2^n) ≈ footprint → n = -log2(footprint).
-  let nOct = clamp(-log2(max(footprint, 1e-5)), minOct, cap);
+  // F5: el piso nunca excede el techo (lo = min(minOct, cap)).
+  let nOct = clamp(-log2(max(footprint, 1e-5)), min(minOct, cap), cap);
   let full = floor(nOct);
   let lastW = smoothstep(0.0, 1.0, nOct - full); // microtono: fade de la octava fraccional
   var total: f32 = 0.0;
   var amp: f32 = 0.5;
   var freq: f32 = 1.0;
+  var ampSum: f32 = 0.0; // F2: normalizar → rango estable, sin deriva de luminancia al acercarse
   let fullI = i32(full);
   for (var i = 0; i < fullI; i++) {
     total = total + amp * noise3(p * freq);
+    ampSum = ampSum + amp;
     amp = amp * 0.5;
     freq = freq * 2.0;
   }
   total = total + amp * lastW * noise3(p * freq);
-  return total;
+  ampSum = ampSum + amp * lastW;
+  return total / max(ampSum, 1e-5);
 }
 // Footprint del pixel a la distancia del punto p (T-222): cuánto mundo cubre un pixel
 // ahí. pixelAngle ≈ 2/resY (el raymarcher usa camRight/camUp unitarios; el fov queda
@@ -154,7 +173,8 @@ fn pixelFootprint(p: vec3<f32>) -> f32 {
 // dominio de \`p\`; \`minOct\` = piso continuo; \`fixedOct\` = octavas del modo fijo.
 fn fbm_detail(p: vec3<f32>, footprint: f32, minOct: f32, fixedOct: i32) -> f32 {
   let cap = u.quality.w;
-  if (cap < 0.0) { return fbm(p, fixedOct); }
+  // Modo fijo usa fbm_norm (mismo rango que el continuo) → el A/B compara DETALLE, no brillo.
+  if (cap < 0.0) { return fbm_norm(p, fixedOct); }
   return fbm_continuous(p, footprint, minOct, cap);
 }
 `;

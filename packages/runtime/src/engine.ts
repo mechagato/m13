@@ -221,7 +221,13 @@ export class M13Engine {
     this.lastLoadInfo = { wgslHash: newHash, reusedPipeline };
 
     if (this.camera) {
-      this.camera.setBounds(boundsForCamera(scene.bounds));
+      // F9: en exterior no hay paredes → no clampar XZ a bounds (sería pared invisible en
+      // pleno campo abierto); solo se mantiene el clamp de altura (no caer bajo el suelo).
+      const exterior = scene.walls === undefined || scene.ceiling === undefined;
+      const camBounds: Vec3 = exterior
+        ? [Math.max(scene.bounds[0], 250), scene.bounds[1] - 0.3, Math.max(scene.bounds[2], 250)]
+        : boundsForCamera(scene.bounds);
+      this.camera.setBounds(camBounds);
       this.camera.reset(scene.spawn);
       // T-231: la escena puede fijar su velocidad de cámara (explanadas grandes).
       if (scene.cameraSpeed !== undefined) this.camera.setSpeed(scene.cameraSpeed);
@@ -266,6 +272,9 @@ export class M13Engine {
   setQuality(q: QualityPreset | Partial<Quality>): Quality {
     const next = typeof q === 'string' ? QUALITY_PRESETS[q] : q;
     this.quality = { ...this.quality, ...next };
+    // octaveCap es MAGNITUD >= 1: el signo de quality.w es interno del toggle de detalle
+    // continuo (negativo = octavas fijas). Clampar evita que 0/negativo invierta el toggle.
+    this.quality.octaveCap = Math.max(1, Math.abs(this.quality.octaveCap));
     return { ...this.quality };
   }
 
@@ -418,12 +427,13 @@ export class M13Engine {
       fogColor: [...scene.ambient.fogColor],
       fogDensity: scene.ambient.fogDensity,
       tint: [...scene.ambient.tint],
-      // .w lleva el octaveCap; su SIGNO es el toggle de detalle continuo (negativo = octavas fijas).
+      // .w lleva el octaveCap; su SIGNO es el toggle de detalle continuo (negativo = octavas
+      // fijas). Magnitud >= 1 para que octaveCap=0 no colapse el toggle (-0 no es < 0).
       quality: [
         this.quality.maxSteps,
         this.quality.shadowSteps,
         this.quality.aoSamples,
-        this.quality.continuousDetail ? this.quality.octaveCap : -this.quality.octaveCap,
+        (this.quality.continuousDetail ? 1 : -1) * Math.max(this.quality.octaveCap, 1),
       ],
       // P4 escribirá las bandas FFT reales; mientras, amplitude en .w (compat)
       audioBands: [0, 0, 0, amp],

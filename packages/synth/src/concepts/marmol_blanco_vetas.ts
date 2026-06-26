@@ -18,7 +18,8 @@ fn mat_marmol_blanco_vetas(p: vec3<f32>, n: vec3<f32>, audioAmp: f32) -> vec3<f3
   // T-224: vetas con detalle continuo (menos shimmer de lejos, más finura de cerca).
   let fp = pixelFootprint(p);
   let vein = fbm_detail(p * vec3<f32>(2.0, 0.5, 2.0), fp * 2.0, 2.0, 4);
-  let v = smoothstep(0.4, 0.55, vein);
+  // Umbral recalibrado al rango normalizado del fbm (vetas definidas, no toda la superficie).
+  let v = smoothstep(0.52, 0.66, vein);
   return mix(vec3<f32>(0.92, 0.91, 0.88), vec3<f32>(0.55, 0.55, 0.58), v * 0.6);
 }
 `,

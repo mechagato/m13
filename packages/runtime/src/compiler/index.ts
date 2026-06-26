@@ -290,7 +290,10 @@ function generateMatParamsStruct(layout: MatParamsLayout): string {
  */
 function generateSceneConstants(scene: M13Scene): string {
   let bg: readonly [number, number, number] = scene.ambient.background;
-  if (scene.sky) {
+  // F10: el cielo solo aplica en exterior (en interior el miss casi nunca se ve y
+  // alteraría el hash silenciosamente). Sin sky/exterior → background tal cual (byte-idéntico).
+  const exterior = scene.walls === undefined || scene.ceiling === undefined;
+  if (scene.sky && exterior) {
     // Cielo de exterior (T-232): por ahora color plano ponderado hacia el cénit.
     // El gradiente per-pixel horizonte→cénit es mejora futura (requiere pasar la
     // dirección del rayo al miss, lo que cambiaría el contrato del shader estático).
@@ -346,7 +349,9 @@ function seedOffset(seed: number): [number, number, number] {
     return s - Math.floor(s);
   };
   const K = 13.0;
-  return [h(seed) * K, h(seed + 1.37) * K, h(seed + 2.71) * K];
+  // F8: cada canal hashea el seed con una transformación independiente (no un delta
+  // pequeño compartido) → ningún par (seedA, eje) colisiona con (seedB, otro eje).
+  return [h(seed * 0.1031) * K, h(seed * 0.0973 + 19.19) * K, h(seed * 0.1107 + 71.71) * K];
 }
 
 function generateMapFunction(scene: M13Scene): string {
