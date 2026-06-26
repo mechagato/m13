@@ -278,6 +278,7 @@ const engine = new M13Engine(canvas, {
     cyEl.textContent = s.cameraPos[1].toFixed(2);
     czEl.textContent = s.cameraPos[2].toFixed(2);
     ampEl.textContent = s.audioAmplitude.toFixed(2);
+    autoResolution(s.fps); // ultra-opt: ajusta la resolución para clavar ~72fps con máxima nitidez
   },
 });
 engine.setQuality(activePreset);
@@ -310,8 +311,34 @@ const DPR_OVERRIDE = (() => {
   return Number.isFinite(q) ? Math.min(2, Math.max(0.3, q)) : null;
 })();
 
+// Resolución dinámica adaptativa (ultra-opt Quest): sin ?dpr override, el scale arranca en
+// el renderScale del preset y SUBE la nitidez mientras el FPS sobre del objetivo, o baja si
+// cae — converge a la máxima resolución que sostiene ~72fps. Desactivado con ?dpr= fijo.
+const FPS_TARGET = 72;
+let dynScale: number | null = DPR_OVERRIDE === null ? engine.getQuality().renderScale : null;
+let fpsAccum = 0;
+let fpsCount = 0;
+
+function autoResolution(fps: number): void {
+  if (dynScale === null || !engineOk) return;
+  fpsAccum += fps;
+  fpsCount++;
+  if (fpsCount < 45) return; // ~0.75s de muestreo antes de ajustar
+  const avg = fpsAccum / fpsCount;
+  fpsAccum = 0;
+  fpsCount = 0;
+  const cap = Math.max(engine.getQuality().renderScale, 1.0); // permite subir sobre el preset
+  let next = dynScale;
+  if (avg > FPS_TARGET + 5 && dynScale < cap) next = Math.min(cap, dynScale + 0.06);
+  else if (avg < FPS_TARGET - 2 && dynScale > 0.5) next = Math.max(0.5, dynScale - 0.1);
+  if (Math.abs(next - dynScale) > 0.001) {
+    dynScale = next;
+    resize();
+  }
+}
+
 function resize(): void {
-  const dprCap = DPR_OVERRIDE ?? engine.getQuality().renderScale;
+  const dprCap = DPR_OVERRIDE ?? dynScale ?? engine.getQuality().renderScale;
   const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = doc.clientWidth || 1;
   const h = doc.clientHeight || 1;

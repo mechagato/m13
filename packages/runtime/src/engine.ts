@@ -56,7 +56,10 @@ export type QualityPreset = 'quest' | 'mobile' | 'desktop' | 'ultra';
 
 export const QUALITY_PRESETS: Record<QualityPreset, Quality> = {
   // Quest 3 standalone: medido 37-48fps a dpr 1 (D-2112) — presupuesto agresivo
-  quest: { maxSteps: 96, shadowSteps: 16, aoSamples: 3, octaveCap: 3, renderScale: 0.7, continuousDetail: true },
+  // Quest re-balanceado (ultra-opt): sombras/AO/pasos más baratos liberan presupuesto
+  // para que la resolución dinámica suba la nitidez manteniendo ~72fps. renderScale es el
+  // PISO inicial; la app lo sube en vivo según el FPS (ver autoResolution en examples).
+  quest: { maxSteps: 78, shadowSteps: 8, aoSamples: 2, octaveCap: 3, renderScale: 0.7, continuousDetail: true },
   mobile: { maxSteps: 112, shadowSteps: 24, aoSamples: 4, octaveCap: 4, renderScale: 1.5, continuousDetail: true },
   // desktop = comportamiento histórico exacto del motor (pre-T-212)
   desktop: { maxSteps: 128, shadowSteps: 32, aoSamples: 5, octaveCap: 5, renderScale: 2, continuousDetail: true },
