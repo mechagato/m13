@@ -2734,3 +2734,38 @@ seguido tal cual. 8 commits, suite corrida tras cada grupo.
 
 ### Verificación final: typecheck 6/6 · **137/137 tests** (124→137: +guardia layout,
 +colisiones WGSL, +LRU×2, +seeds congelados) · lint 0 errors · build + sw-precache OK.
+
+---
+
+## 2026-06-25 — Entrada 029 — Easter eggs permanentes + análisis de material de referencia
+
+**Sesión companion-m13 (orquestador). Dos bloques: encargo personal de Gato + dirección de roadmap.**
+
+### Bloque A — 4 easter eggs permanentes (commit aislado `d4f4ba4`, pusheado)
+Encargo de Gato en `notas.txt` ("con cuidado y amor"). Verificado que ninguno existía. Hechos:
+1. Dedicatoria a **Nora Cristina Torres Morales** (comentario WGSL al inicio de `RAYMARCH_WGSL`,
+   `runtime/src/shaders/raymarch.ts` — "donde la función se vuelve luz"). Firmado `— G.I.G.T.`
+2. `package.json` description → "Continuous 3D format. For Us, NCTM y GGT (kzdr)."
+3. Escena oculta **"para papá"/"para papa"** (tolerante a acento) en `@m13/generator`:
+   luz dorada, madera + piedra volcánica, metadato `dedicated_to`. +test en suite `@m13/mcp`.
+4. `MANIFESTO.md` nuevo en raíz.
+Verificación: typecheck 6/6 · **138/138 tests** (137+1) · build examples OK. El determinismo del
+compiler quedó intacto (la dedicatoria WGSL no movió hashes). `pnpm dev` falla por ENOSPC de inotify
+del sistema (ajeno a los cambios) → smoke por build de producción.
+
+### Bloque B — Material de referencia (ZIP de Gato) analizado y clasificado
+6 HTMLs + animations.jsx + countries.geojson. Decisiones de Gato:
+- **CAD Designer Kit v2** → FlowCAD (+ediciones de Gato). **v1** → descartado.
+- **Globo / Cosmic / Spinners / Chat** → artefactos reutilizables en `ref-claudedesign/artefactos/`
+  (con README). Cosmic pendiente de re-colorear a identidad NeoNodos. Globo = candidato a m13.
+- **Auditoría de capacidades del motor para CAD** (clave): m13 hoy solo hace UNIÓN de primitivas.
+  El WGSL de `opSub` (restar) y `opSmoothUnion` (fillet) **YA existe** (`common.ts:74-83`) pero no
+  está expuesto al formato `.m13`. Faltan: CSG en schema+compiler, mirror, PBR metálico. **CSG NO
+  está en el plan de Fase 2.** Decisión de Gato: **CSG va DESPUÉS de terminar Fase 2.** Cuando se
+  abra, requiere su propio Spec Kit. Repos: motor (CSG+escena `.m13`) en m13; shell CAD en flowcad.
+
+### Memoria + estado
+`.phi` re-sellada (7 fichas, firma verificada): fichas `decisiones`, `estado-vivo`,
+`material-y-artefactos` actualizadas. **Siguiente acción: retomar Fase 2 → T-221** (prototipo
+fbm_continuous + A/B `?s13=on|off`, gate visual de Gato). Sigue pendiente lo de la entrada 028
+(eval LLM :9095, validación visual B7/B8, número FPS Quest).
