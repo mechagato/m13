@@ -602,20 +602,22 @@ function showS13Banner(mode: 'on' | 'off'): void {
     el = document.createElement('div');
     el.id = 's13Banner';
     el.style.cssText =
-      'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;' +
-      'background:rgba(10,12,10,0.86);color:#e8e0d0;font:12px/1.5 "JetBrains Mono",monospace;' +
+      'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;text-align:center;' +
+      'max-width:92vw;background:rgba(10,12,10,0.86);color:#e8e0d0;font:12px/1.6 "JetBrains Mono",monospace;' +
       'padding:8px 14px;border:1px solid #c9a227;border-radius:8px;backdrop-filter:blur(6px)';
     document.body.appendChild(el);
   }
   el.innerHTML =
     'A/B Sonido 13 · modo <b style="color:#c9a227">S13 ' +
     mode.toUpperCase() +
-    '</b> — camina cerca/lejos del monolito · ' +
+    '</b> · ' +
     '<a href="?s13=' +
     other +
     '" style="color:#9ecbff">comparar S13 ' +
     other.toUpperCase() +
-    '</a>';
+    '</a>' +
+    '<br><span style="opacity:.78">click en el visor para entrar · <b>W A S D</b> caminar · mouse mirar · ' +
+    '<b>Espacio/Shift</b> subir·bajar · <b>Esc</b> soltar</span>';
 }
 
 recipeShare.addEventListener('click', () => {
