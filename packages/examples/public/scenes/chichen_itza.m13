@@ -1,22 +1,22 @@
 version: "0.1"
 name: chichen_itza
-description: "El Castillo de Chichén Itzá (Templo de Kukulcán) — 9 cuerpos escalonados con cornisas, templo y escalinata. Showcase del detalle continuo (Sonido 13) en campo abierto."
+description: "El Castillo de Chichén Itzá (Templo de Kukulcán) — 9 cuerpos con cornisas, escalinata de escalones reales con serpientes Kukulcán y templo superior. Showcase del detalle continuo (Sonido 13) en campo abierto."
 bounds: [60, 32, 60]
-spawn: [0, -24, 52]
+spawn: [0, -23.5, 50]
 cameraSpeed: 9
 sky:
-  horizon: [1.15, 0.78, 0.48]
+  horizon: [1.18, 0.79, 0.47]
   zenith: [0.3, 0.46, 0.8]
 ambient:
   background: [0.5, 0.55, 0.72]
   ambientColor: [0.26, 0.23, 0.19]
-  fogColor: [0.85, 0.74, 0.58]
-  fogDensity: 0.013
+  fogColor: [0.86, 0.74, 0.57]
+  fogDensity: 0.012
   tint: [1.08, 0.99, 0.86]
 light:
-  position: [22, 9, 34]
-  color: [1.35, 0.96, 0.58]
-  intensity: 1.85
+  position: [20, 8, 36]
+  color: [1.38, 0.96, 0.56]
+  intensity: 1.9
 floor:
   concept: piedra_volcanica
 objects:
@@ -30,8 +30,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 2
-    position: [0, -27.9, 0]
-    scale: [24.45, 0.28, 24.45]
+    position: [0, -27.87, 0]
+    scale: [24.7, 0.32, 24.7]
   - id: cuerpo1
     kind: round_box
     material: piedra_volcanica
@@ -42,8 +42,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 4
-    position: [0, -25.55, 0]
-    scale: [22.3, 0.28, 22.3]
+    position: [0, -25.52, 0]
+    scale: [22.55, 0.32, 22.55]
   - id: cuerpo2
     kind: round_box
     material: piedra_volcanica
@@ -54,8 +54,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 6
-    position: [0, -23.2, 0]
-    scale: [20.15, 0.28, 20.15]
+    position: [0, -23.17, 0]
+    scale: [20.4, 0.32, 20.4]
   - id: cuerpo3
     kind: round_box
     material: piedra_volcanica
@@ -66,8 +66,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 8
-    position: [0, -20.85, 0]
-    scale: [18, 0.28, 18]
+    position: [0, -20.82, 0]
+    scale: [18.25, 0.32, 18.25]
   - id: cuerpo4
     kind: round_box
     material: piedra_volcanica
@@ -78,8 +78,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 10
-    position: [0, -18.5, 0]
-    scale: [15.85, 0.28, 15.85]
+    position: [0, -18.47, 0]
+    scale: [16.1, 0.32, 16.1]
   - id: cuerpo5
     kind: round_box
     material: piedra_volcanica
@@ -90,8 +90,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 12
-    position: [0, -16.15, 0]
-    scale: [13.7, 0.28, 13.7]
+    position: [0, -16.12, 0]
+    scale: [13.95, 0.32, 13.95]
   - id: cuerpo6
     kind: round_box
     material: piedra_volcanica
@@ -102,8 +102,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 14
-    position: [0, -13.8, 0]
-    scale: [11.55, 0.28, 11.55]
+    position: [0, -13.77, 0]
+    scale: [11.8, 0.32, 11.8]
   - id: cuerpo7
     kind: round_box
     material: piedra_volcanica
@@ -114,8 +114,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 16
-    position: [0, -11.45, 0]
-    scale: [9.4, 0.28, 9.4]
+    position: [0, -11.42, 0]
+    scale: [9.65, 0.32, 9.65]
   - id: cuerpo8
     kind: round_box
     material: piedra_volcanica
@@ -126,8 +126,8 @@ objects:
     kind: round_box
     material: piedra_volcanica
     seed: 18
-    position: [0, -9.1, 0]
-    scale: [7.25, 0.28, 7.25]
+    position: [0, -9.07, 0]
+    scale: [7.5, 0.32, 7.5]
   - id: templo_base
     kind: box
     material: piedra_volcanica
@@ -139,13 +139,13 @@ objects:
     material: piedra_volcanica
     seed: 20
     position: [0, -5.45, 0]
-    scale: [5.1, 0.35, 5.1]
+    scale: [5.2, 0.38, 5.2]
   - id: templo_crest
     kind: box
     material: piedra_volcanica
     seed: 21
-    position: [0, -4.55, -1.2]
-    scale: [4.6, 0.55, 0.5]
+    position: [0, -4.5, -1.2]
+    scale: [4.4, 0.6, 0.5]
   - id: col0
     kind: cylinder
     material: piedra_volcanica
@@ -176,24 +176,137 @@ objects:
     seed: 26
     position: [0, -5.85, 4.3]
     scale: [3.8, 0.4, 0.4]
-  - id: escalinata
+  - id: step0
     kind: box
     material: piedra_volcanica
     seed: 27
-    position: [0, -19.42, 14.25]
-    rotation: [-44.53, 0, 0]
-    scale: [4.2, 0.45, 15.08]
-  - id: alfarda_izq
+    position: [0, -29.24, 24.71]
+    scale: [4.4, 0.76, 0.97]
+  - id: step1
     kind: box
     material: piedra_volcanica
     seed: 28
-    position: [-4.5, -19.12, 14.25]
-    rotation: [-44.53, 0, 0]
-    scale: [0.5, 0.9, 15.08]
-  - id: alfarda_der
+    position: [0, -27.73, 23.14]
+    scale: [4.4, 0.76, 0.97]
+  - id: step2
     kind: box
     material: piedra_volcanica
     seed: 29
-    position: [4.5, -19.12, 14.25]
-    rotation: [-44.53, 0, 0]
-    scale: [0.5, 0.9, 15.08]
+    position: [0, -26.22, 21.57]
+    scale: [4.4, 0.76, 0.97]
+  - id: step3
+    kind: box
+    material: piedra_volcanica
+    seed: 30
+    position: [0, -24.71, 20]
+    scale: [4.4, 0.76, 0.97]
+  - id: step4
+    kind: box
+    material: piedra_volcanica
+    seed: 31
+    position: [0, -23.2, 18.43]
+    scale: [4.4, 0.76, 0.97]
+  - id: step5
+    kind: box
+    material: piedra_volcanica
+    seed: 32
+    position: [0, -21.69, 16.86]
+    scale: [4.4, 0.76, 0.97]
+  - id: step6
+    kind: box
+    material: piedra_volcanica
+    seed: 33
+    position: [0, -20.18, 15.29]
+    scale: [4.4, 0.76, 0.97]
+  - id: step7
+    kind: box
+    material: piedra_volcanica
+    seed: 34
+    position: [0, -18.67, 13.71]
+    scale: [4.4, 0.76, 0.97]
+  - id: step8
+    kind: box
+    material: piedra_volcanica
+    seed: 35
+    position: [0, -17.16, 12.14]
+    scale: [4.4, 0.76, 0.97]
+  - id: step9
+    kind: box
+    material: piedra_volcanica
+    seed: 36
+    position: [0, -15.65, 10.57]
+    scale: [4.4, 0.76, 0.97]
+  - id: step10
+    kind: box
+    material: piedra_volcanica
+    seed: 37
+    position: [0, -14.14, 9]
+    scale: [4.4, 0.76, 0.97]
+  - id: step11
+    kind: box
+    material: piedra_volcanica
+    seed: 38
+    position: [0, -12.63, 7.43]
+    scale: [4.4, 0.76, 0.97]
+  - id: step12
+    kind: box
+    material: piedra_volcanica
+    seed: 39
+    position: [0, -11.12, 5.86]
+    scale: [4.4, 0.76, 0.97]
+  - id: step13
+    kind: box
+    material: piedra_volcanica
+    seed: 40
+    position: [0, -9.61, 4.29]
+    scale: [4.4, 0.76, 0.97]
+  - id: alfarda_izq
+    kind: box
+    material: piedra_volcanica
+    seed: 41
+    position: [-4.8, -18.92, 14.5]
+    rotation: [-43.87, 0, 0]
+    scale: [0.55, 1.1, 15.26]
+  - id: alfarda_der
+    kind: box
+    material: piedra_volcanica
+    seed: 42
+    position: [4.8, -18.92, 14.5]
+    rotation: [-43.87, 0, 0]
+    scale: [0.55, 1.1, 15.26]
+  - id: serpiente_izq_base
+    kind: box
+    material: piedra_volcanica
+    seed: 43
+    position: [-4.8, -29, 26.3]
+    scale: [1, 1, 1.6]
+  - id: serpiente_izq_cabeza
+    kind: round_box
+    material: piedra_volcanica
+    seed: 44
+    position: [-4.8, -28.7, 27.9]
+    scale: [1.2, 1.1, 1]
+  - id: serpiente_izq_hocico
+    kind: box
+    material: piedra_volcanica
+    seed: 45
+    position: [-4.8, -29.3, 28.7]
+    scale: [1, 0.5, 0.7]
+  - id: serpiente_der_base
+    kind: box
+    material: piedra_volcanica
+    seed: 46
+    position: [4.8, -29, 26.3]
+    scale: [1, 1, 1.6]
+  - id: serpiente_der_cabeza
+    kind: round_box
+    material: piedra_volcanica
+    seed: 47
+    position: [4.8, -28.7, 27.9]
+    scale: [1.2, 1.1, 1]
+  - id: serpiente_der_hocico
+    kind: box
+    material: piedra_volcanica
+    seed: 48
+    position: [4.8, -29.3, 28.7]
+    scale: [1, 0.5, 0.7]
