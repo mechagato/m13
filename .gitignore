@@ -21,3 +21,6 @@ next-env.d.ts
 # Build artifacts
 build/
 out/
+
+# Material de referencia: el zip fuente es redundante (extraído en artefactos/)
+ref-claudedesign/*.zip

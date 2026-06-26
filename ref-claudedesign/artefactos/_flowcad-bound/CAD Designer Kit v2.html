@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>CAD Designer Kit v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;overflow:hidden}
+body{font-family:'Space Grotesk',system-ui,sans-serif;font-size:12px;background:var(--bg,#0f0f12);color:var(--fg,#e2e2f0)}
+.app{display:flex;height:100vh;width:100vw;overflow:hidden}
+/* ── Tweaks Panel ── */
+.tp{width:272px;min-width:272px;height:100%;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border);position:relative;z-index:10;flex-shrink:0}
+.tp::before{content:'';position:absolute;left:0;top:0;width:2.5px;height:100%;background:var(--accent);opacity:.75;z-index:1}
+.tp-head{padding:13px 15px 10px;border-bottom:1px solid var(--border)}
+.tp-tag{font:500 8px/1 'JetBrains Mono',monospace;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:4px}
+.tp-title{font:600 15px/1 'Space Grotesk',sans-serif;letter-spacing:-.025em;color:var(--fg);display:block}
+.tp-ver{font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg3);display:block;margin-top:3px}
+.tp-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.tp-scroll::-webkit-scrollbar{width:3px}
+.tp-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+.tp-reset{display:block;width:100%;padding:7px 14px;border:none;background:transparent;color:var(--fg3);font:400 9px/1 'JetBrains Mono',monospace;text-align:left;cursor:pointer;letter-spacing:.06em;border-top:1px solid var(--border)}
+.tp-reset:hover{color:var(--accent)}
+/* ── Tweak Sections ── */
+.ts{border-bottom:1px solid var(--border)}
+.ts-hd{width:100%;display:flex;justify-content:space-between;align-items:center;padding:6px 13px;background:none;border:none;color:var(--fg3);font:500 8.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.ts-hd:hover{color:var(--fg2)}
+.ts-bd{padding:4px 11px 9px;display:flex;flex-direction:column;gap:5px}
+.tr{display:flex;flex-direction:column;gap:2px}
+.tlbl{font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg2)}
+.topts{display:flex;flex-wrap:wrap;gap:2.5px}
+.topt{padding:2px 6px;border-radius:3px;border:1px solid var(--border);background:var(--surface2);color:var(--fg2);font:400 8.5px/1.7 'JetBrains Mono',monospace;cursor:pointer;white-space:nowrap}
+.topt:hover{color:var(--fg);border-color:var(--fg3)}
+.topt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tr-row{flex-direction:row;justify-content:space-between;align-items:center}
+.tog{width:28px;height:15px;border-radius:8px;border:none;cursor:pointer;position:relative;transition:background .15s;flex-shrink:0}
+.tog.on{background:var(--accent)}.tog.off{background:var(--surface3)}
+.tok{position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;top:2px;transition:left .14s;pointer-events:none}
+.tog.on .tok{left:15px}.tog.off .tok{left:2px}
+.sl-wrap{display:flex;align-items:center;gap:5px;flex:1}
+.sl-wrap input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:var(--surface3);border-radius:2px;outline:none;cursor:pointer}
+.sl-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.slv{font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg2);min-width:34px;text-align:right}
+/* ── CAD Shell ── */
+.cad-wrap{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;height:100%}
+.mbar{height:23px;display:flex;align-items:center;padding:0 6px;background:var(--headerBg,var(--surface));border-bottom:1px solid var(--border);flex-shrink:0}
+.mi{padding:0 7px;height:23px;display:flex;align-items:center;color:var(--fg2);font-size:11px;cursor:pointer;border-radius:2px;white-space:nowrap}
+.mi:hover{background:var(--surface2);color:var(--fg)}
+/* ── Ribbon ── */
+.ctb{background:var(--surface);border-bottom:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.tb-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 6px;flex-shrink:0}
+.tb-tab{padding:4px 9px;font:400 8.5px/1 'JetBrains Mono',monospace;cursor:pointer;color:var(--fg2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;letter-spacing:.04em}
+.tb-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tb-groups{display:flex;align-items:stretch;padding:2px 5px;overflow-x:auto;scrollbar-width:none}
+.tb-groups::-webkit-scrollbar{display:none}
+.tg{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--border);padding:2px 7px;gap:1px}
+.tg:last-child{border-right:none}
+.tg-tools{display:flex;flex-wrap:wrap;gap:1.5px;justify-content:center}
+.tg-lbl{font:400 7.5px/1 'JetBrains Mono',monospace;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.tbtn{padding:2px 5px;border:none;background:transparent;color:var(--fg2);border-radius:3px;cursor:pointer;font:400 9px/1 'JetBrains Mono',monospace;white-space:nowrap;min-height:19px;display:flex;align-items:center}
+.tbtn:hover{background:var(--surface2);color:var(--fg)}
+/* ── Workspace ── */
+.ws{flex:1;display:flex;overflow:hidden;min-height:0}
+/* ── Feature Tree ── */
+.ftree{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;width:198px}
+.ph{height:24px;display:flex;align-items:center;padding:0 9px;font:600 8.5px/1 'JetBrains Mono',monospace;color:var(--fg2);border-bottom:1px solid var(--border);background:var(--surface2);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;gap:4px}
+.tree-body{flex:1;overflow-y:auto;padding:2px 0;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.tree-body::-webkit-scrollbar{width:3px}
+.tree-root{padding:4px 8px;font:600 9.5px/1 'JetBrains Mono',monospace;color:var(--fg)}
+.ti{display:flex;align-items:center;gap:3px;height:20px;cursor:pointer;color:var(--fg2);border-left:2px solid transparent;padding-right:6px;user-select:none}
+.ti:hover{background:var(--surface2);color:var(--fg)}
+.ti.sel{background:var(--selection);border-left-color:var(--accent);color:var(--fg)}
+.ti-tog{width:12px;text-align:center;font-size:7.5px;color:var(--fg3);flex-shrink:0}
+.ti-lbl{font:400 9px/1 'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── Viewport ── */
+.vpa{flex:1;position:relative;overflow:hidden;min-width:0;background:#070710}
+.vp-mount{position:absolute;inset:0}
+.vp-hud{position:absolute;inset:0;pointer-events:none}
+.vp-axes{position:absolute;bottom:12px;left:14px}
+.ax-row{display:flex;align-items:center;gap:4px;font:400 8.5px/1 'JetBrains Mono',monospace;line-height:1.7}
+.ax-bar{width:14px;height:2px;border-radius:1px;flex-shrink:0}
+.vp-coord{position:absolute;bottom:12px;right:14px;font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg2)}
+.vp-fps{position:absolute;top:10px;left:12px;font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg3)}
+.vp-cams{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:2.5px;pointer-events:auto}
+.vp-cam-btn{width:38px;height:18px;border-radius:2px;border:1px solid var(--border);background:rgba(0,0,0,.45);color:var(--fg2);font:400 8px/1 'JetBrains Mono',monospace;cursor:pointer;display:flex;align-items:center;justify-content:center;letter-spacing:.04em}
+.vp-cam-btn:hover{background:var(--surface2);color:var(--fg)}
+/* ── Props ── */
+.pp{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;width:218px}
+.pp-scroll{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.pp-scroll::-webkit-scrollbar{width:3px}
+.pg{border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.pg-hd{padding:3px 7px;background:var(--surface2);font:600 8.5px/1 'JetBrains Mono',monospace;color:var(--fg2);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border)}
+.pr{display:flex;justify-content:space-between;align-items:center;padding:2.5px 8px;border-bottom:1px solid var(--border)}
+.pr:last-child{border-bottom:none}
+.pk{font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg3)}
+.pv{font:500 9px/1 'JetBrains Mono',monospace;color:var(--fg)}
+.pswatch{width:10px;height:10px;border-radius:2px;border:1px solid rgba(255,255,255,.18);display:inline-block;flex-shrink:0}
+/* ── Status ── */
+.sbar{height:21px;display:flex;align-items:center;padding:0 10px;background:var(--surface);border-top:1px solid var(--border);font:400 9px/1 'JetBrains Mono',monospace;color:var(--fg2);gap:8px;flex-shrink:0}
+.sbar-r{display:flex;gap:3px;margin-left:auto}
+.chip{padding:1px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;font:400 8.5px/1 'JetBrains Mono',monospace;color:var(--fg2)}
+.chip.hi{background:var(--selection);border-color:var(--accent);color:var(--accent)}
+.chip.ok{background:rgba(40,180,80,.1);border-color:#28b450;color:#28b450}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ══════════════════════════════════════════ DATA ══════════════════════════════════════════ */
+const THEMES={
+  'Dark Carbon':{bg:'#0f0f12',surface:'#181820',surface2:'#21212a',surface3:'#2b2b36',headerBg:'#0c0c0f',border:'#29293a',fg:'#e2e2f0',fg2:'#7d7d9e',fg3:'#4a4a62',accent:'#3d9bff',selection:'rgba(61,155,255,.14)'},
+  'Steel Blue': {bg:'#0b1724',surface:'#0f1f35',surface2:'#152d4a',surface3:'#1c3858',headerBg:'#08101a',border:'#193455',fg:'#cce0ff',fg2:'#5888b8',fg3:'#2e5070',accent:'#4db8ff',selection:'rgba(77,184,255,.14)'},
+  'Titanium':   {bg:'#ededf2',surface:'#ffffff',surface2:'#e5e5ee',surface3:'#d6d6e5',headerBg:'#d3d3dd',border:'#bebece',fg:'#1a1a2c',fg2:'#505078',fg3:'#9090a8',accent:'#0066cc',selection:'rgba(0,102,204,.1)'},
+  'Matrix':     {bg:'#060e07',surface:'#0a170b',surface2:'#0e1e0f',surface3:'#142614',headerBg:'#040a05',border:'#153015',fg:'#88ff99',fg2:'#44aa55',fg3:'#265e28',accent:'#33ff55',selection:'rgba(51,255,85,.11)'},
+  'Onyx':       {bg:'#070707',surface:'#111111',surface2:'#1a1a1a',surface3:'#242424',headerBg:'#050505',border:'#262626',fg:'#e8e8e8',fg2:'#888',fg3:'#555',accent:'#e0a030',selection:'rgba(224,160,48,.13)'},
+  'Blueprint':  {bg:'#001030',surface:'#001848',surface2:'#002060',surface3:'#002878',headerBg:'#000c22',border:'#003090',fg:'#88ccff',fg2:'#4488cc',fg3:'#205888',accent:'#00aaff',selection:'rgba(0,170,255,.14)'},
+};
+const MAT_PRESETS={
+  Aluminum:     {hex:'#b0bec5',r:.38,m:.85},
+  Steel:        {hex:'#78909c',r:.28,m:.92},
+  Titanium:     {hex:'#90a4ae',r:.22,m:.94},
+  'Tool Steel': {hex:'#546e7a',r:.18,m:.96},
+  Brass:        {hex:'#c9a84c',r:.30,m:.86},
+  'Carbon Fiber':{hex:'#202028',r:.52,m:.28},
+  Plastic:      {hex:'#1e6bb8',r:.68,m:.0},
+  'ABS Yellow': {hex:'#f5c400',r:.72,m:.0},
+};
+const ENV_PRESETS={
+  Studio:      {amb:0x8090b0,ambI:.5, sky:0x8090c0,gnd:0x203810,skyI:.3,bg:'#0f0f14'},
+  Outdoor:     {amb:0xfff0d0,ambI:.7, sky:0xaaccff,gnd:0x406020,skyI:.5,bg:'#4a7aaa'},
+  Warehouse:   {amb:0x607070,ambI:.35,sky:0x506070,gnd:0x202820,skyI:.2,bg:'#0e1620'},
+  'Dark Studio':{amb:0x303040,ambI:.15,sky:0x404060,gnd:0x101010,skyI:.1,bg:'#050508'},
+  Neutral:     {amb:0xd0d0d0,ambI:.6, sky:0xdde0ff,gnd:0x306030,skyI:.4,bg:'#e0e0e8'},
+};
+const TOOLS={
+  Part:[
+    {l:'Sketch',   t:['Line','Rect','Circle','Arc','Spline','Offset','Trim','Mirror','Convert','3D Sketch']},
+    {l:'Features', t:['Extrude','Revolve','Sweep','Loft','Boundary','Fillet','Chamfer','Shell','Draft','Rib','Wrap','Deform']},
+    {l:'Pattern',  t:['Linear','Circular','Curve','Table','Fill','Mirror Feat.']},
+    {l:'Ref. Geom',t:['Plane','Axis','Point','Curve','Origin']},
+    {l:'Evaluate', t:['Measure','Mass Props','Check','Zebra','Draft Anal.','Curvature','Thickness','Section Prop.']},
+  ],
+  Assembly:[
+    {l:'Parts',    t:['Insert','New Part','New Assem','Smart Insert','Dissolve','Save Bodies']},
+    {l:'Mates',    t:['Coincident','Concentric','Parallel','Perpendicular','Tangent','Distance','Angle','Width','Path','LimitAngle','Gear','Rack','Cam']},
+    {l:'Layout',   t:['Exploded','Collapse','Animate','Envelope','Smart Explode']},
+    {l:'Evaluate', t:['Interference','Clearance','Alignment','Mass Props','Section','Draft Anal.','Performance']},
+  ],
+  Drawing:[
+    {l:'Views',    t:['Std 3-View','Section','Detail','Broken','Auxiliary','Relative','Named','Model']},
+    {l:'Annotate', t:['SmartDim','Model Items','Note','Surface Finish','GD&T','Datum','Weld Symbol','Balloon','Auto Balloon','Center Mark','Cosmetic Thread']},
+    {l:'Tables',   t:['BOM','Revision','Holes','Weld','Bend','Punch']},
+    {l:'Format',   t:['Edit Sheet','Edit Format','Layer','Line Style','Templates']},
+  ],
+  CAM:[
+    {l:'2D Mill',  t:['Face','Contour','Pocket','2D Adaptive','Drill','Bore','Thread','Engrave','2D Chamfer','Slot']},
+    {l:'3D Mill',  t:['3D Contour','Scallop','Parallel','Radial','Spiral','Morph','Pencil','Horizontal','Steep&Shallow','Adaptive 3D','Raster']},
+    {l:'Turn',     t:['Profile','Groove','Thread','Bore','Face','Part','Reverse']},
+    {l:'Mill-Turn',t:['Rotary','Indexed','Sync','Probe','4-Axis Wrap','5-Axis Swarf']},
+    {l:'Post',     t:['Setup Sheet','Toolpath','Simulate','Verify','Post Process','Cycle Time','NC Code','Nesting','Stock Setup']},
+  ],
+  Simulation:[
+    {l:'Study',    t:['Static','Frequency','Thermal','Drop Test','Fatigue','Nonlinear','Pressure Vessel','Buckling','Topology']},
+    {l:'Setup',    t:['Material','Fixtures','Loads','Mesh','Connections','Contact','Shell Mgr','Thermal Loads','Remote Loads']},
+    {l:'Run',      t:['Run','Adaptive Mesh','P-Adapt','Restart','Parametric Batch','Optimization']},
+    {l:'Results',  t:['Von Mises','Max Shear','Strain','Displacement','FoS','Temperature','Heat Flux','Probe','Design Insight','Report']},
+  ],
+};
+const TREE={
+  Part:[
+    {l:'Annotations',c:[]},{l:'Material <Aluminum>'},
+    {l:'Front Plane'},{l:'Top Plane'},{l:'Right Plane'},{l:'Origin'},
+    {l:'Extrude1 (BasePlate)',c:[{l:'Sketch1'}],id:'BasePlate'},
+    {l:'Extrude2 (BackWall)', c:[{l:'Sketch2'}],id:'BackWall'},
+    {l:'ExtrudeCut (Pocket)', c:[{l:'Sketch3'}],id:'Pocket1'},
+    {l:'Fillet1 (Boss-L)',    c:[],              id:'BossLeft'},
+    {l:'Fillet2 (Boss-R)',    c:[],              id:'BossRight'},
+    {l:'Rib1 (Gusset-L)',     c:[],              id:'LeftGusset'},
+    {l:'Mirror1 (Gusset-R)',  c:[],              id:'RightGusset'},
+    {l:'HoleSeries1 (×4)',    c:[{l:'Sketch4'}]},
+    {l:'Chamfer1'},
+  ],
+  Assembly:[
+    {l:'Mates',c:[]},
+    {l:'BasePlate<1>',   id:'BasePlate'},
+    {l:'BackWall<1>',    id:'BackWall'},
+    {l:'Gusset<1>',      id:'LeftGusset'},
+    {l:'Gusset<2>',      id:'RightGusset'},
+    {l:'Boss<1>',        id:'BossLeft'},
+    {l:'Boss<2>',        id:'BossRight'},
+    {l:'Bolt-M5<1>'},{l:'Bolt-M5<2>'},{l:'Bolt-M5<3>'},{l:'Bolt-M5<4>'},
+  ],
+  CAM:[
+    {l:'Setup1 (Zero: World)',c:[]},
+    {l:'Face1  [Face Mill]',   c:[{l:'Tool: Ø50 Face Mill'},{l:'Feed: 1200mm/min'},{l:'RPM: 2800'},{l:'DoC: 1.0mm'}]},
+    {l:'Pocket1 [Pocket]',     c:[{l:'Tool: Ø8 Flat End Mill'},{l:'Feed: 800mm/min'},{l:'DoC: 0.5mm'}]},
+    {l:'Contour1 [Contour]',   c:[{l:'Tool: Ø6 Flat End Mill'},{l:'Feed: 600mm/min'}]},
+    {l:'Drill1  [Drill ×4]',   c:[{l:'Tool: Ø3.8 Drill'},{l:'Feed: 200mm/min'},{l:'Peck: 3mm'}]},
+    {l:'Bore1   [Bore ×2]',    c:[{l:'Tool: Ø20 Boring Bar'},{l:'Feed: 80mm/min'}]},
+    {l:'Thread1 [Thread]',     c:[{l:'Tool: M4 Tap'},{l:'Pitch: 0.7mm'}]},
+  ],
+};
+TREE.Drawing=TREE.Part; TREE.Simulation=TREE.Part;
+
+const MESH_INFO={
+  BasePlate:   {Vol:'47,500 mm³',SA:'10,200 mm²',BBox:'5 × 0.75 × 4 mm',Faces:'6'},
+  BackWall:    {Vol:'52,200 mm³',SA:'13,600 mm²',BBox:'5 × 2.8 × 0.5 mm',Faces:'6'},
+  Pocket1:     {Vol:'2,900 mm³', SA:'1,850 mm²', BBox:'2.6 × 0.52 × 2.2 mm',Faces:'6'},
+  BossLeft:    {Vol:'1,940 mm³', SA:'1,100 mm²', BBox:'Ø0.84 × 0.35 mm',Faces:'3'},
+  BossRight:   {Vol:'1,940 mm³', SA:'1,100 mm²', BBox:'Ø0.84 × 0.35 mm',Faces:'3'},
+  LeftGusset:  {Vol:'6,800 mm³', SA:'3,200 mm²', BBox:'0.36 × 2.1 × 1.7 mm',Faces:'6'},
+  RightGusset: {Vol:'6,800 mm³', SA:'3,200 mm²', BBox:'0.36 × 2.1 × 1.7 mm',Faces:'6'},
+};
+
+/* ══════════════════════════════════════════ THREE.JS SCENE ══════════════════════════════════ */
+function initScene(mount, onSelect) {
+  const W=mount.clientWidth||800, H=mount.clientHeight||600;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(W,H);
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.localClippingEnabled=true;
+  mount.appendChild(renderer.domElement);
+
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0f0f14);
+
+  const camera=new THREE.PerspectiveCamera(52,W/H,0.05,500);
+  camera.position.set(7.5,6,8);
+
+  const controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.target.set(0,.8,-.5);
+  controls.enableDamping=true; controls.dampingFactor=0.06;
+  controls.update();
+
+  // Lights
+  const hemi=new THREE.HemisphereLight(0x8090c0,0x203810,.35); scene.add(hemi);
+  const keyL=new THREE.DirectionalLight(0xfff4e0,1.15); keyL.position.set(6,10,6);
+  keyL.castShadow=true; keyL.shadow.mapSize.set(2048,2048);
+  keyL.shadow.camera.near=1; keyL.shadow.camera.far=42;
+  ['left','right','top','bottom'].forEach((s,i)=>{keyL.shadow.camera[s]=['-8','8','8','-8'][i]*1;});
+  scene.add(keyL);
+  const fillL=new THREE.DirectionalLight(0xd0e8ff,.45); fillL.position.set(-5,4,2); scene.add(fillL);
+  const rimL=new THREE.DirectionalLight(0xffffff,.28); rimL.position.set(0,5,-8); scene.add(rimL);
+
+  // Ground + grid
+  const groundM=new THREE.MeshStandardMaterial({color:0x080810,roughness:.9,metalness:0});
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),groundM);
+  ground.rotation.x=-Math.PI/2; ground.position.y=-.38; ground.receiveShadow=true; scene.add(ground);
+  const grid=new THREE.GridHelper(30,30,0x18283e,0x0f1828); grid.position.y=-.37; scene.add(grid);
+  const axHelper=new THREE.AxesHelper(1.8); axHelper.position.set(-6.5,-.35,-5); scene.add(axHelper);
+
+  // Section plane
+  const sPlane=new THREE.Plane(new THREE.Vector3(0,-1,0),20);
+
+  // Materials
+  const mkM=(hex,r,m)=>new THREE.MeshStandardMaterial({color:new THREE.Color(hex),roughness:r,metalness:m,clippingPlanes:[],clipShadows:true});
+  const mainM=mkM('#b0bec5',.38,.85);
+  const pocketM=mkM('#677888',.45,.72);
+  const darkM=mkM('#060c12',.15,.5);
+
+  const allMeshes=[],mainMeshes=[],selectable=[],byName={};
+  const addM=(geo,mat,name,px=0,py=0,pz=0,rx=0,ry=0,rz=0,ex=[0,0,0])=>{
+    const m=new THREE.Mesh(geo,mat.clone());
+    m.position.set(px,py,pz); m.rotation.set(rx,ry,rz);
+    m.castShadow=true; m.receiveShadow=true;
+    m.userData={name,homePos:new THREE.Vector3(px,py,pz),explodeDir:new THREE.Vector3(...ex)};
+    scene.add(m); allMeshes.push(m);
+    if(name){byName[name]=m;selectable.push(m);}
+    // Edge lines as child
+    if(name&&!name.startsWith('H')&&name!=='Pocket1'){
+      const eg=new THREE.EdgesGeometry(geo,20);
+      const el=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0x4dabff,opacity:.65,transparent:true}));
+      el.visible=false; el.userData.isEdge=true; m.add(el);
+    }
+    return m;
+  };
+
+  // ── MODEL ──
+  addM(new THREE.BoxGeometry(5,.75,4),mainM,'BasePlate',0,0,0,0,0,0,[0,-.55,0]);
+  addM(new THREE.BoxGeometry(2.6,.55,2.2),pocketM,'Pocket1',.1,.37,.1,0,0,0,[0,.4,0]);
+  addM(new THREE.BoxGeometry(5,2.8,.5),mainM,'BackWall',0,1,-2,0,0,0,[0,.15,-1]);
+  addM(new THREE.BoxGeometry(.36,2.1,1.7),mainM,'LeftGusset',-2.08,.3,-1.35,-Math.PI*.28,0,0,[-.7,0,0]);
+  addM(new THREE.BoxGeometry(.36,2.1,1.7),mainM,'RightGusset',2.08,.3,-1.35,-Math.PI*.28,0,0,[.7,0,0]);
+  addM(new THREE.CylinderGeometry(.42,.42,.35,32),mainM,'BossLeft',-1.5,1.5,-1.78,Math.PI/2,0,0,[-.4,.2,-.5]);
+  addM(new THREE.CylinderGeometry(.42,.42,.35,32),mainM,'BossRight',1.5,1.5,-1.78,Math.PI/2,0,0,[.4,.2,-.5]);
+  addM(new THREE.CylinderGeometry(.21,.21,.6,20),darkM,null,-1.5,1.5,-1.78,Math.PI/2,0,0,[-.4,.2,-.5]);
+  addM(new THREE.CylinderGeometry(.21,.21,.6,20),darkM,null,1.5,1.5,-1.78,Math.PI/2,0,0,[.4,.2,-.5]);
+  [[-1.85,-.3,-1.45],[1.85,-.3,-1.45],[-1.85,-.3,1.45],[1.85,-.3,1.45]].forEach(([x,y,z],i)=>{
+    addM(new THREE.CylinderGeometry(.19,.19,.85,20),darkM,`Hole${i+1}`,x,y,z,0,0,0,[0,-.45,0]);
+    // counterbore ring
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.19,.30,20),new THREE.MeshStandardMaterial({color:0x1a2530,roughness:.2,metalness:.6,side:THREE.DoubleSide}));
+    ring.position.set(x,.03,z); ring.rotation.x=-Math.PI/2; scene.add(ring);
+  });
+
+  mainMeshes.push(...allMeshes.filter(m=>m.userData.name&&!m.userData.name.startsWith('H')&&m.userData.name!=='Pocket1'));
+
+  // ── CAM TOOLPATH ──
+  const camG=new THREE.Group(); scene.add(camG); camG.visible=false;
+  const pathC=[0x00ccff,0x00ff88,0xffaa00];
+  [[1.15,.95],[.75,.62],[.38,.30]].forEach(([w,d],i)=>{
+    const pts=[];
+    for(let j=0;j<=50;j++){const t=j/50;let x,z;
+      if(t<.25){x=-w+8*w*t;z=-d}else if(t<.5){x=w;z=-d+8*d*(t-.25)}
+      else if(t<.75){x=w-8*w*(t-.5);z=d}else{x=-w;z=d-8*d*(t-.75)}
+      pts.push(new THREE.Vector3(x+.1,.65,z+.1));
+    }
+    camG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:pathC[i],opacity:.85,transparent:true})));
+  });
+  // Drill paths
+  [[-1.85,1.2,-1.45],[1.85,1.2,-1.45],[-1.85,1.2,1.45],[1.85,1.2,1.45]].forEach(([x,y,z])=>{
+    const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,y,z),new THREE.Vector3(x,.37,z)]);
+    camG.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0xff4444,opacity:.8,transparent:true})));
+  });
+  // Contour path
+  const cpts=[];for(let i=0;i<=50;i++){const t=i/50;let x,z;
+    if(t<.25){x=-2.45+9.8*t;z=-1.88}else if(t<.5){x=2.45;z=-1.88+7.52*(t-.25)}
+    else if(t<.75){x=2.45-9.8*(t-.5);z=1.88}else{x=-2.45;z=1.88-7.52*(t-.75)}
+    cpts.push(new THREE.Vector3(x,.42,z));
+  }
+  camG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cpts),new THREE.LineBasicMaterial({color:0xaa88ff,opacity:.9,transparent:true})));
+  // Bore path on back wall
+  [[-1.5,1.5,-1.78],[1.5,1.5,-1.78]].forEach(([x,y,z])=>{
+    const bpts=[new THREE.Vector3(x,y,z-.5),new THREE.Vector3(x,y,z+.5)];
+    camG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bpts),new THREE.LineBasicMaterial({color:0x44eeff,opacity:.7,transparent:true})));
+  });
+  // Tool (end mill)
+  const toolG=new THREE.Group();
+  const shankM=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,16),new THREE.MeshStandardMaterial({color:0x888,metalness:.9,roughness:.2}));
+  const fluteM=new THREE.Mesh(new THREE.CylinderGeometry(.055,.085,.22,12),new THREE.MeshStandardMaterial({color:0xffdd00,metalness:.9,roughness:.15}));
+  shankM.position.y=.25; fluteM.position.y=-.11;
+  toolG.add(shankM); toolG.add(fluteM); toolG.position.set(-1.15,.98,.1);
+  camG.add(toolG);
+
+  // Pocket pts for tool animation
+  const pPts=[];
+  for(let j=0;j<=50;j++){const t=j/50;let x,z;
+    if(t<.25){x=-1.15+8*1.15*t;z=-.95}else if(t<.5){x=1.15;z=-.95+8*.95*(t-.25)}
+    else if(t<.75){x=1.15-8*1.15*(t-.5);z=.95}else{x=-1.15;z=.95-8*.95*(t-.75)}
+    pPts.push(new THREE.Vector3(x+.1,.65,z+.1));
+  }
+
+  // Raycaster for mesh selection
+  const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
+  renderer.domElement.addEventListener('click',e=>{
+    if(e.button!==0||controls.sphericalDelta.theta!==0) return;
+    const rect=renderer.domElement.getBoundingClientRect();
+    mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+    ray.setFromCamera(mouse,camera);
+    const hits=ray.intersectObjects(selectable);
+    if(hits.length>0&&hits[0].object.userData.name) onSelect(hits[0].object.userData.name);
+  });
+
+  // Animation loop
+  let rafId,simT=0,camSim=false,selMesh=null;
+  const loop=()=>{
+    rafId=requestAnimationFrame(loop);
+    controls.update();
+    if(camSim&&camG.visible){
+      simT=(simT+.005)%1;
+      const idx=Math.floor(simT*(pPts.length-1));
+      const p=pPts[idx];
+      toolG.position.set(p.x,p.y+.32,p.z);
+      shankM.rotation.y+=.12;
+    }
+    renderer.render(scene,camera);
+  };
+  loop();
+
+  const ro=new ResizeObserver(()=>{
+    const w=mount.clientWidth,h=mount.clientHeight;
+    if(!w||!h)return;
+    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+  });
+  ro.observe(mount);
+
+  // ── PUBLIC API ──
+  return {
+    setMaterial(preset,roughPct,metPct){
+      const p=MAT_PRESETS[preset]||MAT_PRESETS.Aluminum;
+      const r=roughPct!=null?roughPct/100:p.r;
+      const m=metPct!=null?metPct/100:p.m;
+      const c=new THREE.Color(p.hex);
+      mainMeshes.forEach(mesh=>{mesh.material.color.set(c);mesh.material.roughness=r;mesh.material.metalness=m;mesh.material.transparent=false;mesh.material.opacity=1;mesh.material.wireframe=false;});
+    },
+    setRenderMode(mode){
+      const isEdge=mode==='Edges';
+      allMeshes.forEach(m=>{
+        m.traverse(ch=>{if(ch.userData.isEdge)ch.visible=isEdge;});
+        const isDark=!m.userData.name||m.userData.name.startsWith('H')||m.userData.name==='Pocket1';
+        const mt=m.material; mt.depthWrite=true;
+        switch(mode){
+          case 'Wireframe': mt.wireframe=true;mt.transparent=false;mt.opacity=1;break;
+          case 'X-Ray':     mt.wireframe=false;mt.transparent=true;mt.opacity=isDark?.04:.2;mt.depthWrite=false;break;
+          case 'Clay':      mt.wireframe=false;mt.transparent=false;mt.opacity=1;mt.color.set(isDark?0x2a1e18:0xe8d4c0);mt.roughness=.96;mt.metalness=0;mt.emissive.set(0);break;
+          case 'Thermal':   mt.wireframe=false;mt.transparent=false;mt.opacity=1;
+            const hc=new THREE.Color().setHSL(.7-(m.position.y+.4)/5*.7,1,.5);
+            mt.color.copy(hc);mt.emissive.copy(hc).multiplyScalar(.14);mt.roughness=.85;mt.metalness=0;break;
+          default:          mt.wireframe=false;mt.transparent=false;mt.opacity=1;mt.depthWrite=true;mt.emissive.set(selMesh===m?0x1a3870:0);
+        }
+      });
+    },
+    setSection(enabled,pos){
+      const c=enabled?(pos/100)*5.5-1.2:20;
+      sPlane.constant=c;
+      allMeshes.forEach(m=>{m.material.clippingPlanes=enabled?[sPlane]:[];});
+    },
+    setExplode(dist){
+      allMeshes.forEach(m=>{
+        m.position.set(m.userData.homePos.x+m.userData.explodeDir.x*dist,m.userData.homePos.y+m.userData.explodeDir.y*dist,m.userData.homePos.z+m.userData.explodeDir.z*dist);
+      });
+    },
+    showToolpaths(v){camG.visible=v;},
+    setCamSim(v){camSim=v;},
+    setGrid(v){grid.visible=v;},
+    setAxes(v){axHelper.visible=v;},
+    setGround(v){ground.visible=v;},
+    setEnvironment(name){
+      const e=ENV_PRESETS[name]||ENV_PRESETS.Studio;
+      scene.background=new THREE.Color(e.bg);
+      hemi.color.set(e.sky);hemi.groundColor.set(e.gnd);hemi.intensity=e.skyI;
+      fillL.intensity=e.ambI/2;
+    },
+    setCamPreset(p){
+      const pos={Perspective:[7.5,6,8,0,.8,-.5],Top:[0,14,.001,0,0,-.5],Front:[0,2.5,12,0,1.5,-.5],Right:[12,2.5,-.5,0,1.5,-.5],Iso:[6.5,6.5,6.5,0,.8,-.5],'3/4 Back':[-7.5,6,-7.5,0,.8,-.5]}[p]||[7.5,6,8,0,.8,-.5];
+      camera.position.set(pos[0],pos[1],pos[2]);
+      controls.target.set(pos[3],pos[4],pos[5]);
+      controls.update();
+    },
+    selectMesh(name){
+      if(selMesh){selMesh.material.emissive&&selMesh.material.emissive.set(0);}
+      selMesh=byName[name];
+      if(selMesh)selMesh.material.emissive&&selMesh.material.emissive.set(0x1a3870);
+    },
+    dispose(){cancelAnimationFrame(rafId);ro.disconnect();controls.dispose();renderer.dispose();if(mount.contains(renderer.domElement))mount.removeChild(renderer.domElement);}
+  };
+}
+
+/* ══════════════════════════════════════════ COMPONENTS ══════════════════════════════════════ */
+const Sec=({t,ch=true,children})=>{const[o,sO]=useState(ch);return<div className="ts"><button className="ts-hd" onClick={()=>sO(!o)}><span>{t}</span><span>{o?'▾':'▸'}</span></button>{o&&<div className="ts-bd">{children}</div>}</div>;};
+const Radio=({lbl,opts,val,set})=><div className="tr"><span className="tlbl">{lbl}</span><div className="topts">{opts.map(o=><button key={o} className={`topt${val===o?' on':''}`} onClick={()=>set(o)}>{o}</button>)}</div></div>;
+const Tog=({lbl,val,set})=><div className="tr tr-row"><span className="tlbl">{lbl}</span><button className={`tog ${val?'on':'off'}`} onClick={()=>set(!val)}><span className="tok"/></button></div>;
+const Sld=({lbl,min,max,step=1,val,set,unit=''})=><div className="tr tr-row"><span className="tlbl">{lbl}</span><div className="sl-wrap"><input type="range" min={min} max={max} step={step} value={val} onChange={e=>set(+e.target.value)}/><span className="slv">{val}{unit}</span></div></div>;
+
+const TweaksPanel=({c,s,reset})=>(
+  <div className="tp">
+    <div className="tp-head">
+      <span className="tp-tag">Constructor Kit</span>
+      <span className="tp-title">CAD / CAM / Sim</span>
+      <span className="tp-ver">Three.js · PBR · Clipping · CAM</span>
+    </div>
+    <div className="tp-scroll">
+      <Sec t="THEME"><Radio lbl="Theme" opts={Object.keys(THEMES)} val={c.theme} set={v=>s('theme',v)}/></Sec>
+      <Sec t="RENDER">
+        <Radio lbl="Mode"        opts={['Shaded','Wireframe','X-Ray','Clay','Edges','Thermal']} val={c.renderMode} set={v=>s('renderMode',v)}/>
+        <Radio lbl="Material"    opts={Object.keys(MAT_PRESETS)}                                val={c.material}   set={v=>s('material',v)}/>
+        <Sld   lbl="Roughness"   min={0} max={100} val={c.roughness} set={v=>s('roughness',v)} unit="%"/>
+        <Sld   lbl="Metalness"   min={0} max={100} val={c.metalness} set={v=>s('metalness',v)} unit="%"/>
+        <Radio lbl="Environment" opts={Object.keys(ENV_PRESETS)}                                val={c.env3d}      set={v=>s('env3d',v)}/>
+        <Tog   lbl="Shadows"     val={c.shadows}   set={v=>s('shadows',v)}/>
+      </Sec>
+      <Sec t="MODEL">
+        <Tog lbl="Section View"  val={c.sectionOn}  set={v=>s('sectionOn',v)}/>
+        {c.sectionOn&&<Sld lbl="Cut Position" min={0} max={100} val={c.sectionPos} set={v=>s('sectionPos',v)} unit="%"/>}
+        <Tog lbl="Explode View"  val={c.explodeOn}  set={v=>s('explodeOn',v)}/>
+        {c.explodeOn&&<Sld lbl="Explode Dist" min={0} max={28} step={.5} val={c.explodeDist} set={v=>s('explodeDist',v)}/>}
+      </Sec>
+      <Sec t="CAM">
+        <Tog lbl="Show Toolpaths" val={c.camPaths} set={v=>s('camPaths',v)}/>
+        <Tog lbl="Simulate Tool"  val={c.camSim}   set={v=>s('camSim',v)}/>
+        <Radio lbl="Path Set" opts={['Contour','Pocket','Drill','All']} val={c.camSet} set={v=>s('camSet',v)}/>
+      </Sec>
+      <Sec t="CAMERA">
+        <Radio lbl="View" opts={['Perspective','Top','Front','Right','Iso','3/4 Back']} val={c.camView} set={v=>s('camView',v)}/>
+        <Tog lbl="Grid"    val={c.grid}  set={v=>s('grid',v)}/>
+        <Tog lbl="Axes"    val={c.axes}  set={v=>s('axes',v)}/>
+        <Tog lbl="Ground"  val={c.gnd}   set={v=>s('gnd',v)}/>
+      </Sec>
+      <Sec t="INTERFACE" ch={false}>
+        <Tog lbl="Menu Bar"   val={c.menuBar}   set={v=>s('menuBar',v)}/>
+        <Tog lbl="Status Bar" val={c.statusBar} set={v=>s('statusBar',v)}/>
+        <Tog lbl="Tree Panel" val={c.treeOn}    set={v=>s('treeOn',v)}/>
+        <Tog lbl="Props Panel"val={c.propsOn}   set={v=>s('propsOn',v)}/>
+      </Sec>
+    </div>
+    <button className="tp-reset" onClick={reset}>↺  Reset all settings</button>
+  </div>
+);
+
+const TreeNode=({item,depth=0,sel,onSel})=>{
+  const[open,sO]=useState(true);
+  const hasC=item.c&&item.c.length>0;
+  return<>
+    <div className={`ti${sel===item.id?' sel':''}`} style={{paddingLeft:6+depth*11}}
+         onClick={()=>{if(hasC)sO(!open);if(item.id)onSel(item.id);}}>
+      <span className="ti-tog">{hasC?(open?'▾':'▸'):'·'}</span>
+      <span className="ti-lbl">{item.l}</span>
+    </div>
+    {hasC&&open&&item.c.map((ch,i)=><TreeNode key={i} item={ch} depth={depth+1} sel={sel} onSel={onSel}/>)}
+  </>;
+};
+
+const FeatureTree=({env,sel,onSel})=>(
+  <div className="ftree">
+    <div className="ph">⊞ {env} Mgr</div>
+    <div className="tree-body">
+      <div className="tree-root">▸ {env==='Assembly'?'Assem1':env==='CAM'?'Setup1':'Part1'}</div>
+      {(TREE[env]||TREE.Part).map((it,i)=><TreeNode key={i} item={it} sel={sel} onSel={onSel}/>)}
+    </div>
+  </div>
+);
+
+const PropsPanel=({sel,material,renderMode})=>{
+  const mi=MESH_INFO[sel]||{};
+  const mp=MAT_PRESETS[material]||MAT_PRESETS.Aluminum;
+  return<div className="pp">
+    <div className="ph">Properties</div>
+    <div className="pp-scroll">
+      <div className="pg">
+        <div className="pg-hd">Selection</div>
+        <div className="pr"><span className="pk">Name</span><span className="pv">{sel||'—'}</span></div>
+        <div className="pr"><span className="pk">Type</span><span className="pv">{sel?'Solid Body':'—'}</span></div>
+        {mi.Vol&&<div className="pr"><span className="pk">Volume</span><span className="pv">{mi.Vol}</span></div>}
+        {mi.SA&&<div className="pr"><span className="pk">Surf. Area</span><span className="pv">{mi.SA}</span></div>}
+        {mi.BBox&&<div className="pr"><span className="pk">Bound. Box</span><span className="pv">{mi.BBox}</span></div>}
+        {mi.Faces&&<div className="pr"><span className="pk">Faces</span><span className="pv">{mi.Faces}</span></div>}
+      </div>
+      <div className="pg">
+        <div className="pg-hd">Material</div>
+        <div className="pr"><span className="pk">Preset</span><span className="pv">{material}</span></div>
+        <div className="pr"><span className="pk">Color</span><span className="pv" style={{display:'flex',alignItems:'center',gap:4}}><span className="pswatch" style={{background:mp.hex}}/>{mp.hex}</span></div>
+        <div className="pr"><span className="pk">Roughness</span><span className="pv">{Math.round(mp.r*100)}%</span></div>
+        <div className="pr"><span className="pk">Metalness</span><span className="pv">{Math.round(mp.m*100)}%</span></div>
+      </div>
+      <div className="pg">
+        <div className="pg-hd">Render Info</div>
+        <div className="pr"><span className="pk">Mode</span><span className="pv">{renderMode}</span></div>
+        <div className="pr"><span className="pk">Shading</span><span className="pv">PBR / Std</span></div>
+        <div className="pr"><span className="pk">Shadows</span><span className="pv">PCFSoft</span></div>
+      </div>
+    </div>
+  </div>;
+};
+
+const Toolbar=({env,setEnv})=>{
+  const ENVS=['Part','Assembly','Drawing','CAM','Simulation'];
+  const grps=TOOLS[env]||TOOLS.Part;
+  return<div className="ctb">
+    <div className="tb-tabs">{ENVS.map(e=><div key={e} className={`tb-tab${e===env?' on':''}`} onClick={()=>setEnv(e)}>{e}</div>)}</div>
+    <div className="tb-groups">
+      {grps.map(g=><div key={g.l} className="tg">
+        <div className="tg-tools">{g.t.map(t=><button key={t} className="tbtn" title={t}>{t}</button>)}</div>
+        <div className="tg-lbl">{g.l}</div>
+      </div>)}
+    </div>
+  </div>;
+};
+
+const CAM_VIEWS=['Perspective','Top','Front','Right','Iso'];
+
+const Viewport3D=({c,onSelect,scRef})=>{
+  const mountRef=useRef(null);
+
+  useEffect(()=>{
+    if(!mountRef.current)return;
+    const sc=initScene(mountRef.current,onSelect);
+    scRef.current=sc;
+    // Apply initial config
+    sc.setMaterial(c.material,c.roughness,c.metalness);
+    return()=>sc.dispose();
+  },[]);
+
+  useEffect(()=>{scRef.current?.setMaterial(c.material,c.roughness,c.metalness);},[c.material,c.roughness,c.metalness]);
+  useEffect(()=>{scRef.current?.setRenderMode(c.renderMode);},[c.renderMode]);
+  useEffect(()=>{scRef.current?.setSection(c.sectionOn,c.sectionPos);},[c.sectionOn,c.sectionPos]);
+  useEffect(()=>{scRef.current?.setExplode(c.explodeOn?c.explodeDist:0);},[c.explodeOn,c.explodeDist]);
+  useEffect(()=>{scRef.current?.showToolpaths(c.camPaths);},[c.camPaths]);
+  useEffect(()=>{scRef.current?.setCamSim(c.camSim);},[c.camSim]);
+  useEffect(()=>{scRef.current?.setGrid(c.grid);},[c.grid]);
+  useEffect(()=>{scRef.current?.setAxes(c.axes);},[c.axes]);
+  useEffect(()=>{scRef.current?.setGround(c.gnd);},[c.gnd]);
+  useEffect(()=>{scRef.current?.setEnvironment(c.env3d);},[c.env3d]);
+  useEffect(()=>{scRef.current?.setCamPreset(c.camView);},[c.camView]);
+
+  return<div className="vpa">
+    <div ref={mountRef} className="vp-mount"/>
+    <div className="vp-hud">
+      {c.axes&&<div className="vp-axes">
+        {[['#ff5566','X'],['#44dd77','Y'],['#4488ff','Z']].map(([cl,ax])=>
+          <div key={ax} className="ax-row"><div className="ax-bar" style={{background:cl}}/><span style={{color:cl,font:'400 8.5px/1 JetBrains Mono,mono'}}>{ax}</span></div>)}
+      </div>}
+      {c.camPaths&&<div style={{position:'absolute',top:12,left:12,font:'400 9px/1 JetBrains Mono,mono',color:'rgba(255,255,255,.45)'}}>
+        <div>─ Contour</div><div style={{color:'#0cf'}}>─ Pocket</div><div style={{color:'#0f8'}}>─ Roughing</div><div style={{color:'#fa0'}}>─ Finishing</div><div style={{color:'#f44'}}>─ Drill</div>
+      </div>}
+    </div>
+  </div>;
+};
+
+/* ═══════════════════════════════════════════ APP ════════════════════════════════════════════ */
+const DEF={
+  theme:'Dark Carbon',renderMode:'Shaded',material:'Aluminum',roughness:38,metalness:85,
+  env3d:'Studio',shadows:true,
+  sectionOn:false,sectionPos:50,explodeOn:false,explodeDist:0,
+  camPaths:false,camSim:false,camSet:'All',
+  camView:'Perspective',grid:true,axes:true,gnd:true,
+  env:'Part',menuBar:true,statusBar:true,treeOn:true,propsOn:true,
+};
+
+const App=()=>{
+  const [c,setC]=useState(DEF);
+  const [sel,setSel]=useState(null);
+  const scRef=useRef(null);
+  const s=useCallback((k,v)=>setC(p=>({...p,[k]:v})),[]);
+
+  const t=THEMES[c.theme]||THEMES['Dark Carbon'];
+  useEffect(()=>{
+    const r=document.documentElement;
+    Object.entries(t).forEach(([k,v])=>r.style.setProperty(`--${k}`,v));
+  },[t]);
+
+  const handleSelect=useCallback(name=>{setSel(name);scRef.current?.selectMesh(name);},[]);
+  const handleTreeSel=useCallback(name=>{setSel(name);scRef.current?.selectMesh(name);},[]);
+
+  return<div className="app">
+    <TweaksPanel c={c} s={s} reset={()=>setC(DEF)}/>
+    <div className="cad-wrap">
+      {c.menuBar&&<div className="mbar">
+        {['File','Edit','View','Insert','Tools','Simulate','Window','?'].map(m=><div key={m} className="mi">{m}</div>)}
+        <div style={{flex:1}}/>
+        <div className="mi" style={{color:'var(--accent)',fontSize:10}}>Part1.sldprt</div>
+      </div>}
+      <Toolbar env={c.env} setEnv={v=>s('env',v)}/>
+      <div className="ws">
+        {c.treeOn&&<FeatureTree env={c.env} sel={sel} onSel={handleTreeSel}/>}
+        <Viewport3D c={c} onSelect={handleSelect} scRef={scRef}/>
+        {c.propsOn&&<PropsPanel sel={sel} material={c.material} renderMode={c.renderMode}/>}
+      </div>
+      {c.statusBar&&<div className="sbar">
+        <span>Ready</span>
+        <span style={{color:'var(--fg3)'}}>·</span>
+        <span>{sel?`Selected: ${sel}`:'Click model or tree to select'}</span>
+        <div className="sbar-r">
+          {c.sectionOn&&<span className="chip warn">SECTION</span>}
+          {c.explodeOn&&<span className="chip warn">EXPLODE</span>}
+          {c.camPaths&&<span className="chip ok">CAM</span>}
+          <span className="chip hi">{c.env}</span>
+          <span className="chip">{c.renderMode}</span>
+          <span className="chip">mm</span>
+          <span className="chip">1:1</span>
+        </div>
+      </div>}
+    </div>
+  </div>;
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

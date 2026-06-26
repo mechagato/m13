@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Globo Interactivo — Ultra Realista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #03060f;
+    --ink: #eaf2ff;
+    --muted: #8fa3c8;
+    --accent: #57d3ff;
+    --accent2: #7c5cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  #globeViz { position: fixed; inset: 0; z-index: 1; }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    position: fixed; z-index: 5; pointer-events: none;
+    user-select: none;
+  }
+  .hud.top-left {
+    top: 26px; left: 28px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand .dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #aef3ff, var(--accent));
+    box-shadow: 0 0 14px var(--accent), 0 0 30px rgba(87,211,255,.5);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.55;transform:scale(.82)} }
+  .brand h1 {
+    font-size: 15px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .brand h1 span { color: var(--muted); font-weight: 400; }
+  .sub {
+    margin-top: 6px; margin-left: 23px;
+    font-size: 12px; color: var(--muted); letter-spacing: .04em;
+  }
+
+  .legend {
+    position: fixed; z-index: 5; left: 28px; bottom: 26px;
+    display: flex; flex-direction: column; gap: 10px;
+    pointer-events: none; user-select: none;
+  }
+  .legend .row {
+    display: flex; align-items: center; gap: 11px;
+    font-size: 12.5px; color: var(--muted); letter-spacing: .02em;
+  }
+  .legend .key {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 26px; padding: 0 7px;
+    border: 1px solid rgba(143,163,200,.32); border-radius: 7px;
+    background: rgba(143,163,200,.06);
+    color: var(--ink); font-size: 11px; font-weight: 500;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .legend .key.wide { min-width: 58px; }
+
+  .readout {
+    position: fixed; z-index: 5; right: 28px; bottom: 26px;
+    text-align: right; pointer-events: none; user-select: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .readout .country {
+    font-size: 19px; font-weight: 600; letter-spacing: .01em;
+    min-height: 24px; color: var(--ink);
+    text-shadow: 0 2px 18px rgba(0,0,0,.6);
+  }
+  .readout .coords {
+    margin-top: 5px; font-size: 11.5px; color: var(--muted); letter-spacing: .06em;
+  }
+
+  /* country tooltip from globe.gl */
+  .scene-tooltip { pointer-events: none; }
+  .ctip {
+    background: rgba(8,14,28,.86);
+    border: 1px solid rgba(120,160,255,.35);
+    backdrop-filter: blur(8px);
+    padding: 7px 12px; border-radius: 999px;
+    font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500;
+    color: #eaf2ff; letter-spacing: .02em; white-space: nowrap;
+    box-shadow: 0 8px 30px rgba(0,0,0,.55), 0 0 0 1px rgba(87,211,255,.12);
+  }
+  .ctip i { color: var(--accent); font-style: normal; margin-right: 7px; }
+
+  /* ---------- LOADER ---------- */
+  #loader {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 30px;
+    background:
+      radial-gradient(1200px 800px at 50% 42%, rgba(20,40,90,.45), transparent 70%),
+      #03060f;
+    transition: opacity .9s ease, visibility .9s ease;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+
+  .loader-stage {
+    position: relative;
+    width: 320px; height: 320px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* whirl rings */
+  .whirl {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .whirl.w1 {
+    background: conic-gradient(from 0deg,
+      transparent 0deg, rgba(87,211,255,.0) 40deg,
+      rgba(87,211,255,.55) 120deg, rgba(124,92,255,.0) 200deg,
+      transparent 360deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 60%, #000 61%, #000 70%, transparent 71%);
+            mask: radial-gradient(closest-side, transparent 60%, #000 61%, #000 70%, transparent 71%);
+    animation: spin 2.6s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(87,211,255,.5));
+  }
+  .whirl.w2 {
+    background: conic-gradient(from 180deg,
+      transparent 0deg, rgba(124,92,255,.5) 90deg,
+      transparent 180deg, rgba(174,243,255,.3) 270deg, transparent 360deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 72%, #000 73%, #000 78%, transparent 79%);
+            mask: radial-gradient(closest-side, transparent 72%, #000 73%, #000 78%, transparent 79%);
+    animation: spinrev 4.2s linear infinite;
+  }
+  .whirl.w3 {
+    border: 1px dashed rgba(143,163,200,.25);
+    inset: -14px;
+    animation: spin 11s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spinrev { to { transform: rotate(-360deg); } }
+
+  /* orbiting particles */
+  .orbit { position: absolute; inset: 0; animation: spin linear infinite; }
+  .orbit .p {
+    position: absolute; top: 50%; left: 50%;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  #loaderGlobe {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1px rgba(120,160,255,.18),
+      0 0 60px rgba(40,90,180,.45),
+      inset 0 0 40px rgba(0,0,0,.5);
+  }
+
+  .loader-text { text-align: center; }
+  .loader-text .t1 {
+    font-size: 13px; letter-spacing: .42em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+  }
+  .loader-text .t2 {
+    margin-top: 12px; font-size: 13px; color: var(--muted);
+    letter-spacing: .04em; min-height: 18px;
+  }
+  .loader-text .t2 b { color: var(--ink); font-weight: 600; }
+  .bar {
+    margin: 16px auto 0; width: 200px; height: 3px; border-radius: 3px;
+    background: rgba(143,163,200,.16); overflow: hidden;
+  }
+  .bar i {
+    display: block; height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 12px var(--accent);
+    transition: width .3s ease;
+  }
+
+  @media (max-width: 560px) {
+    .hud.top-left { top: 18px; left: 18px; }
+    .legend { left: 18px; bottom: 18px; }
+    .readout { right: 18px; bottom: 78px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="globeViz"></div>
+
+<!-- HUD -->
+<div class="hud top-left">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>ORBITA <span>/ atlas vivo</span></h1>
+  </div>
+  <div class="sub">Globo terráqueo navegable · texturas NASA Blue Marble</div>
+</div>
+
+<div class="legend">
+  <div class="row"><span class="key wide">Arrastrar</span> Girar el planeta</div>
+  <div class="row"><span class="key">Scroll</span> Acercar / alejar</div>
+  <div class="row"><span class="key">Hover</span> Ver país</div>
+</div>
+
+<div class="readout">
+  <div class="country" id="roCountry">Explora el planeta</div>
+  <div class="coords" id="roCoords">LAT —— · LON ——</div>
+</div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-stage">
+    <div class="whirl w3"></div>
+    <div class="whirl w1"></div>
+    <div class="whirl w2"></div>
+    <div class="orbit" id="orbit" style="animation-duration:5.5s"></div>
+    <div class="orbit" id="orbit2" style="animation-duration:8s;animation-direction:reverse"></div>
+    <div id="loaderGlobe"></div>
+  </div>
+  <div class="loader-text">
+    <div class="t1">Cargando atlas</div>
+    <div class="t2">Trazando <b id="loadCountry">países</b>…</div>
+    <div class="bar"><i id="loadBar"></i></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+<script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+<script>
+(function () {
+  const GEO_URLS = [
+    'countries.geojson',
+    'https://cdn.jsdelivr.net/gh/vasturiano/globe.gl@master/example/datasets/ne_110m_admin_0_countries.geojson'
+  ];
+  const IMG = 'https://unpkg.com/three-globe@2.27.2/example/img/';
+
+  const nameOf = p => p.ADMIN || p.NAME || p.name || p.NAME_LONG || p.SOVEREIGNT || '—';
+
+  // vibrant deterministic color per country
+  function colorFor(i, a) {
+    const hue = (i * 47.5) % 360;
+    return `hsla(${hue}, 75%, 58%, ${a})`;
+  }
+
+  // ---------- decorate loader whirl particles ----------
+  function seedOrbit(el, n, r, size) {
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2;
+      const d = document.createElement('div');
+      d.className = 'p';
+      const x = Math.cos(ang) * r, y = Math.sin(ang) * r;
+      d.style.transform = `translate(${x}px, ${y}px)`;
+      d.style.opacity = 0.4 + 0.6 * Math.random();
+      if (size) { d.style.width = d.style.height = size + 'px'; }
+      el.appendChild(d);
+    }
+  }
+  seedOrbit(document.getElementById('orbit'), 10, 128, 5);
+  seedOrbit(document.getElementById('orbit2'), 7, 150, 3);
+
+  let mainGlobe = null;
+  let ready = false;
+  const tStart = Date.now();
+
+  // absolute safety net: never let the loader trap the user, even if
+  // textures / geojson are slow on a given network.
+  setTimeout(() => { ready = true; hideLoader(); }, 7000);
+
+  // ---------- fetch country geometry (retry to beat first-paint serve race) ----------
+  async function fetchGeo(urls, retries) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      for (const url of urls) {
+        try {
+          const r = await fetch(url, { cache: 'reload' });
+          if (r.ok) return await r.json();
+        } catch (e) { /* try next */ }
+      }
+      await new Promise(res => setTimeout(res, 450));
+    }
+    throw new Error('all geo sources failed');
+  }
+
+  fetchGeo(GEO_URLS, 8)
+    .then(geo => {
+      const feats = (geo.features || []).filter(f => nameOf(f.properties) !== 'Antarctica');
+
+      buildLoaderGlobe(feats);
+      buildMainGlobe(feats);
+
+      // cycle country names in loader text
+      const names = feats.map(f => nameOf(f.properties)).filter(Boolean);
+      let idx = 0;
+      const lc = document.getElementById('loadCountry');
+      const cyc = setInterval(() => {
+        lc.textContent = names[(idx = (idx + Math.floor(1 + Math.random() * 3)) % names.length)];
+      }, 130);
+      window.__cyc = cyc;
+    })
+    .catch(err => {
+      document.getElementById('loadCountry').textContent = 'sin conexión';
+      console.error('GeoJSON load failed', err);
+      // still show a textured globe even without country polygons
+      buildMainGlobe([]);
+    });
+
+  // progress bar driven by time + readiness
+  const bar = document.getElementById('loadBar');
+  const prog = setInterval(() => {
+    const t = (Date.now() - tStart) / 2600;
+    let p = Math.min(0.92, t);
+    if (ready) p = 1;
+    bar.style.width = (p * 100).toFixed(0) + '%';
+    if (p >= 1) { clearInterval(prog); }
+  }, 80);
+
+  // ---------- LOADER GLOBE (200x200) ----------
+  function buildLoaderGlobe(feats) {
+    const g = Globe({ animateIn: false })(document.getElementById('loaderGlobe'))
+      .width(200).height(200)
+      .backgroundColor('rgba(0,0,0,0)')
+      .showGlobe(true)
+      .globeImageUrl(IMG + 'earth-blue-marble.jpg')
+      .showAtmosphere(true)
+      .atmosphereColor('#5cc8ff')
+      .atmosphereAltitude(0.25)
+      .polygonsData(feats)
+      .polygonCapColor((d) => colorFor(feats.indexOf(d), 0.62))
+      .polygonSideColor(() => 'rgba(0,0,0,0)')
+      .polygonStrokeColor(() => 'rgba(255,255,255,0.55)')
+      .polygonAltitude(0.012);
+
+    // a few floating country labels orbiting the loader globe
+    const picks = [];
+    const step = Math.max(1, Math.floor(feats.length / 14));
+    for (let i = 0; i < feats.length; i += step) picks.push(feats[i]);
+    g.labelsData(picks)
+      .labelLat(d => centroidLat(d))
+      .labelLng(d => centroidLng(d))
+      .labelText(d => nameOf(d.properties))
+      .labelSize(1.1)
+      .labelColor(() => 'rgba(235,242,255,0.9)')
+      .labelDotRadius(0.28)
+      .labelDotOrientation(() => 'bottom')
+      .labelResolution(2);
+
+    const c = g.controls();
+    c.enableZoom = false; c.enablePan = false; c.enableRotate = false;
+    c.autoRotate = true; c.autoRotateSpeed = 6.5;
+    g.pointOfView({ lat: 18, lng: 0, altitude: 2.3 });
+  }
+
+  // rough centroid from first ring of a feature
+  function centroidLat(f) { return centroid(f)[1]; }
+  function centroidLng(f) { return centroid(f)[0]; }
+  function centroid(f) {
+    if (f.__c) return f.__c;
+    let coords = f.geometry.coordinates;
+    if (f.geometry.type === 'MultiPolygon') {
+      // largest polygon
+      let best = coords[0], bl = 0;
+      coords.forEach(poly => { if (poly[0].length > bl) { bl = poly[0].length; best = poly; } });
+      coords = best;
+    }
+    const ring = coords[0];
+    let x = 0, y = 0;
+    ring.forEach(p => { x += p[0]; y += p[1]; });
+    f.__c = [x / ring.length, y / ring.length];
+    return f.__c;
+  }
+
+  // ---------- MAIN GLOBE ----------
+  function buildMainGlobe(feats) {
+    const g = Globe()(document.getElementById('globeViz'))
+      .backgroundImageUrl(IMG + 'night-sky.png')
+      .globeImageUrl(IMG + 'earth-blue-marble.jpg')
+      .bumpImageUrl(IMG + 'earth-topology.png')
+      .showAtmosphere(true)
+      .atmosphereColor('#6cc6ff')
+      .atmosphereAltitude(0.18)
+      .polygonsData(feats)
+      .polygonCapColor(d => hovered === d ? 'rgba(255,255,255,0.55)' : colorFor(feats.indexOf(d), 0.32))
+      .polygonSideColor(() => 'rgba(40,90,160,0.15)')
+      .polygonStrokeColor(() => 'rgba(255,255,255,0.45)')
+      .polygonAltitude(d => hovered === d ? 0.06 : 0.008)
+      .polygonsTransitionDuration(280)
+      .polygonLabel(d => `<div class="ctip"><i>◉</i>${nameOf(d.properties)}</div>`);
+
+    let hovered = null;
+    g.onPolygonHover(d => {
+      hovered = d;
+      g.polygonAltitude(g.polygonAltitude())     // trigger update
+       .polygonCapColor(g.polygonCapColor());
+      const ro = document.getElementById('roCountry');
+      ro.textContent = d ? nameOf(d.properties) : 'Explora el planeta';
+    });
+
+    mainGlobe = g;
+
+    // sizing
+    function size() { g.width(window.innerWidth).height(window.innerHeight); }
+    size(); window.addEventListener('resize', size);
+
+    // controls: Google-Earth feel
+    const c = g.controls();
+    c.enableZoom = true;
+    c.autoRotate = true; c.autoRotateSpeed = 0.35;
+    c.minDistance = 130; c.maxDistance = 600;
+    c.rotateSpeed = 0.9; c.zoomSpeed = 1.1;
+    g.pointOfView({ lat: 20, lng: -20, altitude: 2.6 });
+
+    // stop auto-rotate on user interaction, resume after idle
+    let idle;
+    const dom = g.renderer().domElement;
+    const onUse = () => {
+      c.autoRotate = false;
+      clearTimeout(idle);
+      idle = setTimeout(() => { c.autoRotate = true; }, 3500);
+    };
+    dom.addEventListener('pointerdown', onUse);
+    dom.addEventListener('wheel', onUse, { passive: true });
+
+    // live lat/lon readout from camera point-of-view
+    setInterval(() => {
+      const pov = g.pointOfView();
+      const lat = pov.lat.toFixed(1), lon = ((pov.lng + 540) % 360 - 180).toFixed(1);
+      document.getElementById('roCoords').textContent =
+        `LAT ${lat>=0?'+':''}${lat}° · LON ${lon>=0?'+':''}${lon}°`;
+    }, 120);
+
+    g.onGlobeReady(() => {
+      ready = true;
+      const wait = Math.max(0, 1900 - (Date.now() - tStart));
+      setTimeout(hideLoader, wait);
+    });
+
+    // fallback if onGlobeReady doesn't fire (no textures)
+    setTimeout(() => { ready = true; hideLoader(); }, 6000);
+  }
+
+  let hidden = false;
+  function hideLoader() {
+    if (hidden) return; hidden = true;
+    document.getElementById('loadBar').style.width = '100%';
+    clearInterval(window.__cyc);
+    setTimeout(() => document.getElementById('loader').classList.add('hide'), 250);
+  }
+})();
+</script>
+</body>
+</html>

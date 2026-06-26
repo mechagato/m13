@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IA en el Mundo Empresarial</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="animations.jsx"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body,#root{width:100%;height:100%;overflow:hidden}
+    body{background:#030303}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ── constants ────────────────────────────────────────────────────────────── */
+const W = 1920, H = 1080, DUR = 90;
+const HF = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+/* ── helpers ──────────────────────────────────────────────────────────────── */
+const fa = (f, t, s, e, ease = Easing.easeInOutCubic) =>
+  animate({ from: f, to: t, start: s, end: e, ease });
+
+const fadeIO = (lt, dur, i = 0.5, o = 0.7) =>
+  Math.min(fa(0, 1, 0, i)(lt), fa(1, 0, dur - o, dur)(lt));
+
+/* ── Orb: positioned circle ───────────────────────────────────────────────── */
+function Orb({ cx, cy, r, fill = 'white', opacity = 1, ring = false, sx = {} }) {
+  return (
+    <div style={{
+      position: 'absolute', left: cx - r, top: cy - r,
+      width: r * 2, height: r * 2, borderRadius: '50%',
+      background: ring ? 'transparent' : fill,
+      border: ring ? `1.5px solid ${fill}` : 'none',
+      opacity, pointerEvents: 'none', ...sx,
+    }} />
+  );
+}
+
+/* ── CenterVignette: radial dark gradient for text legibility ─────────────── */
+const CenterVignette = ({ a = 0.9 }) => (
+  <div style={{
+    position: 'absolute', inset: 0, pointerEvents: 'none',
+    background: `radial-gradient(ellipse 680px 520px at 50% 50%, rgba(3,3,3,${a}) 0%, transparent 100%)`,
+  }} />
+);
+
+/* ── BigStat: headline number + label ────────────────────────────────────── */
+function BigStat({ num, label, src, lt, ts = 1.0, sz = 240 }) {
+  const nO = fa(0, 1, ts, ts + 0.8, Easing.easeOutCubic)(lt);
+  const nY = fa(30, 0, ts, ts + 0.8, Easing.easeOutCubic)(lt);
+  const lO = fa(0, 1, ts + 0.65, ts + 1.55, Easing.easeOutCubic)(lt);
+  const nh = sz * 1.05;
+  return (
+    <>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: H / 2 - nh * 0.58,
+        textAlign: 'center', opacity: nO, transform: `translateY(${nY}px)`,
+        fontFamily: HF, fontSize: sz, fontWeight: 800, color: '#fff',
+        letterSpacing: '-0.04em', lineHeight: 1,
+        textShadow: '0 0 100px rgba(255,255,255,0.12)',
+      }}>{num}</div>
+      <div style={{
+        position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+        top: H / 2 + nh * 0.5 + 18, width: 980, textAlign: 'center',
+        opacity: lO, fontFamily: HF, fontSize: 25, fontWeight: 300,
+        color: 'rgba(255,255,255,0.42)', letterSpacing: '0.1em',
+        textTransform: 'uppercase', lineHeight: 1.65,
+      }}>{label}</div>
+      {src && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 50,
+          textAlign: 'center', opacity: lO * 0.28, fontFamily: HF,
+          fontSize: 12, fontWeight: 300, color: 'rgba(255,255,255,0.9)',
+          letterSpacing: '0.22em', textTransform: 'uppercase',
+        }}>Fuente: {src}</div>
+      )}
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SCENES
+════════════════════════════════════════════════════════════════════════════ */
+
+/* S0 — Intro ───────────────────────────────────────────────────────────────── */
+function S0() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur, 0.3, 1.5);
+  const rings = Array.from({ length: 6 }, (_, i) => {
+    const lt2 = Math.max(0, lt - i * 0.55);
+    return {
+      r: fa(8, 790, 0, 6.5, Easing.easeOutCubic)(lt2),
+      o: fa(0.75, 0, 0.15, 5.5, Easing.easeInQuad)(lt2),
+    };
+  });
+  const dotR = fa(3, 8, 0, 2)(lt);
+  const tO = fa(0, 1, 1.1, 2.7, Easing.easeOutCubic)(lt);
+  const tY = fa(28, 0, 1.1, 2.7, Easing.easeOutCubic)(lt);
+  const sO = fa(0, 0.52, 2.3, 3.7)(lt);
+  const ambients = [[240,195,3,0.7],[1695,875,4,1.1],[280,815,4,0.5],[1605,185,3,0.9],[975,100,3.5,1.3],[930,975,4,0.8]];
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {rings.map(({ r, o }, i) => (
+        <Orb key={i} cx={W / 2} cy={H / 2} r={r} ring fill={`rgba(255,255,255,${o})`} opacity={1} />
+      ))}
+      <Orb cx={W / 2} cy={H / 2} r={dotR} sx={{ boxShadow: '0 0 28px rgba(255,255,255,0.9)' }} />
+      {ambients.map(([x, y, r, d], i) => (
+        <Orb key={`a${i}`} cx={x} cy={y} r={r} opacity={fa(0, 0.28, d, d + 1)(lt)} />
+      ))}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: H / 2 - 84,
+        textAlign: 'center', opacity: tO, transform: `translateY(${tY}px)`,
+        fontFamily: HF, fontSize: 84, fontWeight: 700, color: '#fff',
+        letterSpacing: '-0.025em', textTransform: 'uppercase',
+      }}>IA en el Mundo Empresarial</div>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: H / 2 + 52,
+        textAlign: 'center', opacity: sO,
+        fontFamily: HF, fontSize: 19, fontWeight: 300,
+        color: 'rgba(255,255,255,0.8)', letterSpacing: '0.32em', textTransform: 'uppercase',
+      }}>Los datos que redefinen los negocios</div>
+    </div>
+  );
+}
+
+/* S1 — 77% adoption ─────────────────────────────────────────────────────────── */
+function S1() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const fp = fa(0, 77, 0.4, 5.0, Easing.easeInOutCubic)(lt);
+  const RING_R = 460;
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {Array.from({ length: 100 }, (_, i) => {
+        const a = (i / 100) * Math.PI * 2 - Math.PI / 2;
+        const cx = W / 2 + Math.cos(a) * RING_R;
+        const cy = H / 2 + Math.sin(a) * RING_R;
+        const active = i < 77;
+        const p = Easing.easeOutCubic(clamp((fp - i) / 2.5, 0, 1));
+        return (
+          <Orb key={i} cx={cx} cy={cy} r={11}
+            fill="white"
+            opacity={active ? p * 0.88 : 0.07}
+          />
+        );
+      })}
+      <CenterVignette />
+      <BigStat
+        num="77%"
+        label="de las empresas ya usa o explora inteligencia artificial"
+        src="McKinsey Global Survey, 2023"
+        lt={lt} ts={0.5}
+      />
+    </div>
+  );
+}
+
+/* S2 — $15T GDP ─────────────────────────────────────────────────────────────── */
+function S2() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const bigR = fa(40, 575, 0, 8.5, Easing.easeInOutSine)(lt);
+  const bigO = fa(0, 0.13, 0, 2)(lt);
+  const rR = fa(28, 505, 0.5, 8.5, Easing.easeInOutSine)(lt);
+  const rO = fa(0, 0.28, 0.5, 3)(lt);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      <Orb cx={W / 2} cy={H / 2} r={bigR} opacity={bigO} />
+      <Orb cx={W / 2} cy={H / 2} r={rR} ring fill="rgba(255,255,255,0.55)" opacity={rO} />
+      {[0, 1.3, 2.6].map((d, i) => {
+        const lt2 = Math.max(0, lt - d);
+        const pr = fa(18, 490, 0, 5.2, Easing.easeOutCubic)(lt2);
+        const po = fa(0.55, 0, 0.12, 5.2, Easing.easeInQuad)(lt2);
+        return <Orb key={i} cx={W / 2} cy={H / 2} r={pr} ring fill="white" opacity={po} />;
+      })}
+      <CenterVignette />
+      <BigStat
+        num="$15T"
+        label="en valor económico global que creará la IA para 2030"
+        src="PwC Global AI Study"
+        lt={lt} ts={0.8}
+      />
+    </div>
+  );
+}
+
+/* S3 — 100M users ───────────────────────────────────────────────────────────── */
+function S3() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const vc = Math.floor(fa(0, 88, 0.3, 5.5, Easing.easeOutCubic)(lt));
+  const cn = Math.round(fa(0, 100000000, 0.3, 5.5, Easing.easeOutCubic)(lt));
+  const pts = React.useMemo(() =>
+    Array.from({ length: 88 }, (_, i) => {
+      const a = i * 137.508 * (Math.PI / 180);
+      const d = Math.sqrt((i + 1) / 88) * 445;
+      return { x: W / 2 + Math.cos(a) * d, y: H / 2 + Math.sin(a) * d, r: 2.5 + (i % 5) * 1.3 };
+    }), []);
+  const disp = cn >= 1e6 ? `${Math.floor(cn / 1e6)}M` : cn > 999 ? `${Math.floor(cn / 1e3)}K` : `${cn}`;
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {pts.slice(0, vc).map(({ x, y, r }, i) => (
+        <Orb key={i} cx={x} cy={y} r={r} opacity={0.62} />
+      ))}
+      <CenterVignette />
+      <BigStat
+        num={disp}
+        label="usuarios de ChatGPT en 2 meses — la app de mayor crecimiento en la historia"
+        src="OpenAI, enero 2023"
+        lt={lt} ts={0.3}
+      />
+    </div>
+  );
+}
+
+/* S4 — 28% SMEs ─────────────────────────────────────────────────────────────── */
+function S4() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const rP = fa(0, 1, 0.3, 3.5)(lt);
+  const dots = React.useMemo(() =>
+    Array.from({ length: 55 }, (_, i) => {
+      const s1 = (i * 7919) % 1000 / 1000, s2 = (i * 6271) % 1000 / 1000;
+      return { x: 80 + s1 * (W - 160), y: 80 + s2 * (H - 160), r: 10 + (i % 5) * 6, active: i < 16 };
+    }), []);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {dots.map(({ x, y, r, active }, i) => (
+        <Orb key={i} cx={x} cy={y} r={r}
+          fill={active ? 'white' : 'transparent'}
+          ring={!active}
+          opacity={active ? rP * 0.78 : 0.08}
+        />
+      ))}
+      <CenterVignette />
+      <BigStat
+        num="28%"
+        label="de las pymes usa IA en su día a día — la gran mayoría aún no empezó"
+        src="Salesforce SMB Trends, 2023"
+        lt={lt} ts={0.8}
+      />
+    </div>
+  );
+}
+
+/* S5 — 6–10% growth ─────────────────────────────────────────────────────────── */
+function S5() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const B = 115, lCX = W / 2 - 310, rCX = W / 2 + 310, CY = H / 2 + 45;
+  const rR = fa(B, B * 1.43, 1.0, 6.5, Easing.easeInOutSine)(lt);
+  const rO = fa(0.22, 1.0, 1.0, 5.5)(lt);
+  const lbO = fa(0, 1, 1.5, 3)(lt);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {/* Competitor — static */}
+      <Orb cx={lCX} cy={CY} r={B} fill="white" opacity={0.1} />
+      <Orb cx={lCX} cy={CY} r={B} ring fill="rgba(255,255,255,0.3)" opacity={0.22} />
+      {/* AI-adopter — growing */}
+      <Orb cx={rCX} cy={CY} r={rR} fill="white" opacity={rO * 0.18} />
+      <Orb cx={rCX} cy={CY} r={rR} ring fill="white" opacity={rO} />
+      <Orb cx={rCX} cy={CY} r={rR * 1.3} ring fill="rgba(255,255,255,0.18)" opacity={rO * 0.35} />
+      {/* Labels */}
+      {[[lCX, 'Sin IA', 0.28], [rCX, 'Con IA', 0.78]].map(([cx, txt, o], i) => (
+        <div key={i} style={{
+          position: 'absolute', left: cx - 80, top: CY + rR + 58,
+          width: 160, textAlign: 'center', opacity: lbO * o,
+          fontFamily: HF, fontSize: 13, fontWeight: 300,
+          color: 'rgba(255,255,255,0.9)', letterSpacing: '0.22em', textTransform: 'uppercase',
+        }}>{txt}</div>
+      ))}
+      <CenterVignette />
+      <BigStat
+        num="6–10%"
+        label="más rápido crecen las pymes que integran IA vs sus competidores"
+        src="Accenture SME Report, 2023"
+        lt={lt} ts={0.8} sz={195}
+      />
+    </div>
+  );
+}
+
+/* S6 — 40% time saved ───────────────────────────────────────────────────────── */
+function S6() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const aP = fa(0, 0.4, 0.5, 4.8, Easing.easeInOutCubic)(lt);
+  const R = 218, CX = W / 2, CY = H / 2 + 28;
+  const deg = aP * 360, tr = d => d * Math.PI / 180;
+  const sa = -90, ea = sa + deg;
+  const sx = CX + R * Math.cos(tr(sa)), sy = CY + R * Math.sin(tr(sa));
+  const ex = CX + R * Math.cos(tr(ea)), ey = CY + R * Math.sin(tr(ea));
+  const dO = fa(0, 1, 0.5, 1.3)(lt);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      <svg style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, pointerEvents: 'none' }}
+        viewBox={`0 0 ${W} ${H}`}>
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1.5} />
+        {deg > 0.5 && (
+          <path d={`M ${sx} ${sy} A ${R} ${R} 0 ${deg > 180 ? 1 : 0} 1 ${ex} ${ey}`}
+            fill="none" stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+        )}
+      </svg>
+      {deg > 2 && <Orb cx={ex} cy={ey} r={6} opacity={dO} sx={{ boxShadow: '0 0 20px rgba(255,255,255,0.7)' }} />}
+      <Orb cx={CX} cy={CY - R} r={4} opacity={dO * 0.5} />
+      <CenterVignette />
+      <BigStat
+        num="40%"
+        label="de reducción en tiempo de tareas reportada por equipos con IA"
+        src="Microsoft Work Trend Index, 2023"
+        lt={lt} ts={0.8}
+      />
+    </div>
+  );
+}
+
+/* S7 — $91B investment ──────────────────────────────────────────────────────── */
+function S7() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const bubs = React.useMemo(() =>
+    Array.from({ length: 36 }, (_, i) => {
+      const s1 = (i * 7331) % 1000 / 1000, s2 = (i * 5113) % 1000 / 1000;
+      return { x: 100 + s1 * (W - 200), r: 12 + s2 * 55, dy: i * 0.16 };
+    }), []);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {bubs.map(({ x, r, dy }, i) => {
+        const lt2 = Math.max(0, lt - dy);
+        const y = fa(-r - 40, 70 + r + ((i * 179) % 720), 0, 2.8, Easing.easeOutCubic)(lt2);
+        const bO = fa(0, 0.52, 0, 0.55)(lt2);
+        return <Orb key={i} cx={x} cy={y} r={r} opacity={bO} />;
+      })}
+      <CenterVignette />
+      <BigStat
+        num="$91,000M"
+        label="invertidos en startups de IA en 2022 — el capital ya tomó su decisión"
+        src="CB Insights, State of AI 2022"
+        lt={lt} ts={0.8} sz={190}
+      />
+    </div>
+  );
+}
+
+/* S8 — 30% tasks automatable ────────────────────────────────────────────────── */
+function S8() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const aT = fa(0, 1, 0.5, 3.5)(lt);
+  const COLS = 5, R = 52, GAPX = 222, GAPY = 188;
+  const SX = W / 2 - (COLS - 1) * GAPX / 2;
+  const SY = H / 2 + 118;
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {Array.from({ length: 10 }, (_, i) => {
+        const cx = SX + (i % COLS) * GAPX;
+        const cy = SY + Math.floor(i / COLS) * GAPY;
+        const auto = i < 3;
+        const pulse = auto ? 0.8 + Math.sin(lt * 2.8 + i * 1.2) * 0.2 : 1;
+        return (
+          <React.Fragment key={i}>
+            <Orb cx={cx} cy={cy} r={R}
+              fill={auto ? 'white' : 'transparent'}
+              ring={!auto}
+              opacity={auto ? 0.15 + aT * 0.55 * pulse : 0.1}
+            />
+            {auto && (
+              <Orb cx={cx} cy={cy} r={R * 1.58}
+                ring fill="rgba(255,255,255,0.22)"
+                opacity={aT * 0.22 * pulse}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+      <CenterVignette a={0.85} />
+      <BigStat
+        num="30%"
+        label="de las tareas en más de la mitad de todos los empleos son automatizables hoy"
+        src="McKinsey Global Institute, 2023"
+        lt={lt} ts={0.8}
+      />
+    </div>
+  );
+}
+
+/* S9 — 33% companies investing ──────────────────────────────────────────────── */
+function S9() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur);
+  const CX = W / 2, CY = H / 2 + 38, B = 110, SEP = 348;
+  const mR = fa(B, B * 1.44, 0.7, 5.8, Easing.easeInOutCubic)(lt);
+  const mO = fa(0.18, 1.0, 0.7, 5.8)(lt);
+  const sO = fa(0, 0.18, 0.2, 2.2)(lt);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      <Orb cx={CX - SEP} cy={CY} r={B} ring fill="rgba(255,255,255,0.3)" opacity={sO} />
+      <Orb cx={CX + SEP} cy={CY} r={B} ring fill="rgba(255,255,255,0.3)" opacity={sO} />
+      <svg style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, pointerEvents: 'none' }}
+        viewBox={`0 0 ${W} ${H}`}>
+        <line x1={CX - SEP + B} y1={CY} x2={CX - mR} y2={CY}
+          stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+        <line x1={CX + mR} y1={CY} x2={CX + SEP - B} y2={CY}
+          stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+      </svg>
+      <Orb cx={CX} cy={CY} r={mR} fill="white" opacity={mO * 0.18} />
+      <Orb cx={CX} cy={CY} r={mR} ring fill="white" opacity={mO} />
+      <Orb cx={CX} cy={CY} r={mR * 1.5} ring fill="rgba(255,255,255,0.18)" opacity={mO * 0.3} />
+      <CenterVignette />
+      <BigStat
+        num="33%"
+        label="de las empresas globales planea aumentar su inversión en IA este año"
+        src="Gartner CIO Survey, 2024"
+        lt={lt} ts={0.8}
+      />
+    </div>
+  );
+}
+
+/* S10 — Outro ───────────────────────────────────────────────────────────────── */
+function S10() {
+  const { localTime: lt, duration: dur } = useSprite();
+  const op = fadeIO(lt, dur, 0.8, 0.6);
+  const cP = fa(0, 1, 0, 3.5, Easing.easeInCubic)(lt);
+  const pts = React.useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => {
+      const a = (i / 24) * Math.PI * 2;
+      const d = 265 + (i % 5) * 80;
+      return { sx: W / 2 + Math.cos(a) * d, sy: H / 2 + Math.sin(a) * d, r: 4 + (i % 4) * 4 };
+    }), []);
+  const flO = fa(0, 0.1, 3.5, 4.1)(lt);
+  const gO = fa(0, 1, 3.8, 5.2)(lt);
+  const tO = fa(0, 1, 3.6, 5.3, Easing.easeOutCubic)(lt);
+  const tS = fa(0.88, 1, 3.6, 5.3, Easing.easeOutBack)(lt);
+  const sO = fa(0, 1, 4.9, 6.6)(lt);
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: op }}>
+      {pts.map(({ sx, sy, r }, i) => (
+        <Orb key={i}
+          cx={sx + (W / 2 - sx) * cP}
+          cy={sy + (H / 2 - sy) * cP}
+          r={r} opacity={0.4 * (1 - cP * 0.65)}
+        />
+      ))}
+      {[0, 0.28, 0.56].map((d, i) => {
+        const lt2 = Math.max(0, lt - 3.5 - d);
+        const rr = fa(0, i * 112 + 72, 0, 1.6, Easing.easeOutCubic)(lt2);
+        const ro = fa(0.5, 0, 0, 1.6, Easing.easeInQuad)(lt2);
+        return <Orb key={`r${i}`} cx={W / 2} cy={H / 2} r={rr} ring fill="white" opacity={ro * gO} />;
+      })}
+      <div style={{ position: 'absolute', inset: 0, background: 'white', opacity: flO, pointerEvents: 'none' }} />
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: H / 2 - 90,
+        textAlign: 'center', opacity: tO, transform: `scale(${tS})`,
+        fontFamily: HF, fontSize: 96, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em',
+      }}>¿Tu empresa ya empezó?</div>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: H / 2 + 66,
+        textAlign: 'center', opacity: sO,
+        fontFamily: HF, fontSize: 19, fontWeight: 300,
+        color: 'rgba(255,255,255,0.32)', letterSpacing: '0.32em', textTransform: 'uppercase',
+      }}>La IA no espera</div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   APP + MOUNT
+════════════════════════════════════════════════════════════════════════════ */
+const SW = [
+  [0,  8],   // S0  Intro
+  [7,  16],  // S1  77%
+  [15, 24],  // S2  $15T
+  [23, 32],  // S3  100M
+  [31, 40],  // S4  28%
+  [39, 48],  // S5  6–10%
+  [47, 56],  // S6  40%
+  [55, 64],  // S7  $91B
+  [63, 72],  // S8  30%
+  [71, 80],  // S9  33%
+  [79, DUR], // S10 Outro
+];
+const SCENES = [S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10];
+
+function App() {
+  const t = useTime();
+  React.useEffect(() => {
+    const el = document.getElementById('ar');
+    if (el) el.setAttribute('data-screen-label', `t=${Math.floor(t)}s`);
+  });
+  return (
+    <div id="ar" data-screen-label="t=0s" style={{ position: 'absolute', inset: 0 }}>
+      {SCENES.map((SC, i) => (
+        <Sprite key={i} start={SW[i][0]} end={SW[i][1]}>
+          <SC />
+        </Sprite>
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <Stage width={W} height={H} duration={DUR} background="#030303" persistKey="cosmic-ai-v1">
+    <App />
+  </Stage>
+);
+</script>
+</body>
+</html>
