@@ -46,15 +46,19 @@ const D3_GEO_IDS = [
   'cubo_basico',
 ];
 
-const ALL_IDS = [...BOOTSTRAP_IDS, ...D3_MATERIAL_IDS, ...D3_GEO_IDS];
-const TOTAL_COUNT = ALL_IDS.length; // 18
+const FASE1_IDS = [...BOOTSTRAP_IDS, ...D3_MATERIAL_IDS, ...D3_GEO_IDS]; // 18 — catálogo Fase 1
+// Fase 2 — prototipos experimentales registrados (T-221, gate Sonido 13). Si el gate
+// no pasa, se quitan el concepto y esta entrada. Si pasa, migran al catálogo estable (T-224).
+const PHASE2_PROTOTYPE_IDS = ['piedra_volcanica_s13'];
+const ALL_IDS = [...FASE1_IDS, ...PHASE2_PROTOTYPE_IDS];
+const TOTAL_COUNT = ALL_IDS.length; // 19 (18 Fase 1 + 1 prototipo Fase 2)
 
 describe('synth — Concept registry y manifest', () => {
   // ============================================
   // T-017 — Registry & interface
   // ============================================
 
-  it('listConcepts retorna los 18 conceptos del catálogo Fase 1', () => {
+  it('listConcepts retorna el catálogo completo (18 Fase 1 + 1 prototipo Fase 2)', () => {
     const ids = listConcepts().map((c) => c.id).sort();
     expect(ids).toEqual([...ALL_IDS].sort());
     expect(listConcepts()).toHaveLength(TOTAL_COUNT);
@@ -95,7 +99,7 @@ describe('synth — Concept registry y manifest', () => {
     }
   });
 
-  it('listManifests() devuelve un array completo de manifests (18 entradas)', () => {
+  it('listManifests() devuelve un array completo de manifests (catálogo completo)', () => {
     const manifests = listManifests();
     expect(manifests).toHaveLength(TOTAL_COUNT);
     expect(manifests.every((m) => typeof m.id === 'string')).toBe(true);
@@ -254,6 +258,8 @@ describe('synth — Concept registry y manifest', () => {
     piso_madera_envejecida: 1016,
     piso_marmol_blanco: 1017,
     vidrio_esmerilado: 1018,
+    // Fase 2 — prototipo T-221 (primer concepto post-Fase 1).
+    piedra_volcanica_s13: 1019,
   };
 
   it('FR-2.2/B11: seeds únicos y CONGELADOS — los existentes nunca se renumeran', () => {

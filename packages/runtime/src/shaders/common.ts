@@ -117,4 +117,29 @@ fn fbm(p: vec3<f32>, octaves: i32) -> f32 {
   }
   return total;
 }
+// fbm_continuous (Fase 2, Sonido 13 / T-221): el número de octavas es una función
+// CONTINUA del footprint del pixel (cuánto mundo cubre un pixel a esa distancia).
+// Cerca → footprint chico → más octavas (más micro-detalle); lejos → footprint grande
+// → menos octavas (anti-shimmer: no muestreamos frecuencias sub-pixel). La parte
+// fraccional de la última octava se atenúa con smoothstep → transición microtonal
+// (sin pops/popping de LOD discreto). \`minOct\` = piso de octavas; \`cap\` = u.quality.w.
+// El \`p\` que se pasa ya viene escalado por la frecuencia base del material, y
+// \`footprint\` debe estar en ESE mismo dominio (footprint_mundo * misma escala).
+fn fbm_continuous(p: vec3<f32>, footprint: f32, minOct: f32, cap: f32) -> f32 {
+  // Octava más alta resoluble: su longitud de onda (1/2^n) ≈ footprint → n = -log2(footprint).
+  let nOct = clamp(-log2(max(footprint, 1e-5)), minOct, cap);
+  let full = floor(nOct);
+  let lastW = smoothstep(0.0, 1.0, nOct - full); // microtono: fade de la octava fraccional
+  var total: f32 = 0.0;
+  var amp: f32 = 0.5;
+  var freq: f32 = 1.0;
+  let fullI = i32(full);
+  for (var i = 0; i < fullI; i++) {
+    total = total + amp * noise3(p * freq);
+    amp = amp * 0.5;
+    freq = freq * 2.0;
+  }
+  total = total + amp * lastW * noise3(p * freq);
+  return total;
+}
 `;

@@ -548,6 +548,76 @@ function readSharedScene(): string | null {
   }
 }
 
+// ============================================
+// Modo A/B Sonido 13 (T-221, gate Gato): ?s13=on|off
+// Escena de prueba INLINE — no toca la lista SCENES ni el precache del SW. El toggle
+// alterna el material de TODO el mundo de piedra entre piedra_volcanica (off, detalle
+// fijo de 5 octavas) y piedra_volcanica_s13 (on, detalle continuo por footprint).
+// Mismo mundo en ambos modos → comparación directa caminando cerca/lejos.
+// ============================================
+function readS13Mode(): 'on' | 'off' | null {
+  const v = new URLSearchParams(window.location.search).get('s13');
+  if (v === 'on') return 'on';
+  if (v === 'off') return 'off';
+  return null;
+}
+
+function buildS13TestScene(matId: string): string {
+  return [
+    'version: "0.1"',
+    'name: s13_test',
+    'description: "A/B Sonido 13 — detalle continuo en piedra (T-221)"',
+    'bounds: [8, 4, 16]',
+    'spawn: [0, 0, -13]',
+    'ambient:',
+    '  background: [0.04, 0.035, 0.03]',
+    '  fogColor: [0.05, 0.04, 0.03]',
+    '  fogDensity: 0.012',
+    'light:',
+    '  position: [3, 3.2, -3]',
+    '  color: [1.0, 0.84, 0.58]',
+    '  intensity: 1.7',
+    `walls: { concept: ${matId} }`,
+    `floor: { concept: ${matId} }`,
+    `ceiling: { concept: ${matId} }`,
+    'objects:',
+    '  - id: monolito',
+    '    kind: box',
+    `    material: ${matId}`,
+    '    position: [0, -0.8, 0]',
+    '    scale: [1.4, 2.2, 1.0]',
+    '  - id: muro_glifos',
+    '    kind: box',
+    `    material: ${matId}`,
+    '    position: [0, -0.6, 4.5]',
+    '    scale: [3.2, 2.2, 0.3]',
+    '',
+  ].join('\n');
+}
+
+function showS13Banner(mode: 'on' | 'off'): void {
+  const other = mode === 'on' ? 'off' : 'on';
+  let el = document.getElementById('s13Banner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 's13Banner';
+    el.style.cssText =
+      'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;' +
+      'background:rgba(10,12,10,0.86);color:#e8e0d0;font:12px/1.5 "JetBrains Mono",monospace;' +
+      'padding:8px 14px;border:1px solid #c9a227;border-radius:8px;backdrop-filter:blur(6px)';
+    document.body.appendChild(el);
+  }
+  el.innerHTML =
+    'A/B Sonido 13 · modo <b style="color:#c9a227">S13 ' +
+    mode.toUpperCase() +
+    '</b> — camina cerca/lejos del monolito · ' +
+    '<a href="?s13=' +
+    other +
+    '" style="color:#9ecbff">comparar S13 ' +
+    other.toUpperCase() +
+    '</a>';
+}
+
 recipeShare.addEventListener('click', () => {
   if (!currentYaml) return;
   const url = window.location.origin + window.location.pathname + '#scene=' + encodeSceneHash(currentYaml);
@@ -725,9 +795,25 @@ loadSettings();
   }
   resize();
   engine.attachFlyCamera();
+  const s13Mode = readS13Mode();
   const shared = readSharedScene();
   try {
-    if (shared !== null) {
+    if (s13Mode !== null) {
+      // Modo A/B Sonido 13 (T-221): escena de prueba de piedra, toggle ?s13=on|off
+      entryScreen.classList.add('hidden');
+      setView('crear');
+      const matId = s13Mode === 'on' ? 'piedra_volcanica_s13' : 'piedra_volcanica';
+      const yaml = buildS13TestScene(matId);
+      sceneNameEl.textContent = `A/B Sonido 13 — S13 ${s13Mode.toUpperCase()}`;
+      sceneDescEl.textContent =
+        s13Mode === 'on'
+          ? 'Detalle CONTINUO (fbm_continuous por footprint): menos shimmer de lejos, más detalle de cerca.'
+          : 'Detalle FIJO (5 octavas, como Fase 1). Acércate y aléjate del monolito para comparar.';
+      showRecipe(yaml, 's13_test.m13');
+      await engine.loadScene(yaml);
+      showS13Banner(s13Mode);
+      taskDone(`modo A/B Sonido 13 — S13 ${s13Mode.toUpperCase()} · usa el banner para alternar`);
+    } else if (shared !== null) {
       // Link compartido: la URL trae el mundo completo — entrar directo
       entryScreen.classList.add('hidden');
       setView('crear');
@@ -743,7 +829,7 @@ loadSettings();
     engine.start();
     engineOk = true;
   } catch (err) {
-    if (shared !== null) fail((err as Error).message ?? String(err));
+    if (s13Mode !== null || shared !== null) fail((err as Error).message ?? String(err));
     /* loadIdx ya maneja su propio error */
   }
 })();

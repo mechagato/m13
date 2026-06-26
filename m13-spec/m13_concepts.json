@@ -136,6 +136,12 @@
       "categoria": "objeto",
       "categoria_motor": "object_geo",
       "descripcion": "Cubo gris básico — bloque de construcción para prototipado de escenas."
+    },
+    {
+      "id": "piedra_volcanica_s13",
+      "categoria": "material",
+      "categoria_motor": "universal",
+      "descripcion": "EXPERIMENTAL (T-221, gate Sonido 13): piedra_volcanica con detalle CONTINUO (fbm_continuous por footprint). Prototipo del A/B — no usar en producción hasta T-224."
     }
   ]
 }

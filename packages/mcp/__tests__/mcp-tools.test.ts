@@ -184,3 +184,30 @@ describe('get_m13_format_guide — lógica', () => {
     }
   });
 });
+
+describe('piedra_volcanica_s13 — prototipo Sonido 13 (T-221)', () => {
+  const S13_SCENE = `
+version: "0.1"
+name: s13_test
+bounds: [8, 4, 16]
+spawn: [0, 0, -13]
+walls: { concept: piedra_volcanica_s13 }
+floor: { concept: piedra_volcanica_s13 }
+ceiling: { concept: piedra_volcanica_s13 }
+objects:
+  - id: monolito
+    kind: box
+    material: piedra_volcanica_s13
+    position: [0, -0.8, 0]
+    scale: [1.4, 2.2, 1.0]
+`;
+
+  it('una escena con piedra_volcanica_s13 parsea y compila (concepto registrado)', () => {
+    const scene = parseScene(S13_SCENE, { silent: true });
+    const compiled = compileScene(scene);
+    expect(compiled.conceptsUsed).toContain('piedra_volcanica_s13');
+    // el WGSL ensamblado trae la función del concepto y fbm_continuous (de common)
+    expect(compiled.wgsl).toContain('mat_piedra_volcanica_s13');
+    expect(compiled.wgsl).toContain('fn fbm_continuous');
+  });
+});
