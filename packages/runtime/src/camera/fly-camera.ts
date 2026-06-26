@@ -87,8 +87,20 @@ export class FlyCamera {
         // ignore
       }
     };
+    const resetInput = (): void => {
+      this.input.forward = false;
+      this.input.back = false;
+      this.input.left = false;
+      this.input.right = false;
+      this.input.up = false;
+      this.input.down = false;
+      this.touchMove = [0, 0];
+    };
     const onLockChange = (): void => {
       this.locked = document.pointerLockElement === this.canvas;
+      // Al salir del lock (Esc, prompt del navegador como "Instalar app", alt-tab) los
+      // 'keyup' se pierden y la tecla queda "pegada" → la cámara avanza sola. Reset defensivo.
+      if (!this.locked) resetInput();
     };
     const onMouseMove = (e: MouseEvent): void => {
       if (!this.locked) return;
@@ -178,7 +190,10 @@ export class FlyCamera {
     this.canvas.addEventListener('pointermove', onPointerMove);
     this.canvas.addEventListener('pointerup', onPointerEnd);
     this.canvas.addEventListener('pointercancel', onPointerEnd);
+    // Perder foco de la ventana (alt-tab, prompt del navegador) también pierde los keyup.
+    window.addEventListener('blur', resetInput);
     this.listeners.push(() => this.canvas.removeEventListener('click', onClick));
+    this.listeners.push(() => window.removeEventListener('blur', resetInput));
     this.listeners.push(() => document.removeEventListener('pointerlockchange', onLockChange));
     this.listeners.push(() => document.removeEventListener('mousemove', onMouseMove));
     this.listeners.push(() => document.removeEventListener('keydown', onKeyDown));
