@@ -2819,3 +2819,16 @@ exterior, sky solo-exterior. F6 (Nyquist −1 octava) queda para validación vis
 ### Dominio
 m13 vive ahora en **m13.phi-core.com** (marca propia, no NeoNodos) — custom domain + CNAME en
 Cloudflare (zona phi-core.com), apuntando al proyecto Pages `motor13`. Fallback: motor13.pages.dev.
+
+### Adendum 030-b — T-215: FPS Quest 3 medido (cierra el bloqueante formal de Fase 1)
+Gato midió en el navegador del Quest 3 (2026-06-26): **68-72 fps · 13.9 ms/frame · 604×364**.
+- **SC-6 (≥72 fps): alcanzado AL LÍMITE** (oscila 68-72). **NFR-7 (90): no.** Render **funcional y
+  navegable** en Quest. Esto cierra el único bloqueante *formal* que Fase 1 arrastraba desde la
+  entrada 024/026 (era "falta el número FPS Quest").
+- La resolución **604×364 es baja** (ventana del navegador 2D del Quest × `renderScale 0.7` del
+  preset quest, D-2112) → se ve pixelado; no es calidad de demo aún. Optimización aparte (no bloquea).
+- **Gate visual del detalle continuo: APROBADO por Gato** ("avancemos"). Nota suya: la geometría de
+  Chichén Itzá es v1 (cajas apiladas), falta modelado fino — trabajo de escena, no del motor.
+- **Pendiente de optimización (post, requiere re-test Quest):** subir calidad/resolución en Quest
+  aprovechando que el detalle continuo abarata el render lejano; o modo VR inmersivo (Fase 5) a
+  resolución nativa del visor.

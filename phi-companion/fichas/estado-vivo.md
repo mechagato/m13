@@ -21,12 +21,21 @@ metadata: {type: project}
 - **Easter eggs** (commit d4f4ba4) HECHOS. Material de referencia en `ref-claudedesign/artefactos/`
   (ver [[material-y-artefactos]]).
 
+## Cerrado 2026-06-26
+- **Gate visual del detalle continuo: APROBADO** por Gato ("avancemos"). Pirámide es v1 (cajas
+  apiladas, falta modelado fino — trabajo de escena).
+- **T-215 FPS Quest:** 68-72 fps @604×364 (SC-6 al límite, render funcional → cierra el bloqueante
+  formal de Fase 1). Optimización de calidad Quest = pendiente post (no bloquea).
+- **T-227** hash-regression CI: hecho.
+
 ## Pendientes
-- **Stoppers de Gato/hardware:** T-205 APK Quest · T-215 FPS Quest · T-235 video laptop.
-- **Validación visual general** del detalle continuo + Chichén Itzá (Gato en su laptop con WebGPU).
-- **Refinamientos:** T-225 micro-detalle <40cm · T-227 hash-regression CI · F6 Nyquist (calibración visual).
-- **CSG / modelado sólido** (FlowCAD/Innovafest) = el gran frente POST-Fase 2. WGSL opSub/opSmoothUnion
-  ya existe; falta exponerlo al formato. Ver [[decisiones]].
+- **Opcionales de Gato:** T-205 APK Quest · T-235 video laptop · re-eval LLM (gateway :9095 offline).
+- **Pulir Chichén Itzá** (geometría fina) — cuando Gato lo pida.
+- **Refinamientos visuales:** T-225 micro-detalle <40cm · F6 Nyquist · optimización calidad Quest
+  (requieren ojo en GPU / re-test Quest).
+- **🚀 CSG / modelado sólido** (FlowCAD/Innovafest) = el gran frente POST-Fase 2. WGSL
+  opSub/opSmoothUnion ya existe; falta exponerlo al formato `.m13`. Espera "abre el Spec de CSG"
+  de Gato. Ver [[decisiones]].
 
 ## Siguiente acción
 Pedir a Gato validación visual del look en su laptop; cerrar stoppers de Quest; luego abrir el
