@@ -343,6 +343,16 @@ function hasStaticRotation(obj: M13Object): boolean {
  * Mismo seed = mismo offset (determinista); seeds distintos = offsets distintos. K=13
  * separa lo suficiente para que las vetas/grano no se repitan.
  */
+/** P4/T-242: canal del uniform para la reactividad de audio. `true` = amplitud global
+ *  (u.audioAmp, compat); `{band}` = la banda FFT (graves→x, medios→y, agudos→z); ''=sin audio. */
+function audioChannel(ar: M13Object['audio_reactive']): string {
+  if (ar === true) return 'u.audioAmp';
+  if (typeof ar === 'object' && ar !== null) {
+    return `u.audioBands.${ar.band === 'bass' ? 'x' : ar.band === 'mid' ? 'y' : 'z'}`;
+  }
+  return '';
+}
+
 function seedOffset(seed: number): [number, number, number] {
   const h = (x: number): number => {
     const s = Math.sin(x) * 43758.5453123;
@@ -404,15 +414,16 @@ function generateObjectSdf(obj: M13Object, index: number): string {
       `sin(u.time * ${f(obj.animate.speed)}) * ${f(obj.animate.amplitude)}`,
     );
   }
-  if (obj.audio_reactive) {
-    yOffsetParts.push(`u.audioAmp * 0.1`);
+  const audioCh = audioChannel(obj.audio_reactive);
+  if (audioCh) {
+    yOffsetParts.push(`${audioCh} * 0.1`);
   }
   const yOffset = yOffsetParts.length > 0 ? yOffsetParts.join(' + ') : '0.0';
 
   // Radio adicional por audio (solo aplica a sphere, pero se calcula uniforme).
   // Default '+ 0.0' (no-op) para que la sintaxis WGSL sea válida también cuando
   // no hay audio reactivity — antes producía `sdSphere(..., r 0.0)` (inválido).
-  const extraR = obj.audio_reactive ? `+ u.audioAmp * 0.05` : `+ 0.0`;
+  const extraR = audioCh ? `+ ${audioCh} * 0.05` : `+ 0.0`;
 
   // Transformaciones adicionales (FR-1.3 rotation, animate rotate/pulse).
   // Se emiten SOLO cuando el objeto las usa: una escena sin estas features

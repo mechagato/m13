@@ -62,4 +62,24 @@ export class MicAudioInput {
     this.smoothed += (avg - this.smoothed) * 0.15;
     return this.smoothed;
   }
+
+  private bands: [number, number, number] = [0, 0, 0];
+
+  /**
+   * P4/T-241 — descompone el espectro en 3 bandas normalizadas con smoothing:
+   * graves / medios / agudos. fftSize 256 (bin ≈ 172 Hz a 44.1 kHz):
+   * bass ≈ <520 Hz, mid ≈ 520 Hz–2.4 kHz, treble ≈ >2.4 kHz.
+   */
+  getBands(): [number, number, number] {
+    if (!this.analyser || !this.data) return [0, 0, 0];
+    this.analyser.getByteFrequencyData(this.data);
+    const avg = (lo: number, hi: number): number => {
+      let s = 0;
+      for (let i = lo; i < hi; i++) s += this.data![i] ?? 0;
+      return s / Math.max(hi - lo, 1) / 255;
+    };
+    const target = [avg(1, 3), avg(3, 14), avg(14, 64)];
+    for (let i = 0; i < 3; i++) this.bands[i] += ((target[i] ?? 0) - (this.bands[i] ?? 0)) * 0.2;
+    return [this.bands[0] ?? 0, this.bands[1] ?? 0, this.bands[2] ?? 0];
+  }
 }

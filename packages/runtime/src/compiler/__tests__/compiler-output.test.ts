@@ -292,3 +292,33 @@ objects:
     expect(compiled.wgsl).toContain('n.y < -0.7'); // techo presente
   });
 });
+
+describe('compiler — audio reactivo por banda (T-242, P4)', () => {
+  const mk = (ar: string): string => `
+version: "0.1"
+name: audio_test
+walls: { concept: pared_yeso_blanco }
+floor: { concept: piso_madera_envejecida }
+ceiling: { concept: pared_yeso_blanco }
+objects:
+  - id: esfera
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0, -1, 0]
+    scale: 0.4
+    audio_reactive: ${ar}
+`;
+
+  it('audio_reactive: true → u.audioAmp (retro-compat byte-idéntica)', () => {
+    const c = compileScene(parseScene(mk('true'), { silent: true }));
+    expect(c.wgsl).toContain('u.audioAmp * 0.1');
+  });
+  it('audio_reactive: { band: bass } → u.audioBands.x (graves)', () => {
+    const c = compileScene(parseScene(mk('{ band: bass }'), { silent: true }));
+    expect(c.wgsl).toContain('u.audioBands.x * 0.1');
+  });
+  it('audio_reactive: { band: treble } → u.audioBands.z (agudos)', () => {
+    const c = compileScene(parseScene(mk('{ band: treble }'), { silent: true }));
+    expect(c.wgsl).toContain('u.audioBands.z');
+  });
+});

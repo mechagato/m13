@@ -411,6 +411,7 @@ export class M13Engine {
           up: [0, 1, 0] as Vec3,
         };
     const amp = this.audio ? this.audio.sample() : 0;
+    const bands = this.audio ? this.audio.getBands() : [0, 0, 0];
 
     writeUniforms(this.renderer, {
       resolution: [this.canvas.width, this.canvas.height],
@@ -435,8 +436,8 @@ export class M13Engine {
         this.quality.aoSamples,
         (this.quality.continuousDetail ? 1 : -1) * Math.max(this.quality.octaveCap, 1),
       ],
-      // P4 escribirá las bandas FFT reales; mientras, amplitude en .w (compat)
-      audioBands: [0, 0, 0, amp],
+      // P4/T-242: 3 bandas FFT (graves/medios/agudos) + amplitude en .w (compat).
+      audioBands: [bands[0] ?? 0, bands[1] ?? 0, bands[2] ?? 0, amp],
     });
     renderFrame(this.renderer);
 

@@ -81,7 +81,11 @@ const objectSchema = z
     seed: z.number().finite().optional(),
     /** Requerido cuando kind ≠ 'concept'. Para kind:'concept' el material viene del concept. */
     material: materialSchema.optional(),
-    audio_reactive: z.boolean().default(false),
+    /** Reactividad a audio (P4/T-242): `true` = amplitud global (compat); `{ band }` =
+     *  reacciona a una banda FFT específica (graves/medios/agudos). */
+    audio_reactive: z
+      .union([z.boolean(), z.object({ band: z.enum(['bass', 'mid', 'treble']) })])
+      .default(false),
     animate: z
       .object({
         mode: z.enum(['bob', 'rotate', 'pulse']),
