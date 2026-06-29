@@ -2832,3 +2832,48 @@ Gato midió en el navegador del Quest 3 (2026-06-26): **68-72 fps · 13.9 ms/fra
 - **Pendiente de optimización (post, requiere re-test Quest):** subir calidad/resolución en Quest
   aprovechando que el detalle continuo abarata el render lejano; o modo VR inmersivo (Fase 5) a
   resolución nativa del visor.
+
+---
+
+## 2026-06-29 — Entrada 031 — Ultra-opt Quest + resolución dinámica (commit `49db186`)
+
+**Contexto:** La medición 030-b mostró 68-72 fps a 604×364 — funcional pero pixelado para demo.
+La resolución fija `renderScale 0.7` dejaba presupuesto sin usar cuando el FPS sobraba.
+
+### Implementado (commit `49db186`, LIVE en m13.phi-core.com)
+
+**Preset `quest` re-balanceado** (`packages/runtime/src/engine.ts`):
+- `shadowSteps` 16 → 8, `aoSamples` 3 → 2, `maxSteps` 96 → 78
+- El presupuesto GPU liberado se redirige a resolución, no a más pasos de raymarch.
+- `renderScale: 0.7` sigue siendo el **piso inicial** (no el techo).
+
+**Resolución dinámica adaptativa** (`packages/examples/src/main.ts`):
+- Función `autoResolution(fps)`: muestrea 45 frames (~0.75 s), calcula avg FPS.
+  - avg > 74: sube `dynScale` en 0.06 (hasta `max(renderScale, 1.0)`)
+  - avg < 70: baja `dynScale` en 0.10 (piso 0.5)
+  - Sin cambio: sin ajuste.
+- `resize()` aplica el `dynScale` al canvas — la resolución visible sube en caliente.
+- `?dpr=<valor>` desactiva la adaptación (resolución fija, útil para comparar).
+- En desktop/mobile: `dynScale = null` → comportamiento anterior intacto.
+
+**Resultado esperado en Quest (re-medición pendiente de Gato):**
+- Si FPS se mantiene ≥72: `dynScale` converge hasta 1.0 (de 0.7 base) → resolución ~43% más alta.
+- Si cae: retrocede al piso 0.7 → FPS se recupera. Sistema estable.
+
+### Verificación
+- typecheck 6/6 · **157/157 tests** · build OK (verificado 2026-06-29).
+- 49db186 ya está en `origin/main` → Cloudflare Pages lo desplegó automáticamente.
+
+### Estado pendiente (acción humana — Gato)
+- **Re-medición en Quest**: abrir m13.phi-core.com en el Quest 3, cerrar/reabrir pestaña
+  (caché limpio), esperar ~5 s para que dynScale converja, reportar: fps + resolución W×H.
+- Objetivo: resolución real > 604×364 con FPS ≥72. Si no → afinar los deltas de ajuste.
+
+### Backlog ejecutable sin Quest (no bloqueado por hardware)
+- T-205 APK Quest: requiere Gato con ADB.
+- T-235 video laptop: requiere Gato grabando.
+- **npm publish / Fase 3**: `package.json` root tiene `"private": true`. Para publicar como
+  `m13` en npm → D-1103: `build:types` + ajustar `main`/`types` + quitar `private`.
+  Decisión de Gato pendiente (D-201: repo independiente se decide al cerrar Fase 3).
+- MANIFESTO.md ✅ (ya existe), easter eggs ✅ (commit `d4f4ba4`).
+- `notas.txt` (residuo de sesión anterior, sin trackear) → descartado, no se commitea.
