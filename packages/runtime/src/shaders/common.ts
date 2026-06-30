@@ -140,15 +140,27 @@ fn fbm_norm(p: vec3<f32>, octaves: i32) -> f32 {
 // (sin pops/popping de LOD discreto). \`minOct\` = piso de octavas; \`cap\` = u.quality.w.
 // El \`p\` que se pasa ya viene escalado por la frecuencia base del material, y
 // \`footprint\` debe estar en ESE mismo dominio (footprint_mundo * misma escala).
+//
+// T-225 (micro-detalle <40cm): cuando el footprint es muy pequeño (cerca y octavas
+// ya en el techo del cap), escalar el dominio de muestreo hacia arriba para revelar
+// detalle sub-grid que las octavas a frecuencia base no pueden mostrar. El boost se
+// aplica logarítmicamente para no "pixelar" en la transición: a footprint=1e-3 →
+// boost ≈4× (dominio 4× más fino); a footprint=0.1 → boost ≈1.6×; a footprint≥0.5
+// → boost=1 (comportamiento inalterado). El boost NO cambia el conteo de octavas
+// para preservar el balance Nyquist — solo desplaza el espectro hacia frecuencias
+// más altas que la cuadrícula base del hash.
 fn fbm_continuous(p: vec3<f32>, footprint: f32, minOct: f32, cap: f32) -> f32 {
   // Octava más alta resoluble: su longitud de onda (1/2^n) ≈ footprint → n = -log2(footprint).
   // F5: el piso nunca excede el techo (lo = min(minOct, cap)).
   let nOct = clamp(-log2(max(footprint, 1e-5)), min(minOct, cap), cap);
   let full = floor(nOct);
   let lastW = smoothstep(0.0, 1.0, nOct - full); // microtono: fade de la octava fraccional
+  // T-225: boost de dominio cercano — clamp en [1, 6] para evitar ruido excesivo en
+  // planos de colisión y mantener la invariante de normalización del rango.
+  let nearBoost = clamp(1.0 - log2(max(footprint, 1e-4)) * 0.35, 1.0, 6.0);
   var total: f32 = 0.0;
   var amp: f32 = 0.5;
-  var freq: f32 = 1.0;
+  var freq: f32 = nearBoost; // primer octava ya arranca a la frecuencia boosteada
   var ampSum: f32 = 0.0; // F2: normalizar → rango estable, sin deriva de luminancia al acercarse
   let fullI = i32(full);
   for (var i = 0; i < fullI; i++) {

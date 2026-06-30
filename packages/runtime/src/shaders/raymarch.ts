@@ -107,10 +107,8 @@ fn shade(p: vec3<f32>, rd: vec3<f32>, n: vec3<f32>) -> vec3<f32> {
   return col;
 }
 
-@fragment
-fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
-  let uv = (fragCoord.xy * 2.0 - u.resolution) / u.resolution.y;
-  let uvFixed = vec2<f32>(uv.x, -uv.y);
+// Lanza un rayo y devuelve el color tonemapeado (reutilizado por el AA de bordes).
+fn traceColor(uvFixed: vec2<f32>) -> vec3<f32> {
   let ro = u.camPos;
   let rd = normalize(u.camDir + u.camRight * uvFixed.x + u.camUp * uvFixed.y);
   let hit = raymarch(ro, rd);
@@ -122,12 +120,37 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
     let fog = 1.0 - exp(-hit.t * u.fogDensity);
     col = mix(col, u.fogColor, fog * 0.3);
   } else {
-    // Miss: color de fondo de la escena (ambient.background), mezclado con la
-    // niebla para que el horizonte no corte abrupto contra la geometría.
     col = mix(missColor(), u.fogColor, 0.25);
   }
   col = col / (1.0 + col);
-  col = pow(col, vec3<f32>(0.4545));
+  return pow(col, vec3<f32>(0.4545));
+}
+
+@fragment
+fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
+  let uv = (fragCoord.xy * 2.0 - u.resolution) / u.resolution.y;
+  let uvFixed = vec2<f32>(uv.x, -uv.y);
+  // Rayo principal
+  var col = traceColor(uvFixed);
+
+  // F6 — anti-aliasing Nyquist en bordes geométricos (T-225 companion).
+  // Detectar bordes mediante derivadas de pantalla del color: si el color cambia
+  // bruscamente entre píxeles adyacentes (dpdxFine/dpdyFine grandes), estamos en
+  // un borde de geometría SDF → lanzar 2 rayos adicionales en offsets sub-píxel
+  // y promediar. El umbral 0.04 mantiene el coste solo en bordes visibles sin
+  // desperdiciar trabajo en superficies uniformes. 1 píxel WGSL = 2/resY world-UV.
+  let dx = dpdxFine(col);
+  let dy = dpdyFine(col);
+  let edgeMag = dot(dx, dx) + dot(dy, dy);
+  if (edgeMag > 0.04 * 0.04) {
+    // Offsets horizontales ±0.5px en el espacio UV (1px = 2/resY)
+    let half = 1.0 / u.resolution.y;
+    let colA = traceColor(vec2<f32>(uvFixed.x - half, uvFixed.y));
+    let colB = traceColor(vec2<f32>(uvFixed.x + half, uvFixed.y));
+    col = (col + colA + colB) * (1.0 / 3.0);
+  }
+
+  // Viñeta
   let vignette = smoothstep(1.5, 0.5, length(uvFixed));
   col = col * mix(0.85, 1.0, vignette);
   return vec4<f32>(col, 1.0);

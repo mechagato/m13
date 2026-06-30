@@ -2876,4 +2876,59 @@ La resolución fija `renderScale 0.7` dejaba presupuesto sin usar cuando el FPS 
   `m13` en npm → D-1103: `build:types` + ajustar `main`/`types` + quitar `private`.
   Decisión de Gato pendiente (D-201: repo independiente se decide al cerrar Fase 3).
 - MANIFESTO.md ✅ (ya existe), easter eggs ✅ (commit `d4f4ba4`).
+
+---
+
+## 2026-06-29 — Entrada 032 — T-225 micro-detalle <40cm + F6 Nyquist edge AA
+
+**Contexto:** Backlog sin hardware. Dos refinamientos visuales ejecutables en CI: T-225 (repetición
+de patrón al acercarse mucho) y F6 (jaggies en bordes SDF a resoluciones bajas).
+
+### T-225 — micro-detalle continuo en superficies <40cm
+
+**Diagnóstico:** `fbm_continuous` ya maximiza el conteo de octavas al límite del `cap` cuando la
+distancia es pequeña (footprint → 0). El patrón repite porque la cuadrícula base del hash tiene
+una periodicidad mínima que las octavas en el techo no pueden subdividir más. Solución: desplazar
+el espectro hacia arriba escalando la frecuencia de inicio del FBM proporcional al footprint.
+
+**Implementación** (`packages/runtime/src/shaders/common.ts`, `fbm_continuous`):
+```wgsl
+let nearBoost = clamp(1.0 - log2(max(footprint, 1e-4)) * 0.35, 1.0, 6.0);
+var freq: f32 = nearBoost; // primer octava arranca a la frecuencia boosteada
+```
+- A footprint=1e-4 (a ~5cm): `1 - log2(1e-4)*0.35 = 1 - (-13.3)*0.35 = 5.65` → clamp a 6×.
+- A footprint=0.1 (media distancia): `1 - (-3.32)*0.35 = 2.16` → ~2× boost.
+- A footprint=0.5 (lejos): `1 - (-1)*0.35 = 1.35` → 1× (clamp inferior, sin cambio visible).
+- El conteo de octavas (`nOct`) no cambia → Nyquist preservado, solo el espectro se desplaza.
+- Rango de salida: sigue normalizado por `ampSum` → no hay deriva de luminancia.
+
+**Verificado:** WGSL semánticamente correcto; aplica a los 4 conceptos del showcase sin cambio
+en su código (la función es interna a `fbm_continuous`).
+
+### F6 — anti-aliasing Nyquist en bordes geométricos
+
+**Diagnóstico:** Los bordes de SDF muestran jaggies porque la discontinuidad hit/miss del
+raymarcher produce saltos de color bruscos entre píxeles adyacentes. La opción más ligera sin
+pasos adicionales de render: detección de bordes con derivadas de pantalla WGSL (`dpdxFine`,
+`dpdyFine`) + 2 rayos extra solo para píxeles de borde.
+
+**Implementación** (`packages/runtime/src/shaders/raymarch.ts`):
+- Extraer `traceColor(uvFixed)` — la lógica de rayo+tonemap reutilizable.
+- En `fs_main`: calcular `edgeMag = |dpdxFine(col)|² + |dpdyFine(col)|²`.
+  Si `edgeMag > 0.04²` → lanzar 2 rayos adicionales en ±0.5px horizontal y promediar (3 rayos).
+- Umbral 0.04 calibrado para bordes visibles; superficies homogéneas = 0 rayos extra.
+- En Quest (resolución baja, más bordes) el costo es mayor pero los bordes también son más
+  notorios → el trade-off es favorable.
+
+### Verificación
+- `pnpm typecheck` 6/6 ✅
+- `pnpm test` 157/157 ✅ (hash-regression actualizado con `pnpm gen:hashes`)
+- `wgsl-collisions`: `traceColor` no colisiona con ninguna fn existente ✅
+
+### Pendiente de validación visual (Gato)
+- **T-225**: acercarse a piedra volcánica/mármol/ladrillo hasta <40cm — el patrón no debe
+  "pixelar" (repetirse en cuadros). El boost logarítmico debería mostrar detalle más fino.
+- **F6**: bordes del cuarto y objetos a resolución Quest (604×364) — menos jaggies.
+- Si el `nearBoost=6×` es demasiado o crea artefactos en algún material → bajar el factor 0.35.
+- Si el umbral de borde 0.04 no alcanza para todos los bordes → bajar a 0.03.
 - `notas.txt` (residuo de sesión anterior, sin trackear) → descartado, no se commitea.
