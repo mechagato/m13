@@ -9,6 +9,26 @@
 
 ---
 
+## Encuadre obligatorio al citar este benchmark (auditoría 2026-07-02)
+
+Puntos verificados forensemente — cualquier cita externa de este documento (pitch,
+landing, paper, Innovafest) debe respetar este encuadre:
+
+- **El 30.8× es reducción de PESO DE ASSETS DE ESCENA** (descriptor semántico de
+  2,014 B vs HTML+JS+4 texturas JPG = 62,115 B), **NO rendimiento del motor**.
+- **El 91% del peso Three.js son texturas** (56,414 B); sin texturas el ratio cae a
+  ~2.83×. El claim >10× depende del supuesto de pipeline texturizado tradicional
+  (defendible como caso típico, pero hay que declararlo).
+- Considerando el bundle del motor, la reducción de **PRIMERA CARGA total es ~2.5×**.
+- El bundle m13 citado abajo (289,461 B raw / 70,935 gz) quedó **desactualizado tras
+  Fase 2**: hoy ~319,474 B raw / ~80,458 gz. El claim "bundle m13 < bundle Three"
+  se mantiene (~2.1×).
+- "Compila a WGSL válido" está **verificado en CI**; "renderiza a 60fps" es una
+  **medición manual en un solo equipo** (laptop de Gato), no reproducida
+  independientemente.
+
+---
+
 ## Resumen ejecutivo
 
 Se replicó la escena `sala_galeria.m13` (galería white-cube: cuarto 6×3.5×6 m con

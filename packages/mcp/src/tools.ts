@@ -20,7 +20,7 @@ import { parseScene, compileScene } from '@m13/runtime';
 import { listConcepts } from '@m13/synth';
 
 /** Demo público donde el share link abre el mundo 3D caminable. */
-export const SHARE_BASE_URL = 'https://motor13.neonodos.com/';
+export const SHARE_BASE_URL = 'https://m13.phi-core.com/';
 
 /** Ids de estilo válidos del generador paramétrico (derivados de STYLES, no drift). */
 export const STYLE_IDS = STYLES.map((s) => s.id) as [StyleId, ...StyleId[]];

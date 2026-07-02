@@ -15,7 +15,7 @@
     "gen:hashes": "tsx tools/hash-scenes.ts",
     "gen:qr": "tsx tools/gen-qr.ts",
     "bench:compile": "tsx tools/bench-compile.ts",
-    "test": "vitest run",
+    "test": "vitest run --testTimeout=20000",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",

@@ -30,6 +30,7 @@ una función continua de la distancia (microtonalismo aplicado a gráficos).
 
 ### Notas
 Validación visual en GPU y FPS Quest pendientes de hardware. Demo: **m13.phi-core.com**.
+El benchmark 30.8× refiere a peso de assets de escena (ver encuadre en docs/papers/phase-1-benchmark.md).
 
 ## [0.1.0] - 2026-06-12
 
@@ -56,6 +57,7 @@ Detalle completo en `BITACORA_MOTOR13.md` entradas 024/025 y `docs/spec/phase-1-
   reload (debounce 250 ms), prompt en lenguaje natural → `.m13` validado. Eval suite de
   30 prompts (T-052/T-053): **100% de pass rate en 3 corridas consecutivas** (baseline
   93.3%, una iteración del system prompt; target del spec era >70%).
+- Nota (2026-07-02): el editor LLM está implementado y probado E2E, pero NO desplegado públicamente — el demo público (m13.phi-core.com) sirve la app @m13/examples (generador paramétrico + visor). Despliegue público del editor: pendiente (requiere resolver H-01, token server-side).
 - **Demo público en https://motor13.neonodos.com** (Cloudflare Pages, custom domain via
   API): workspace agéntico estilo IDE con **generador paramétrico 100% local**
   (D-025-06 — cero LLM en el flujo de render; 185 escenas generadas validadas contra

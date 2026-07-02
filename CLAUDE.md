@@ -23,7 +23,7 @@ Si la salida trae una línea de saludo, ésa es tu primera línea. Detalle: `phi
 
 **m13** es un motor gráfico experimental **local-first** para WebGPU/WebXR. Sintetiza mundos 3D desde archivos `.m13` (YAML semántico) usando SDF raymarching + conceptos materiales procedurales — sin assets pesados, sin red en runtime.
 
-**Estado actual:** Fase 1 al 85%. Editor base funcional. Demo público LIVE en `motor13.pages.dev`. Falta cerrar editor LLM E2E + Quest 3 test + benchmark.
+**Estado actual:** Fases 0-2 COMPLETAS y en producción (m13.phi-core.com, dominio de marca propia). Quest 3: 70-72fps con resolución dinámica. Siguiente: Fase 5 (WebXR inmersivo) — ver docs/plans/roadmap-fases-restantes.md.
 
 **Owner del proyecto:** Gato (Genaro Isaí García Torres) — CEO NeoNodos.
 
@@ -105,11 +105,13 @@ Si una propuesta de cambio viola alguno de estos puntos, **detente y pregunta a 
 |---|---|---|
 | 0 | Proof of principle SDF raymarching | COMPLETED (demos HTML standalone) |
 | 1 | Lenguaje .m13 + librería conceptos | COMPLETED (gate cerrado 2026-05-28) |
-| 2 | Detalle continuo (Sonido 13 visual) | IN PROGRESS (spec aprobado 2026-06-12) |
+| 2 | Detalle continuo (Sonido 13 visual) | COMPLETED (cerrada 2026-06-26, CHANGELOG 0.2.0; T-225/F6 2026-06-29) |
 | 3 | Síntesis neural local con ONNX | PENDING |
 | 4 | Gaussian Splatting híbrido | PENDING |
 | 5 | WebXR + Quest 3 + voz | PENDING |
 | 6 | Edición temporal + Sabio Compositor | PENDING |
+
+Nota 2026-07-02: el demo canónico vive en m13.phi-core.com (motor13.pages.dev como origen Pages). Fases 3-4 saltadas hasta post-Innovafest (constitution v0.1.1).
 
 Lee `docs/spec/phase-1-spec.md` para el detalle de lo entregado en Fase 1.
 Lee `BITACORA_MOTOR13.md` entrada 2026-05-28 para el gate de cierre.
@@ -221,6 +223,8 @@ pnpm --filter @m13/synth typecheck     # typecheck solo de synth
 ---
 
 ## Proximos pasos prioritarios (Fase 2)
+
+> [ACTUALIZACIÓN 2026-07-02: Fase 2 CERRADA — esta sección quedó histórica. El plan vigente de fases restantes está en docs/plans/roadmap-fases-restantes.md.]
 
 **FASE 2 DESPAUSADA por orden directa de Gato 2026-06-12 ("continúa con las fases").**
 Spec borrador v1 en `docs/spec/phase-2-spec.md` — 5 prioridades reconstruidas
@@ -422,4 +426,4 @@ Mejor parar y preguntar que destruir el proyecto con buenas intenciones.
 
 ---
 
-*Ultima actualizacion: 2026-05-28 · T-067 cierre Fase 1 · v0.1.0*
+*Ultima actualizacion: 2026-07-02 · Fases 0-2 completas · roadmap fases restantes en docs/plans/*

@@ -2178,6 +2178,7 @@ queda EN PAUSA por orden explicita de Gato — no se toca.
 | SC-2 | Cada escena pesa <50KB de `.m13` | PASS | Medido con `wc -c`: sala_galeria=2,014 bytes (1.97 KB), cocina_industrial=2,068 bytes (2.02 KB), oficina_neonodos=2,673 bytes (2.61 KB). Las 3 escenas formales del spec estan por debajo del limite. Escenas FlowCAD van de 6.9 KB a 11.5 KB — tambien dentro de 50 KB. |
 | SC-3 | Editor permite editar YAML con live reload <500ms | PASS (parcial) | D-2104 en BITACORA documenta debounce de 250ms + compile ~6-10ms = total < 300ms estimado. Compile benchmark real: p95=21.67ms para 50 objetos. Validacion visual eyeballing en sesion — no hay medicion automatizada grabada. El criterio se considera cumplido por design (debounce+compile bien por debajo de 500ms) pero sin test E2E automatizado. |
 | SC-4 | Endpoint LLM produce .m13 valido en >70% de prompts de prueba (suite de 30) | PENDIENTE | T-052 (suite de 30 prompts) y T-053 (iteracion hasta >70%) nunca se ejecutaron. El editor LLM funciona (validado E2E manualmente con Gemini en sesion 023) pero sin suite formal de evaluacion. Requiere sesion con API key activa para ejecutar T-052/T-053. |
+> [Nota editorial 2026-07-02: SC-4 quedó SUPERSEDED por la entrada 025 (30/30 PASS) — ver también el matiz de la auditoría forense: 'pass' = validez ESTRUCTURAL (parsea+compila), no fidelidad semántica al prompt.]
 | SC-5 | Benchmark muestra reduccion de peso >10x vs equivalente Unity | PENDIENTE | T-062..T-064 (benchmark vs Three.js) no completados. `docs/papers/phase-1-benchmark.md` no existe. Se tiene el dato FlowCAD: GLB 15KB → .m13 0.9KB = 16x compresion (documentado en Entrada 023), pero no es el benchmark formal del spec. |
 | SC-6 | Quest 3 navegador renderiza una escena a 72fps minimo | BLOQUEADO | T-061 pendiente. Requiere hardware Quest 3 fisico de Gato. `docs/DEPLOY.md` tiene instrucciones step-by-step para que Gato lo ejecute en ~10-15 min (Tailscale + Horizon OS v62+). |
 | SC-7 | Una persona no-tecnica puede editar YAML y ver resultado sin onboarding | PENDIENTE | No hay registro de prueba con usuario no-tecnico. El editor existe y funciona (live reload, error markers en Monaco). Criterio subjetivo que requiere validacion humana de Gato o un usuario de prueba. |
@@ -2276,6 +2277,7 @@ sesión — listados como deuda en el reporte.
 - Baseline con prompt original: 28/30 (93.3%). Fails: formato de `window`.
 - 1 iteración del system prompt (reglas window/rotation/animate/restricciones numéricas)
 - **3 corridas oficiales consecutivas: 30/30 = 100% cada una** (target ≥70%)
+> [Nota editorial 2026-07-02: medición interna del 2026-06-11; el criterio de pass es validez estructural (parseScene+compileScene), no verifica fidelidad semántica. El gateway :9095 está offline desde ~2026-06-25 — pendiente re-corrida tras el refactor B5/B6 del catálogo.]
 - `pnpm --filter @m13/editor test:llm` reproducible
 
 ### T-062..T-064 — Benchmark vs Three.js (SC-5): **H1 VALIDADA**

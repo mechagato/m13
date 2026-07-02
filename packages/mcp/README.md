@@ -14,7 +14,7 @@ que abre el link.
 |---|---|
 | `generate_m13_scene` | Genera una escena con el generador paramétrico local (cero LLM, determinista por `seed`). Acepta `style` (`galeria` · `cocina` · `oficina` · `templo` · `minimalista` · `sorpresa`) o `prompt` libre. Devuelve YAML completo, bytes, seed, label y `share_url`. |
 | `validate_m13_scene` | Valida un YAML `.m13` en dos niveles: schema (parser Zod) + compilador WGSL (conceptos reales). Si pasa: stats (objetos, conceptos usados, bytes, versión). Si falla: el mensaje de error exacto para que el LLM corrija y reintente. |
-| `share_m13_scene` | Valida y devuelve el `share_url` (`https://motor13.neonodos.com/#scene=<base64url>`) que abre el mundo caminable. |
+| `share_m13_scene` | Valida y devuelve el `share_url` (`https://m13.phi-core.com/#scene=<base64url>`) que abre el mundo caminable. |
 | `list_m13_concepts` | Catálogo vivo de conceptos materiales/geométricos desde `@m13/synth` (id, categoría, descripción, params). Nunca driftea: se lee del registry real en cada llamada. |
 | `get_m13_format_guide` | Guía de autoría completa del formato `.m13` (reglas, restricciones numéricas, catálogo, ejemplos) para que el LLM escriba escenas a mano. Adaptada del system prompt del editor (100% pass rate en el eval T-052/053). |
 

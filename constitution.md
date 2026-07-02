@@ -1,10 +1,10 @@
 # m13 — Constitution
 
-**Versión:** 0.1.0
+**Versión:** 0.1.1
 **Estado:** Research / Experimental
 **Mantenedor:** NeoNodos · Genaro Isaí "Gato" García Torres
 **Repositorio:** github.com/mechagato/neonodos/motor-13
-**Última actualización:** 2026-05-21
+**Última actualización:** 2026-07-02
 
 ---
 
@@ -34,6 +34,10 @@ El objetivo NO es competir con Unity o Unreal en su categoría. El objetivo es *
 2. **WebXR experiences** — Quest 3, Vision Pro, Pico, navegadores móviles con XR.
 3. **Configuradores de espacios** — cocinas (Cocinas Quintana), interiores, retail.
 4. **Investigación abierta** — papers, demos, contribución a la comunidad de gráficos.
+
+### Nota de roadmap (2026-07-02, formaliza decisión de Gato del 2026-05-22)
+
+El roadmap operativo hacia Innovafest (dic 2026), definido en CLAUDE.md, SALTA las Fases 3 (síntesis neural) y 4 (Gaussian Splatting) y prioriza Fase 5 (WebXR inmersivo). Las Fases 3-4 se re-agendan post-Innovafest (2027) con decisión go/no-go explícita de Gato. La tesis H4 (síntesis neural) queda deliberadamente sin validar hasta entonces — riesgo aceptado y documentado. Bump de versión 0.1.0→0.1.1 por esta nota (regla §8.1); justificación en BITACORA_MOTOR13.md entrada 033.
 
 ---
 
