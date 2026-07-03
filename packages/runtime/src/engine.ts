@@ -91,7 +91,7 @@ export interface Quality {
   continuousDetail: boolean;
 }
 
-export type QualityPreset = 'quest' | 'mobile' | 'desktop' | 'ultra';
+export type QualityPreset = 'quest' | 'quest_xr' | 'mobile' | 'desktop' | 'ultra';
 
 export const QUALITY_PRESETS: Record<QualityPreset, Quality> = {
   // Quest 3 standalone: medido 37-48fps a dpr 1 (D-2112) — presupuesto agresivo
@@ -99,6 +99,9 @@ export const QUALITY_PRESETS: Record<QualityPreset, Quality> = {
   // para que la resolución dinámica suba la nitidez manteniendo ~72fps. renderScale es el
   // PISO inicial; la app lo sube en vivo según el FPS (ver autoResolution en examples).
   quest: { maxSteps: 78, shadowSteps: 8, aoSamples: 2, octaveCap: 3, renderScale: 0.7, continuousDetail: true },
+  // Fase 5: en VR el raymarch corre ×2 (un pass por ojo) → presupuesto aún más agresivo
+  // para sostener 72fps estéreo. El microbench en Quest (T-501) afina estos números.
+  quest_xr: { maxSteps: 52, shadowSteps: 6, aoSamples: 2, octaveCap: 3, renderScale: 1, continuousDetail: true },
   mobile: { maxSteps: 112, shadowSteps: 24, aoSamples: 4, octaveCap: 4, renderScale: 1.5, continuousDetail: true },
   // desktop = comportamiento histórico exacto del motor (pre-T-212)
   desktop: { maxSteps: 128, shadowSteps: 32, aoSamples: 5, octaveCap: 5, renderScale: 2, continuousDetail: true },
@@ -164,6 +167,7 @@ export class M13Engine {
   private xrCamera: XRCameraController | null = null;
   private xrRafId = 0;
   private xrLastTime = 0;
+  private preXRQuality: Quality | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts: M13EngineOptions = {}) {
     this.canvas = canvas;
@@ -456,6 +460,10 @@ export class M13Engine {
     const scene = this.compiled.scene;
     this.xrCamera = new XRCameraController(scene.spawn, scene.cameraSpeed ?? 2.5);
 
+    // Presupuesto estéreo (×2 ojos) — guardar la calidad 2D para restaurarla al salir.
+    this.preXRQuality = { ...this.quality };
+    this.setQuality('quest_xr');
+
     this.stop(); // pausar el loop 2D
     session.addEventListener('end', () => this.onXRSessionEnd());
     this.xrLastTime = 0;
@@ -480,6 +488,11 @@ export class M13Engine {
     this.xrLayer = null;
     this.xrCamera = null;
     this.xrRefSpace = null;
+    // Restaurar la calidad 2D previa a VR.
+    if (this.preXRQuality) {
+      this.quality = this.preXRQuality;
+      this.preXRQuality = null;
+    }
     if (!this.disposed && this.renderer && this.compiled) this.start();
   }
 

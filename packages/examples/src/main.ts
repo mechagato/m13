@@ -807,6 +807,94 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ============================================
+// Fase 5 — Entrar en VR (WebXR inmersivo) + voz editor-time
+// ============================================
+// Botón VR: aparece solo si el navegador soporta immersive-vr (Quest 3).
+void (async () => {
+  let supported = false;
+  try {
+    supported = await engine.isXRSupported();
+  } catch {
+    supported = false;
+  }
+  if (!supported) return;
+  const vrBtn = document.createElement('button');
+  vrBtn.textContent = '🥽 Entrar en VR';
+  vrBtn.style.cssText =
+    'position:fixed;bottom:16px;right:16px;z-index:9998;padding:11px 17px;background:#c9a227;' +
+    'color:#0a0c0a;border:none;border-radius:9px;font:13px "JetBrains Mono",monospace;cursor:pointer;font-weight:600';
+  document.body.appendChild(vrBtn);
+  vrBtn.addEventListener('click', () => {
+    void (async () => {
+      try {
+        if (engine.isXRActive()) {
+          await engine.exitXR();
+          vrBtn.textContent = '🥽 Entrar en VR';
+          return;
+        }
+        await engine.enterXR();
+        vrBtn.textContent = '🥽 Salir de VR';
+        taskDone('modo VR activo — ponte el visor · stick izq mover · stick der girar');
+      } catch (err) {
+        vrBtn.textContent = '🥽 Entrar en VR';
+        taskIdle('VR: ' + ((err as Error).message ?? 'no disponible'));
+      }
+    })();
+  });
+})();
+
+// Voz editor-time (Web Speech API): dictar un mundo → generar .m13 → render. Editor-time
+// puro (§3.7): la voz AUTORA la escena; el runtime nunca llama a la nube.
+interface SpeechAltLike { transcript: string }
+interface SpeechEventLike { results: ArrayLike<ArrayLike<SpeechAltLike>> }
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: SpeechEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+}
+const SRCtor = ((window as unknown as {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+}).SpeechRecognition ??
+  (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionLike })
+    .webkitSpeechRecognition);
+if (SRCtor) {
+  const micBtn = document.createElement('button');
+  micBtn.textContent = '🎤 Dictar mundo';
+  micBtn.style.cssText =
+    'position:fixed;bottom:16px;right:160px;z-index:9998;padding:11px 17px;background:rgba(10,12,10,0.86);' +
+    'color:#e8e0d0;border:1px solid #c9a227;border-radius:9px;font:13px "JetBrains Mono",monospace;cursor:pointer';
+  document.body.appendChild(micBtn);
+  micBtn.addEventListener('click', () => {
+    const rec = new SRCtor();
+    rec.lang = 'es-MX';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    micBtn.textContent = '🎤 Escuchando…';
+    rec.onresult = (e): void => {
+      const text = e.results?.[0]?.[0]?.transcript ?? '';
+      micBtn.textContent = '🎤 Dictar mundo';
+      if (!text) return;
+      taskBusy('Generando desde voz: "' + text + '"…');
+      const result = generateFromPrompt(text);
+      void renderYaml(result.yaml, 'voz.m13').then(() => taskDone('mundo dictado: "' + text + '"'));
+    };
+    rec.onerror = (): void => {
+      micBtn.textContent = '🎤 Dictar mundo';
+      taskIdle('no te escuché — intenta de nuevo');
+    };
+    rec.onend = (): void => {
+      if (micBtn.textContent === '🎤 Escuchando…') micBtn.textContent = '🎤 Dictar mundo';
+    };
+    rec.start();
+  });
+}
+
+// ============================================
 // Boot
 // ============================================
 refreshLlmStatus();
