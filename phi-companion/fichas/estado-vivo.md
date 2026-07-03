@@ -1,10 +1,10 @@
 ---
 name: estado-vivo
-description: Estado vivo de m13 (snapshot 2026-06-29). Fuente humana = BITACORA_MOTOR13.md.
+description: Estado vivo de m13 (snapshot 2026-07-02). Fuente humana = BITACORA_MOTOR13.md.
 metadata: {type: project}
 ---
 
-# Estado vivo — m13 (2026-06-29)
+# Estado vivo — m13 (2026-07-02)
 
 - **Fase 1: CERRADA** — T-215 FPS Quest medido (68-72fps); bloqueante formal cerrado.
 - **Fase 2: GRUESO COMPLETO Y EN PRODUCCIÓN** (barrida en autopilot 2026-06-26). Todo LIVE en
@@ -41,16 +41,31 @@ metadata: {type: project}
   Refactoring: `traceColor(uvFixed)` extrae la lógica del rayo para reutilizarla.
 - typecheck 6/6 · **157/157 tests** · hashes regenerados (`pnpm gen:hashes`).
 
-## Pendientes
-- **RE-MEDICIÓN QUEST (Gato):** abrir m13.phi-core.com, cerrar/reabrir pestaña, esperar 5s,
-  reportar fps + resolución W×H. Esto valida el ultra-opt.
-- **Opcionales de Gato:** T-205 APK Quest · T-235 video laptop.
-- **CSG / modelado sólido** (FlowCAD/Innovafest) = gran frente POST-Fase 2. WGSL opSub/opSmoothUnion
-  ya existe; falta exponerlo al formato `.m13`. Espera "abre el Spec de CSG" de Gato.
-- **npm publish / Fase 3:** `package.json` tiene `"private": true`. D-201: repo independiente +
-  `build:types` se decide al cerrar Fase 3. No urgente.
+## Cerrado 2026-07-02 (Entrada 033) — AUDITORÍA 7 LENTES + credibilidad IP + plan fases 3-6
+- **Quest RE-MEDIDO por Gato: 70-72fps** con resolución dinámica → ultra-opt VALIDADO.
+- **Auditoría 7 lentes** (3 SDD + 4 forenses adversariales). **Veredicto IP: SÓLIDO CON MATICES —
+  REGISTRABLE.** Cero vaporware (22/22 capacidades verificadas). Detalle continuo = REAL pero el
+  kernel es prior art → **registrar como SISTEMA integrado, no como algoritmo** (marca "m13"/
+  "Sonido 13" protegible). Ver BITACORA 033 para el desglose completo.
+- **Correcciones aplicadas** (commits 1a90c5a, 0133b14, 4f366d4): encuadre honesto del benchmark
+  (30.8×=assets; sin texturas 2.83×), notas SC-4, **constitution v0.1.1** (formaliza skip 3-4),
+  dominio MCP→m13.phi-core.com, fix flake de tests, CLAUDE.md al día. **170/170 tests.**
+- **NUEVOS TESTS que fijan la IP:** `packages/runtime/src/shaders/__tests__/fbm-continuous-math.test.ts`
+  (5 propiedades del Sonido 13) + `packages/runtime/src/camera/__tests__/fly-camera.test.ts`.
+- **PLAN MAESTRO fases 3-6 AUTORIZADO por Gato:** orden Innovafest-first **5→6→(Innovafest dic)→3→4**.
+  Ver `docs/plans/roadmap-fases-restantes.md`. Multiplayer/gaming = m13-platform (proyecto hermano
+  post-fases; Fase 6 determinismo+replay es su cimiento) — §6.5 del roadmap.
+
+## Pendientes (post-auditoría)
+- **CHECK-IN DE GATO del Spec Fase 5** (`docs/spec/phase-5-spec.md`): resolver **OQ-5.1..5.4**
+  (locomoción, migración uniforms 256B D-5001, voz P2, HUD VR) → luego Plan → Tasks → Implement.
+- **T-501 spike gate (Gato):** probar `immersive-vr`+WebGPU en el navegador del Quest ANTES de
+  construir Fase 5 (riesgo de interop inmadura).
+- **Opcionales/stoppers de Gato:** T-205 APK Quest · T-235 video · re-eval LLM (:9095 offline) ·
+  registro IP con abogado (dossier: registrar como sistema).
+- **Huecos de la auditoría aún abiertos:** H2 sin definición medible · H3 sin baseline FPS/watt
+  vs Three.js (hacer con Fase 5) · specs de Fases 3-4-6 (se generan en su ventana).
 
 ## Siguiente acción
-Esperar re-medición Quest de Gato (valida ultra-opt). T-225/F6 están en prod — validación
-visual en laptop Gato. CSG es el siguiente frente grande. Releer BITACORA (entradas 030-032)
-+ `git log --oneline -15` al arrancar.
+**Arrancar Fase 5**: esperar el check-in de Gato (OQ-5.1..5.4 del Spec) → generar Plan+Tasks →
+codear (T-501 spike primero). Releer BITACORA (entradas 030-033) + `git log --oneline -15` al arrancar.
