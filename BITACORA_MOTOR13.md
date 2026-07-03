@@ -2994,3 +2994,46 @@ recuperaron (uno había completado; el otro lo escribí a mano). Quest re-medido
 ### Próximo paso
 Check-in de Gato del Spec Fase 5 (OQ-5.1..5.4) → Plan → Tasks → Implement. T-501 (spike Quest)
 requiere el visor de Gato.
+
+---
+
+## 2026-07-03 — Entrada 034 — FASE 5 (WebXR inmersivo) CODIFICADA + en producción
+
+**Sesión companion-m13 con Fable. Orden de Gato: "Fase 5 completa, todo full". Las 4 OQ
+resueltas con mi criterio (documentadas): smooth-move+snap-turn, uniforms 256B, voz P2 en
+Fase 5, HUD VR mínimo (v1 sin HUD).**
+
+### Implementado (commits 4fcc78d → 130e631, todo en producción m13.phi-core.com)
+- **D-5001 — uniforms 192→256B** (regla D-108, mismo commit): struct +`xr`[modo,ipdHalf,..]
+  +`viewport`[x,y,w,h] +48B reservados (fases 3-6). Test de layout parsea el struct real (256).
+- **Render estéreo sin romper 2D:** `fs_main` centra el uv en `u.viewport` (en 2D = framebuffer
+  completo → visualmente idéntico; hashes regenerados por el struct común). `renderEyePass()`
+  dibuja un ojo a textura+viewport arbitrarios.
+- **`XRCameraController`** (matemática pura, 11 tests): rig del jugador (smooth-move + snap-turn
+  30° anti-mareo) + `eyeVectors` (rig ∘ viewTransform → base cámara world por ojo, camRight/camUp
+  escalados por tan(fovY/2)). `mat4mul`/`fovScaleFromProjection` exportados y testeados.
+- **Sesión WebXR en el engine:** `enterXR/exitXR/isXRSupported/isXRActive` — crea sesión
+  immersive-vr + `XRGPUBinding` (WebGPU↔WebXR) + projection layer + reference space local-floor;
+  pausa el loop 2D, arranca el estéreo. `onXRFrame`: viewer pose → locomoción → por ojo
+  (eyeVectors + writeUniforms con xr/viewport del ojo + renderEyePass + submit inmediato: el
+  orden de la queue garantiza uniforms por ojo con buffer compartido). Cierre limpio reanuda 2D.
+- **Preset `quest_xr`** (maxSteps 52, renderScale 1) — presupuesto ×2 ojos; auto-aplica/restaura.
+- **Frontend:** botón "Entrar en VR" (solo si `isXRSupported`) + **voz editor-time** (Web Speech
+  es-MX → `generateFromPrompt` → render; editor-time puro, el runtime nunca llama a la nube).
+- **Tipos WebXR mínimos locales** (sin dep nueva; `XRGPUBinding` no está en @types/webxr aún).
+  Si el navegador no lo trae → error claro (T-501, fallback 2D).
+
+### Verificación
+typecheck 6/6 · **181/181 tests** (11 nuevos de la cámara XR) · build OK · hashes regenerados ·
+determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
+
+### Pendiente = STOPPER de hardware (Gato)
+- **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
+  navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo
+  detecta y cae a la vista 2D. Requiere el visor.
+- **T-513 [QUEST-TEST]:** Chichén Itzá caminable en VR + FPS estéreo (SC5-1/2/3) + voz (SC5-6).
+- Ver `docs/spec/phase-5-spec.md` y `docs/tasks/phase-5-tasks.md`.
+
+### Próximo
+T-501/T-513 con el Quest de Gato → ajustar `quest_xr` según microbench. Luego Fase 6 (edición
+temporal — cimiento del multiplayer m13-platform).

@@ -1,10 +1,10 @@
 ---
 name: estado-vivo
-description: Estado vivo de m13 (snapshot 2026-07-02). Fuente humana = BITACORA_MOTOR13.md.
+description: Estado vivo de m13 (snapshot 2026-07-03). Fuente humana = BITACORA_MOTOR13.md.
 metadata: {type: project}
 ---
 
-# Estado vivo — m13 (2026-07-02)
+# Estado vivo — m13 (2026-07-03)
 
 - **Fase 1: CERRADA** — T-215 FPS Quest medido (68-72fps); bloqueante formal cerrado.
 - **Fase 2: GRUESO COMPLETO Y EN PRODUCCIÓN** (barrida en autopilot 2026-06-26). Todo LIVE en
@@ -66,6 +66,17 @@ metadata: {type: project}
 - **Huecos de la auditoría aún abiertos:** H2 sin definición medible · H3 sin baseline FPS/watt
   vs Three.js (hacer con Fase 5) · specs de Fases 3-4-6 (se generan en su ventana).
 
+## Cerrado 2026-07-03 (Entrada 034) — FASE 5 WebXR CODIFICADA + en producción
+- Gato: "Fase 5 completa, todo full". OQ resueltas (smooth-move+snap-turn, uniforms 256B, voz P2,
+  HUD VR mínimo). Commits 4fcc78d→130e631, todo LIVE en m13.phi-core.com.
+- **D-5001**: uniforms 192→256B (`xr`+`viewport`+reserva). **Render estéreo** sin romper 2D
+  (`fs_main` viewport-aware; `renderEyePass`). **`XRCameraController`** (rig+locomoción+eyeVectors,
+  11 tests). **Sesión WebXR** en engine (enterXR/onXRFrame estéreo con XRGPUBinding). Preset
+  **`quest_xr`**. Botón "Entrar en VR" + **voz editor-time** (Web Speech es-MX). **181/181 tests.**
+- **STOPPER GATO:** T-501 (spike WebGPU+WebXR en el Quest — interop nueva, fallback 2D si falta) y
+  T-513 (Chichén en VR + FPS estéreo). Ver `docs/spec/phase-5-spec.md` + `docs/tasks/phase-5-tasks.md`.
+
 ## Siguiente acción
-**Arrancar Fase 5**: esperar el check-in de Gato (OQ-5.1..5.4 del Spec) → generar Plan+Tasks →
-codear (T-501 spike primero). Releer BITACORA (entradas 030-033) + `git log --oneline -15` al arrancar.
+Esperar T-501/T-513 de Gato en el Quest (valida VR real + ajusta `quest_xr`). Mientras, se puede
+arrancar **Fase 6** (edición temporal + determinismo/replay = cimiento del multiplayer m13-platform).
+Releer BITACORA (entradas 032-034) + `git log --oneline -18` al arrancar.
