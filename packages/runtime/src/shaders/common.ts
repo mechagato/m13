@@ -39,6 +39,14 @@ struct Uniforms {
   quality: vec4<f32>,
   // audioBands: x=bass, y=mid, z=treble, w=amplitude (compat con audioAmp)
   audioBands: vec4<f32>,
+  // Layout v3 (Fase 5, D-5001 — 192→256B): 64 bytes reservados para XR y fases 3-6.
+  // xr: x=modo (0=2D, 1=ojo izq, 2=ojo der), y=IPD/2 (offset lateral por ojo, m),
+  //     z=reservado, w=reservado. El raymarcher NO lo usa aún (la base cam ya viene
+  //     por-ojo desde writeUniforms); es plumbing para foveation/estéreo avanzado.
+  xr: vec4<f32>,
+  _rsv0: vec4<f32>, // reservado (fases 3-6: neural/temporal/splatting)
+  _rsv1: vec4<f32>, // reservado
+  _rsv2: vec4<f32>, // reservado
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;

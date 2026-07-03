@@ -1,9 +1,9 @@
 import type { CompiledScene } from '../compiler/index.js';
 
-// Layout v2 (Fase 2): 160 base + 16 quality + 16 audioBands.
+// Layout v3 (Fase 5, D-5001): 160 base + 16 quality + 16 audioBands + 16 xr + 48 reservados.
 // REGLA D-108: si tocas esto, actualiza struct Uniforms (shaders/common.ts) y
 // writeUniforms en el MISMO commit. El test uniform-layout.test.ts lo verifica.
-export const UNIFORM_BYTES = 192;
+export const UNIFORM_BYTES = 256;
 
 /**
  * Budget máximo del buffer MAT_PARAMS — 64 f32 = 256 bytes.
@@ -45,6 +45,8 @@ export interface UniformInputs {
   quality: [number, number, number, number];
   /** [bass, mid, treble, amplitude] — bandas FFT en P4; amplitude = compat */
   audioBands: [number, number, number, number];
+  /** [modo(0=2D,1=izq,2=der), ipdHalf, rsv, rsv] — XR (Fase 5, D-5001). Default [0,0,0,0]. */
+  xr?: [number, number, number, number];
 }
 
 /** Redondea bytes al múltiplo de 16 más cercano (mínimo 16). WebGPU lo exige para uniform buffers. */
@@ -306,6 +308,13 @@ export function writeUniforms(state: RendererState, u: UniformInputs): void {
   dv.setFloat32(o, u.audioBands[1], true); o += 4;
   dv.setFloat32(o, u.audioBands[2], true); o += 4;
   dv.setFloat32(o, u.audioBands[3], true); o += 4;
+  // xr (layout v3, D-5001). Sin XR → [0,0,0,0]. Los 48 bytes reservados quedan en 0
+  // (el ArrayBuffer se inicializa a cero), no hace falta escribirlos explícitamente.
+  const xr = u.xr ?? [0, 0, 0, 0];
+  dv.setFloat32(o, xr[0], true); o += 4;
+  dv.setFloat32(o, xr[1], true); o += 4;
+  dv.setFloat32(o, xr[2], true); o += 4;
+  dv.setFloat32(o, xr[3], true); o += 4;
   state.device.queue.writeBuffer(state.uniformBuffer, 0, buf);
 }
 
@@ -367,4 +376,39 @@ export function renderFrame(state: RendererState): void {
   pass.draw(3);
   pass.end();
   state.device.queue.submit([encoder.finish()]);
+}
+
+/**
+ * Un ojo/viewport del render estéreo WebXR (Fase 5). A diferencia de renderFrame,
+ * dibuja a una textura y viewport arbitrarios (los del ojo, provistos por la capa XR)
+ * y acumula en un encoder compartido para hacer UN solo submit por frame XR.
+ *
+ * El shader es idéntico al 2D: fs_main construye los rayos con camPos/camDir/camRight/
+ * camUp del uniform — que writeUniforms ya escribió con la base cámara de ESTE ojo.
+ * Por eso Fase 5 no toca WGSL ni rompe el path 2D (hash-regression intacto).
+ */
+export function renderEyePass(
+  state: RendererState,
+  encoder: GPUCommandEncoder,
+  targetView: GPUTextureView,
+  viewport: { x: number; y: number; width: number; height: number },
+  clear: boolean,
+): void {
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: targetView,
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        // Ambos ojos comparten la misma textura del framebuffer XR: el primero limpia,
+        // el segundo preserva (load) para no borrar el ojo ya dibujado.
+        loadOp: clear ? 'clear' : 'load',
+        storeOp: 'store',
+      },
+    ],
+  });
+  pass.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, 0, 1);
+  pass.setPipeline(state.pipeline);
+  pass.setBindGroup(0, state.bindGroup);
+  pass.draw(3);
+  pass.end();
 }

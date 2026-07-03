@@ -45,7 +45,7 @@ describe('uniform layout (D-108 guard)', () => {
     expect(wgslStructSize(COMMON_WGSL, 'Uniforms')).toBe(UNIFORM_BYTES);
   });
 
-  it('layout v2 mide exactamente 192 bytes (160 base + quality + audioBands)', () => {
-    expect(UNIFORM_BYTES).toBe(192);
+  it('layout v3 mide exactamente 256 bytes (192 v2 + xr + 48 reservados, D-5001)', () => {
+    expect(UNIFORM_BYTES).toBe(256);
   });
 });
