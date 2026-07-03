@@ -128,7 +128,11 @@ fn traceColor(uvFixed: vec2<f32>) -> vec3<f32> {
 
 @fragment
 fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
-  let uv = (fragCoord.xy * 2.0 - u.resolution) / u.resolution.y;
+  // uv centrado en el VIEWPORT (Fase 5): en 2D u.viewport = [0,0,resolution] → idéntico
+  // al cálculo anterior; en XR estéreo es el rect del ojo dentro del framebuffer compartido.
+  let vpOrigin = u.viewport.xy;
+  let vpSize = u.viewport.zw;
+  let uv = ((fragCoord.xy - vpOrigin) * 2.0 - vpSize) / vpSize.y;
   let uvFixed = vec2<f32>(uv.x, -uv.y);
   // Rayo principal
   var col = traceColor(uvFixed);
@@ -143,8 +147,8 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
   let dy = dpdyFine(col);
   let edgeMag = dot(dx, dx) + dot(dy, dy);
   if (edgeMag > 0.04 * 0.04) {
-    // Offsets horizontales ±0.5px en el espacio UV (1px = 2/resY)
-    let half = 1.0 / u.resolution.y;
+    // Offsets horizontales ±0.5px en el espacio UV (1px = 2/vpH; vpH = alto del viewport)
+    let half = 1.0 / u.viewport.w;
     let colA = traceColor(vec2<f32>(uvFixed.x - half, uvFixed.y));
     let colB = traceColor(vec2<f32>(uvFixed.x + half, uvFixed.y));
     col = (col + colA + colB) * (1.0 / 3.0);

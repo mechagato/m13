@@ -47,6 +47,8 @@ export interface UniformInputs {
   audioBands: [number, number, number, number];
   /** [modo(0=2D,1=izq,2=der), ipdHalf, rsv, rsv] — XR (Fase 5, D-5001). Default [0,0,0,0]. */
   xr?: [number, number, number, number];
+  /** [x,y,w,h] del viewport. Default = [0,0,resolution] (2D). En XR = rect del ojo. */
+  viewport?: [number, number, number, number];
 }
 
 /** Redondea bytes al múltiplo de 16 más cercano (mínimo 16). WebGPU lo exige para uniform buffers. */
@@ -308,13 +310,19 @@ export function writeUniforms(state: RendererState, u: UniformInputs): void {
   dv.setFloat32(o, u.audioBands[1], true); o += 4;
   dv.setFloat32(o, u.audioBands[2], true); o += 4;
   dv.setFloat32(o, u.audioBands[3], true); o += 4;
-  // xr (layout v3, D-5001). Sin XR → [0,0,0,0]. Los 48 bytes reservados quedan en 0
-  // (el ArrayBuffer se inicializa a cero), no hace falta escribirlos explícitamente.
+  // xr (layout v3, D-5001). Sin XR → [0,0,0,0].
   const xr = u.xr ?? [0, 0, 0, 0];
   dv.setFloat32(o, xr[0], true); o += 4;
   dv.setFloat32(o, xr[1], true); o += 4;
   dv.setFloat32(o, xr[2], true); o += 4;
   dv.setFloat32(o, xr[3], true); o += 4;
+  // viewport [x,y,w,h]. Default = framebuffer completo (2D neutro).
+  const vp = u.viewport ?? [0, 0, u.resolution[0], u.resolution[1]];
+  dv.setFloat32(o, vp[0], true); o += 4;
+  dv.setFloat32(o, vp[1], true); o += 4;
+  dv.setFloat32(o, vp[2], true); o += 4;
+  dv.setFloat32(o, vp[3], true); o += 4;
+  // Los 32 bytes reservados (_rsv1,_rsv2) quedan en 0 (ArrayBuffer se inicializa a cero).
   state.device.queue.writeBuffer(state.uniformBuffer, 0, buf);
 }
 
