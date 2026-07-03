@@ -7,15 +7,54 @@ import {
   destroySceneResources,
   destroyRendererCore,
   renderFrame,
+  renderEyePass,
   writeUniforms,
   writeMatParams,
   type RendererState,
   type RendererCore,
   type SceneResources,
+  type UniformInputs,
 } from './renderer/index.js';
 import { FlyCamera, type FlyCameraOptions } from './camera/fly-camera.js';
+import { XRCameraController, type XRLocomotionInput } from './camera/xr-camera.js';
 import { MicAudioInput } from './audio/mic-input.js';
 import type { FrameStats, Vec3 } from './types.js';
+
+// ---- Tipos WebXR mínimos (Fase 5). @types/webxr no trae XRGPUBinding aún, así que
+// declaramos localmente solo lo que usamos y accedemos vía cast — sin dependencia nueva.
+interface XRRigidTransformLike { matrix: Float32Array }
+interface XRViewLike { transform: XRRigidTransformLike; projectionMatrix: Float32Array; eye: string }
+interface XRViewerPoseLike { views: readonly XRViewLike[] }
+interface XRInputSourceLike { handedness: string; gamepad?: { axes: readonly number[] } | null }
+interface XRSessionLike {
+  requestReferenceSpace(type: string): Promise<unknown>;
+  requestAnimationFrame(cb: (t: number, frame: XRFrameLike) => void): number;
+  cancelAnimationFrame(id: number): void;
+  updateRenderState(state: { layers?: unknown[] }): void;
+  addEventListener(type: string, cb: () => void): void;
+  end(): Promise<void>;
+  readonly inputSources: readonly XRInputSourceLike[];
+}
+interface XRFrameLike { session: XRSessionLike; getViewerPose(space: unknown): XRViewerPoseLike | null }
+interface XRSubImageLike { colorTexture: GPUTexture; viewport: { x: number; y: number; width: number; height: number } }
+type XRProjectionLayerLike = object;
+interface XRGPUBindingLike {
+  createProjectionLayer(init?: { colorFormat?: GPUTextureFormat }): XRProjectionLayerLike;
+  getViewSubImage(layer: XRProjectionLayerLike, view: XRViewLike): XRSubImageLike;
+}
+
+/** Lee locomoción de los input sources XR: mano izq = mover, mano der = girar. */
+function readXRInput(sources: readonly XRInputSourceLike[]): XRLocomotionInput {
+  let move: [number, number] = [0, 0];
+  let turn = 0;
+  for (const s of sources) {
+    const ax = s.gamepad?.axes;
+    if (!ax || ax.length < 4) continue;
+    if (s.handedness === 'left') move = [ax[2] ?? 0, -(ax[3] ?? 0)];
+    else if (s.handedness === 'right') turn = ax[2] ?? 0;
+  }
+  return { move, turn };
+}
 
 export interface M13EngineOptions {
   /** Capa de pixel ratio (default: min(devicePixelRatio, 2)) */
@@ -117,6 +156,14 @@ export class M13Engine {
   private loadChain: Promise<unknown> = Promise.resolve();
   /** true mientras una carga reemplaza el renderer — el tick no toca el contexto. */
   private loading = false;
+  // --- Estado WebXR (Fase 5) ---
+  private xrSession: XRSessionLike | null = null;
+  private xrRefSpace: unknown = null;
+  private xrBinding: XRGPUBindingLike | null = null;
+  private xrLayer: XRProjectionLayerLike | null = null;
+  private xrCamera: XRCameraController | null = null;
+  private xrRafId = 0;
+  private xrLastTime = 0;
 
   constructor(canvas: HTMLCanvasElement, opts: M13EngineOptions = {}) {
     this.canvas = canvas;
@@ -326,6 +373,175 @@ export class M13Engine {
     cancelRaf(this.rafId);
   }
 
+  /** Partes NO-cámara del uniform (luz/ambiente/fog/quality/audio) — compartidas por 2D y XR. */
+  private sceneUniforms(
+    scene: M13Scene,
+    time: number,
+    amp: number,
+    bands: number[],
+  ): Omit<UniformInputs, 'resolution' | 'camPos' | 'camDir' | 'camRight' | 'camUp' | 'xr' | 'viewport'> {
+    return {
+      time,
+      audioAmp: amp,
+      lightPos: [...scene.light.position],
+      lightColor: [...scene.light.color],
+      lightIntensity: scene.light.intensity,
+      ambientColor: [...scene.ambient.ambientColor],
+      fogColor: [...scene.ambient.fogColor],
+      fogDensity: scene.ambient.fogDensity,
+      tint: [...scene.ambient.tint],
+      // .w = octaveCap con SIGNO = toggle detalle continuo (negativo = octavas fijas), magnitud >= 1.
+      quality: [
+        this.quality.maxSteps,
+        this.quality.shadowSteps,
+        this.quality.aoSamples,
+        (this.quality.continuousDetail ? 1 : -1) * Math.max(this.quality.octaveCap, 1),
+      ],
+      audioBands: [bands[0] ?? 0, bands[1] ?? 0, bands[2] ?? 0, amp],
+    };
+  }
+
+  // ============================================================
+  // WebXR — sesión inmersiva estéreo (Fase 5)
+  // ============================================================
+
+  /** true si el navegador soporta una sesión immersive-vr (Quest). */
+  async isXRSupported(): Promise<boolean> {
+    const xr = (navigator as unknown as { xr?: { isSessionSupported(m: string): Promise<boolean> } }).xr;
+    if (!xr) return false;
+    try {
+      return await xr.isSessionSupported('immersive-vr');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Entra en VR: crea la sesión immersive-vr, el binding WebGPU↔WebXR y arranca el
+   * loop estéreo. Pausa el loop 2D. Requiere una escena cargada y XRGPUBinding
+   * (WebGPU+WebXR) — si el navegador aún no lo trae, lanza error claro (T-501).
+   */
+  async enterXR(): Promise<void> {
+    if (this.xrSession) return;
+    if (!this.core || !this.renderer || !this.compiled) {
+      throw new Error('[m13/xr] enterXR() sin escena cargada');
+    }
+    const xr = (navigator as unknown as {
+      xr?: { requestSession(m: string, init?: unknown): Promise<XRSessionLike> };
+    }).xr;
+    if (!xr) throw new Error('[m13/xr] WebXR no disponible en este navegador');
+    const XRGPUBindingCtor = (globalThis as unknown as {
+      XRGPUBinding?: new (s: XRSessionLike, d: GPUDevice) => XRGPUBindingLike;
+    }).XRGPUBinding;
+    if (!XRGPUBindingCtor) {
+      throw new Error(
+        '[m13/xr] Este navegador no soporta WebGPU+WebXR (XRGPUBinding no existe). ' +
+          'T-501: interop pendiente — usa la vista 2D en el navegador del Quest mientras tanto.',
+      );
+    }
+
+    const session = await xr.requestSession('immersive-vr', {
+      optionalFeatures: ['local-floor'],
+    });
+    this.xrSession = session;
+    const binding = new XRGPUBindingCtor(session, this.core.device);
+    this.xrBinding = binding;
+    const layer = binding.createProjectionLayer({ colorFormat: this.core.format });
+    this.xrLayer = layer;
+    session.updateRenderState({ layers: [layer] });
+    this.xrRefSpace = await session
+      .requestReferenceSpace('local-floor')
+      .catch(() => session.requestReferenceSpace('local'));
+
+    const scene = this.compiled.scene;
+    this.xrCamera = new XRCameraController(scene.spawn, scene.cameraSpeed ?? 2.5);
+
+    this.stop(); // pausar el loop 2D
+    session.addEventListener('end', () => this.onXRSessionEnd());
+    this.xrLastTime = 0;
+    this.xrRafId = session.requestAnimationFrame((t, f) => this.onXRFrame(t, f));
+  }
+
+  /** Sale de VR (termina la sesión; el 'end' event reanuda el loop 2D). */
+  async exitXR(): Promise<void> {
+    if (this.xrSession) await this.xrSession.end().catch(() => undefined);
+  }
+
+  /** true si hay una sesión XR activa. */
+  isXRActive(): boolean {
+    return this.xrSession !== null;
+  }
+
+  private onXRSessionEnd(): void {
+    if (this.xrSession) this.xrSession.cancelAnimationFrame(this.xrRafId);
+    this.xrRafId = 0;
+    this.xrSession = null;
+    this.xrBinding = null;
+    this.xrLayer = null;
+    this.xrCamera = null;
+    this.xrRefSpace = null;
+    if (!this.disposed && this.renderer && this.compiled) this.start();
+  }
+
+  private onXRFrame(t: number, frame: XRFrameLike): void {
+    if (!this.xrSession) return;
+    this.xrRafId = this.xrSession.requestAnimationFrame((tt, ff) => this.onXRFrame(tt, ff));
+    if (!this.renderer || !this.compiled || !this.core || !this.xrBinding || !this.xrLayer || !this.xrCamera) {
+      return;
+    }
+    const pose = frame.getViewerPose(this.xrRefSpace);
+    if (!pose) return;
+
+    const dt = this.xrLastTime ? Math.min((t - this.xrLastTime) / 1000, 0.05) : 0;
+    this.xrLastTime = t;
+    const time = t / 1000;
+
+    // Locomoción del rig (thumbsticks) + fps
+    this.xrCamera.updateRig(dt, readXRInput(this.xrSession.inputSources));
+    this.fpsTimer += dt;
+    if (this.fpsTimer > 0.5 && dt > 0) {
+      this.lastFps = 1 / dt;
+      this.lastMs = dt * 1000;
+      this.fpsTimer = 0;
+    }
+
+    const scene = this.compiled.scene;
+    const amp = this.audio ? this.audio.sample() : 0;
+    const bands = this.audio ? this.audio.getBands() : [0, 0, 0];
+    const base = this.sceneUniforms(scene, time, amp, bands);
+    const device = this.core.device;
+
+    // Un ojo a la vez: writeUniforms (buffer compartido) + submit inmediato garantizan
+    // que cada pass lea SUS uniforms (el orden en la queue del device se respeta).
+    pose.views.forEach((view, i) => {
+      const sub = this.xrBinding!.getViewSubImage(this.xrLayer!, view);
+      const cam = this.xrCamera!.eyeVectors(view.transform.matrix, view.projectionMatrix);
+      const vp = sub.viewport;
+      writeUniforms(this.renderer!, {
+        ...base,
+        resolution: [vp.width, vp.height],
+        camPos: [cam.pos[0], cam.pos[1], cam.pos[2]],
+        camDir: [cam.forward[0], cam.forward[1], cam.forward[2]],
+        camRight: [cam.right[0], cam.right[1], cam.right[2]],
+        camUp: [cam.up[0], cam.up[1], cam.up[2]],
+        xr: [i + 1, 0, 0, 0],
+        viewport: [vp.x, vp.y, vp.width, vp.height],
+      });
+      const encoder = device.createCommandEncoder();
+      renderEyePass(this.renderer!, encoder, sub.colorTexture.createView(), vp, true);
+      device.queue.submit([encoder.finish()]);
+    });
+
+    this.frameCount++;
+    this.opts.onFrame?.({
+      fps: this.lastFps,
+      ms: this.lastMs,
+      frameCount: this.frameCount,
+      cameraPos: this.xrCamera.getRigPos(),
+      audioAmplitude: amp,
+    });
+  }
+
   /**
    * Libera todos los recursos GPU y deja el engine en estado no-usable.
    *
@@ -343,6 +559,16 @@ export class M13Engine {
     // Idempotente: segunda llamada es no-op.
     if (this.disposed) return;
     this.disposed = true;
+
+    // Terminar sesión XR si estaba activa (fire-and-forget).
+    if (this.xrSession) {
+      this.xrSession.cancelAnimationFrame(this.xrRafId);
+      void this.xrSession.end().catch(() => undefined);
+      this.xrSession = null;
+      this.xrBinding = null;
+      this.xrLayer = null;
+      this.xrCamera = null;
+    }
 
     // Detener el loop de render primero para que el tick no acceda a recursos
     // ya destruidos si hay un frame en vuelo.
@@ -417,30 +643,12 @@ export class M13Engine {
     const bands = this.audio ? this.audio.getBands() : [0, 0, 0];
 
     writeUniforms(this.renderer, {
+      ...this.sceneUniforms(scene, time, amp, bands),
       resolution: [this.canvas.width, this.canvas.height],
-      time,
-      audioAmp: amp,
       camPos: [cam.pos[0], cam.pos[1], cam.pos[2]],
       camDir: [cam.forward[0], cam.forward[1], cam.forward[2]],
       camRight: [cam.right[0], cam.right[1], cam.right[2]],
       camUp: [cam.up[0], cam.up[1], cam.up[2]],
-      lightPos: [...scene.light.position],
-      lightColor: [...scene.light.color],
-      lightIntensity: scene.light.intensity,
-      ambientColor: [...scene.ambient.ambientColor],
-      fogColor: [...scene.ambient.fogColor],
-      fogDensity: scene.ambient.fogDensity,
-      tint: [...scene.ambient.tint],
-      // .w lleva el octaveCap; su SIGNO es el toggle de detalle continuo (negativo = octavas
-      // fijas). Magnitud >= 1 para que octaveCap=0 no colapse el toggle (-0 no es < 0).
-      quality: [
-        this.quality.maxSteps,
-        this.quality.shadowSteps,
-        this.quality.aoSamples,
-        (this.quality.continuousDetail ? 1 : -1) * Math.max(this.quality.octaveCap, 1),
-      ],
-      // P4/T-242: 3 bandas FFT (graves/medios/agudos) + amplitude en .w (compat).
-      audioBands: [bands[0] ?? 0, bands[1] ?? 0, bands[2] ?? 0, amp],
     });
     renderFrame(this.renderer);
 
