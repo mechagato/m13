@@ -2934,3 +2934,63 @@ pasos adicionales de render: detección de bordes con derivadas de pantalla WGSL
 - Si el `nearBoost=6×` es demasiado o crea artefactos en algún material → bajar el factor 0.35.
 - Si el umbral de borde 0.04 no alcanza para todos los bordes → bajar a 0.03.
 - `notas.txt` (residuo de sesión anterior, sin trackear) → descartado, no se commitea.
+
+---
+
+## 2026-07-02 — Entrada 033 — AUDITORÍA 7 LENTES (SDD + forense IP) + correcciones + plan maestro + Spec Fase 5
+
+**Sesión companion-m13 con Fable. Orden de Gato: revisar SDD buscando huecos y corregirlos, y
+auditar el código para CREDIBILIDAD antes de registrar la propiedad intelectual.**
+
+### Auditoría (3 lentes SDD + 4 forenses adversariales)
+**VEREDICTO GLOBAL IP: SÓLIDO CON MATICES — REGISTRABLE.**
+- **Forense Sonido 13:** PARCIALMENTE REAL — el detalle continuo es código genuino, matemática
+  correcta, cableado real cámara→footprint→octavas→pixel, activo en producción y mensurablemente
+  distinto de fbm fijo. PERO el kernel matemático (octavas ≈ −log2(footprint) + cross-fade) es
+  prior art (band-limited fBm, Perlin/Musgrave/Quilez) y "Sonido 13" es metáfora/branding.
+  **Recomendación al abogado: registrar como SISTEMA integrado** (formato .m13 LLM-first +
+  compilador determinista YAML→WGSL + detalle continuo + local-first WebGPU/WebXR), NO como
+  algoritmo de ruido. Marca "m13"/"Sonido 13" protegible como identidad.
+- **Forense tests:** CREÍBLES (~90% genuinos, cero teatro; mocking solo del borde GPU).
+- **Forense maquillaje:** CERO vaporware — 22/22 capacidades verificadas contra código; lo
+  pendiente honestamente marcado. Demo desplegado = código del repo.
+- **Forense empírico:** 11/11 escenas <50KB compilan en strict; 30.84× reproducido al centésimo
+  (matiz: peso de assets; sin texturas 2.83×; primera carga 2.5×); eval LLM real pero no
+  reproducible hoy (:9095 offline) y "pass"=estructural; MCP 5 tools E2E verificado por stdio.
+- **SDD:** Fases 3-6 sin Spec Kit (§8.2); Fase 5 con 3 bloqueadores técnicos (estéreo, uniforms
+  llenos, FlyCamera↔XR); conflicto Constitution↔skip-rules sin formalizar; H2 sin definición
+  medible; H3 sin baseline; docs stale.
+
+### Correcciones aplicadas (commits 1a90c5a + 0133b14)
+- Benchmark: sección "Encuadre obligatorio al citar" (30.8×=assets; 2.83× sin texturas; 2.5×
+  primera carga; bundle actualizado; compila≠renderiza).
+- BITACORA 024/025: notas editoriales SC-4 (superseded + estructural≠semántico).
+- **constitution v0.1.1**: nota formaliza el skip de Fases 3-4 (decisión Gato 2026-05-22) + H4
+  como riesgo aceptado. CLAUDE.md al día (Fases 0-2 COMPLETAS). CHANGELOG: editor LLM no-live.
+- MCP: SHARE_BASE_URL → m13.phi-core.com. package.json: test --testTimeout=20000 (mata el flake).
+- **test(camera):** suite FlyCamera 8 tests. **test(shaders): fbm-continuous-math.test.ts** —
+  FIJA la matemática de la IP (5 propiedades: continuidad microtonal medida contra un LOD
+  discreto de referencia — el escalón discreto no baja al refinar el paso, el continuo sí;
+  normalización; monotonía; toggle; wiring real en WGSL compilado). **170/170 tests.**
+
+### Plan maestro + gaming + Spec Fase 5
+- `docs/plans/roadmap-fases-restantes.md` v2: terminar Fases 3-6, orden Innovafest-first
+  **5 (jul) → 6 (ago-sep) → 3 (oct-nov, dataset desde ya) → Innovafest → 4 (2027)**. AUTORIZADO
+  por Gato 2026-07-02 ("si continúa").
+- **§6.5 gaming/multiplayer (aclaración pedida por Gato):** multiplayer NO está en Fases 3-6 —
+  es m13-platform (Idea 2, proyecto hermano post-éxito comercial, decisión de Gato 2026-05-21;
+  Constitution §5 lo excluye). La Fase 6 (determinismo+replay) es el CIMIENTO técnico que deja
+  el motor listo para ese netcode futuro.
+- `docs/spec/phase-5-spec.md` BORRADOR v1: sesión immersive-vr, render estéreo (D-5001: uniforms
+  192→256B con reserva), ICameraController (FlyCamera + XRCameraController), preset quest_xr,
+  T-501 spike gate (WebGPU↔WebXR en el navegador del Quest ANTES de construir), SC5-1..6.
+  **Esperando check-in de Gato: OQ-5.1..5.4.**
+
+### Contexto de sesión
+Los 3 subagents finales del workflow murieron por límite de sesión (reset 6:30am) — 2 se
+recuperaron (uno había completado; el otro lo escribí a mano). Quest re-medido por Gato:
+**70-72fps** con resolución dinámica (ultra-opt validado).
+
+### Próximo paso
+Check-in de Gato del Spec Fase 5 (OQ-5.1..5.4) → Plan → Tasks → Implement. T-501 (spike Quest)
+requiere el visor de Gato.

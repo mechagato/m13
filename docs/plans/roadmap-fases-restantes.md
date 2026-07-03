@@ -101,6 +101,21 @@ modelos —también lo usa Fase 3). Es la fase más pesada; va después del even
 | **Registro IP** | decide Gato | dossier técnico honesto para el abogado (opcional, lo preparo) |
 | **Pilotos B2B** (PLANVR/Domus/FlowCAD-viewer) | ago+ | requieren confirmación de cliente por Gato |
 
+## §6.5 — m13 for gaming / multiplayer: dónde vive (aclaración pedida por Gato 2026-07-02)
+
+**El multiplayer/netcode NO está dentro de las Fases 3-6** — por decisión propia de Gato ya
+registrada: Constitution §5 lo excluye del scope ("hasta nuevo aviso") y la Idea 2 del CLAUDE.md
+("m13-platform", el "nuevo Roblox" con NPCs LLM + netcode + physics + avatares) fue confirmada por
+Gato el 2026-05-21 como **proyecto hermano separado, POST-éxito comercial de m13** (~18-24 meses,
+repo aparte). No es una fase del motor.
+
+**Lo que las fases SÍ aportan al gaming:** la **Fase 6 es el CIMIENTO técnico del multiplayer** —
+determinismo runtime (§3.5: mismas entradas = mismas salidas) + replay determinista (grabar
+input/timestamps → reproducir exacto) son exactamente los pre-requisitos de un netcode simple
+(lockstep/rollback) sin sincronización compleja. Al cerrar las 6 fases, el motor queda **listo para
+que m13-platform se construya encima** — el netcode en sí es la siguiente carrera, con su propio
+Spec y decisión go/no-go de Gato.
+
 ## §7 — Método (idéntico al que ya funcionó en Fases 1-2)
 
 Spec Kit → check-in Gato → tasks chicas con commit por avance → typecheck+tests+hash-regression
