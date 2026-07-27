@@ -520,3 +520,31 @@ export function generateFromPrompt(prompt: string): GenResult {
   if (/c[aá]lid|warm|dorado|gold/i.test(prompt)) yaml = yaml.replace(/tint: \[[^\]]+\]/, 'tint: [1.1, 0.94, 0.76]');
   return { ...result, yaml };
 }
+
+/**
+ * Sabio Compositor P2: autoría editor-time local de una variación temporal.
+ * No interpreta ni llama modelos en runtime; solo transforma una receta válida a v0.2.
+ */
+export function composeTemporalScene(prompt: string): GenResult {
+  const base = generateFromPrompt(prompt);
+  const temporalIntent = /amanec|sunrise|atardec|sunset|temporal|anim|recorr|mov/i.test(prompt);
+  if (!temporalIntent) return base;
+  const yaml = base.yaml
+    .replace('version: "0.1"', 'version: "0.2"')
+    .replace(/\nobjects:\n/, '\nevents:\n  - { t: 10, kind: light_flash, duration: 0.5, intensity: 0.25 }\nobjects:\n')
+    .replace(/\n$/, '') + `
+  - id: sol_temporal
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0, 0, -4]
+    scale: 0.45
+    animate:
+      duration: 20
+      loop: true
+      keyframes:
+        - { t: 0, position: [-3, -1, 0], scale: 0.5 }
+        - { t: 10, position: [0, 2, 0], scale: 1.0, ease: out }
+        - { t: 20, position: [3, 0, 0], scale: 0.7, ease: in }
+`;
+  return { ...base, label: `${base.label} temporal`, yaml };
+}

@@ -5,6 +5,7 @@ import { listConcepts } from '@m13/synth';
 import {
   buildShareUrl,
   runGenerateScene,
+  runComposeTemporalScene,
   runValidateScene,
   runShareScene,
   runListConcepts,
@@ -71,6 +72,16 @@ describe('generate_m13_scene — lógica', () => {
 
   it('sin style ni prompt lanza error accionable', () => {
     expect(() => runGenerateScene({})).toThrow(/style.*prompt|prompt.*style/i);
+  });
+});
+
+describe('Sabio Compositor temporal', () => {
+  it('compone una receta v0.2 valida sin depender de un LLM en runtime', () => {
+    const result = runComposeTemporalScene('haz un amanecer temporal sobre un templo');
+    const scene = parseScene(result.yaml, { silent: true });
+    expect(scene.version).toBe('0.2');
+    expect(result.yaml).toContain('id: sol_temporal');
+    expect(() => compileScene(scene)).not.toThrow();
   });
 });
 

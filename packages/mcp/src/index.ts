@@ -12,6 +12,7 @@ export {
   STYLE_IDS,
   buildShareUrl,
   runGenerateScene,
+  runComposeTemporalScene,
   runValidateScene,
   runShareScene,
   runListConcepts,

@@ -12,6 +12,7 @@
 import {
   generateScene,
   generateFromPrompt,
+  composeTemporalScene,
   STYLES,
   type StyleId,
   type GenResult,
@@ -89,6 +90,15 @@ export function runGenerateScene(input: GenerateSceneInput): GenerateSceneOutput
     share_url: buildShareUrl(result.yaml),
     yaml: result.yaml,
   };
+}
+
+/** Autoría temporal P2: texto a YAML v0.2, validado antes de devolverlo. */
+export function runComposeTemporalScene(prompt: string): GenerateSceneOutput {
+  if (!prompt.trim()) throw new Error('Pasa un prompt temporal no vacío.');
+  const result = composeTemporalScene(prompt);
+  const scene = parseScene(result.yaml, { silent: true });
+  compileScene(scene);
+  return { label: result.label, seed: result.seed, bytes: utf8Bytes(result.yaml), share_url: buildShareUrl(result.yaml), yaml: result.yaml };
 }
 
 // ============================================================
