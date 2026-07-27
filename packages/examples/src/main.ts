@@ -451,7 +451,7 @@ function highlightYamlLine(line: string): string {
   return esc
     .replace(/^(\s*-?\s*)([\w_.-]+)(:)/, '$1<span class="tok-key">$2</span>$3')
     .replace(/(&quot;.*?&quot;)/g, '<span class="tok-str">$1</span>')
-    .replace(/(?<=[\s\[,:])(-?\d+\.?\d*)(?=[\s\],]|$)/g, '<span class="tok-num">$1</span>');
+    .replace(/(?<=[\s[,:])(-?\d+\.?\d*)(?=[\s\],]|$)/g, '<span class="tok-num">$1</span>');
 }
 
 function showRecipe(yaml: string, fileName = 'escena.m13'): void {

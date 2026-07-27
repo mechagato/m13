@@ -41,6 +41,12 @@ jobs:
       - name: Tests
         run: pnpm test
 
+      - name: Test coverage
+        run: pnpm test:coverage
+
+      - name: Lint
+        run: pnpm lint --max-warnings 0
+
       # B2 (auditoría 06-12): el JSON Schema exportado se desincronizó del Zod
       # real y le enseñó un formato viejo al editor LLM. Este guard lo hace
       # imposible: si schema.ts cambia sin regenerar, CI truena.
@@ -67,8 +73,11 @@ jobs:
           git diff --exit-code m13-spec/scene-hashes.json || {
             echo "::error::m13-spec/scene-hashes.json desincronizado — un cambio alteró el WGSL de una escena; corre 'pnpm gen:hashes', revisa la regresión y commitea"; exit 1; }
 
-      - name: Build examples
-        run: pnpm --filter @m13/examples build
+      - name: Full workspace build
+        run: pnpm build
+
+      - name: Production dependency audit
+        run: pnpm audit --prod --audit-level high
 
       - name: Size check del bundle m13-runtime (límite 60KB raw)
         run: |

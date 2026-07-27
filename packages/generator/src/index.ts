@@ -514,8 +514,8 @@ export function generateFromPrompt(prompt: string): GenResult {
   const result = generateScene(match?.style ?? 'sorpresa');
   // Tweaks ligeros por keywords de material/atmósfera
   let yaml = result.yaml;
-  if (/m[aá]rmol|marble/i.test(prompt)) yaml = yaml.replace(/floor:\n  concept: \S+/, 'floor:\n  concept: piso_marmol_blanco');
-  if (/madera|wood/i.test(prompt)) yaml = yaml.replace(/floor:\n  concept: \S+/, 'floor:\n  concept: piso_madera_envejecida');
+  if (/m[aá]rmol|marble/i.test(prompt)) yaml = yaml.replace(/floor:\n {2}concept: \S+/, 'floor:\n  concept: piso_marmol_blanco');
+  if (/madera|wood/i.test(prompt)) yaml = yaml.replace(/floor:\n {2}concept: \S+/, 'floor:\n  concept: piso_madera_envejecida');
   if (/oscur|dark/i.test(prompt)) yaml = yaml.replace(/ambientColor: \[[^\]]+\]/, 'ambientColor: [0.03, 0.03, 0.04]');
   if (/c[aá]lid|warm|dorado|gold/i.test(prompt)) yaml = yaml.replace(/tint: \[[^\]]+\]/, 'tint: [1.1, 0.94, 0.76]');
   return { ...result, yaml };

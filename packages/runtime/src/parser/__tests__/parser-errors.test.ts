@@ -170,8 +170,8 @@ light:
     } catch (err) {
       const msg = (err as Error).message;
       // formato del agregador: "  · path — message"
-      expect(msg).toMatch(/  · name/);
-      expect(msg).toMatch(/  · light\.intensity/);
+      expect(msg).toMatch(/ {2}· name/);
+      expect(msg).toMatch(/ {2}· light\.intensity/);
     }
   });
 

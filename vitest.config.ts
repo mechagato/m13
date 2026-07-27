@@ -29,11 +29,22 @@ export default defineConfig({
         'packages/**/dist/**',
       ],
       thresholds: {
-        // Empieza permisivo; D-2 (T-008..T-012) sube parser y compiler >70%.
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 70,
+        functions: 65,
+        branches: 65,
+        statements: 70,
+        'packages/runtime/src/engine.ts': {
+          lines: 70,
+          functions: 65,
+          branches: 60,
+          statements: 70,
+        },
+        'packages/runtime/src/renderer/index.ts': {
+          lines: 80,
+          functions: 85,
+          branches: 50,
+          statements: 80,
+        },
       },
     },
   },
