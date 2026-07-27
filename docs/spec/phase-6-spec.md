@@ -122,3 +122,6 @@ de deploy; hash-regression + determinismo en CI; validación visual de Gato; BIT
   sus gates de determinismo.
 - **D-6004:** easing por default `smooth`.
 - **D-6005:** demo de cierre: amanecer sobre Chichen Itza.
+- **D-6006:** las transformaciones de keyframes son relativas al objeto base: `position` se suma,
+  `rotation` se compone y `scale` multiplica. Los campos omitidos conservan el ultimo valor; antes
+  del primer keyframe parten de identidad. El easing del keyframe destino controla cada tramo.

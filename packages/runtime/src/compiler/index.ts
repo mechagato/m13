@@ -1,4 +1,4 @@
-import { MAX_SCENE_OBJECTS, type M13Scene, type M13SceneV01, type M13Object, type M13Material } from '../parser/schema.js';
+import { MAX_SCENE_OBJECTS, type M13Scene, type M13SceneV01, type M13SceneV02, type M13Object, type M13ObjectV02, type M13Material, type M13Timeline } from '../parser/schema.js';
 import { COMMON_WGSL } from '../shaders/common.js';
 import { RAYMARCH_WGSL } from '../shaders/raymarch.js';
 import { getConcept, type Concept } from '@m13/synth';
@@ -59,11 +59,9 @@ export function compileScene(scene: M13Scene): CompiledScene {
   if (scene.objects.length > MAX_SCENE_OBJECTS) {
     throw new Error(`[m13/compiler] La escena excede el máximo de ${MAX_SCENE_OBJECTS} objetos.`);
   }
-  if (scene.version === '0.2' && scene.objects.some((obj) => isTimelineAnimation(obj.animate))) {
-    throw new Error('[m13/compiler] Timeline v0.2 requiere el compilador temporal de T-603.');
-  }
-  // Después del guard, v0.2 sin timeline comparte exactamente la forma estática v0.1.
+  // v0.2 sin timeline conserva el camino estático byte-idéntico a v0.1.
   const staticScene = scene as M13SceneV01;
+  const temporalScene = scene.version === '0.2' && scene.objects.some((obj) => isTimelineAnimation(obj.animate));
   const conceptIds = collectConceptIds(staticScene);
   const concepts = conceptIds.map((id) => {
     const c = getConcept(id);
@@ -94,9 +92,9 @@ export function compileScene(scene: M13Scene): CompiledScene {
     ...concepts.map((c) => c.wgsl),
     sdfSection,
     '\n// ===== map() generada =====\n',
-    generateMapFunction(staticScene),
+    temporalScene ? generateTemporalMapFunction(scene as M13SceneV02) : generateMapFunction(staticScene),
     '\n// ===== material() generada =====\n',
-    generateMaterialFunction(staticScene),
+    temporalScene ? generateTemporalMaterialFunction(scene as M13SceneV02) : generateMaterialFunction(staticScene),
     RAYMARCH_WGSL,
   ].join('\n');
 
@@ -346,8 +344,8 @@ function hasStaticRotation(obj: M13Object): boolean {
 }
 
 function isTimelineAnimation(
-  animate: M13Scene['objects'][number]['animate'],
-): boolean {
+  animate: M13ObjectV02['animate'] | M13Object['animate'],
+): animate is M13Timeline {
   return animate !== undefined && 'keyframes' in animate;
 }
 
@@ -508,6 +506,159 @@ function generateObjectSdf(obj: M13Object, index: number): string {
   }
 }
 
+type TimelineKeyframe = {
+  t: number;
+  position: readonly [number, number, number];
+  rotation: readonly [number, number, number];
+  scale: readonly [number, number, number];
+  ease: 'linear' | 'smooth' | 'in' | 'out';
+};
+
+/**
+ * Completa cada pista con el valor anterior. Las transformaciones temporales son
+ * relativas al objeto: position parte de [0,0,0], rotation de [0,0,0] y scale
+ * de [1,1,1]. Si el primer keyframe no esta en t=0, se interpola desde identidad.
+ */
+function resolveTimeline(timeline: M13Timeline): TimelineKeyframe[] {
+  let position: readonly [number, number, number] = [0, 0, 0];
+  let rotation: readonly [number, number, number] = [0, 0, 0];
+  let scale: readonly [number, number, number] = [1, 1, 1];
+  const keyframes: TimelineKeyframe[] = [];
+
+  for (const keyframe of timeline.keyframes) {
+    position = keyframe.position ?? position;
+    rotation = keyframe.rotation ?? rotation;
+    if (keyframe.scale !== undefined) {
+      scale = typeof keyframe.scale === 'number'
+        ? [keyframe.scale, keyframe.scale, keyframe.scale]
+        : keyframe.scale;
+    }
+    keyframes.push({ t: keyframe.t, position, rotation, scale, ease: keyframe.ease });
+  }
+
+  if (keyframes[0].t > 0) {
+    keyframes.unshift({
+      t: 0,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      ease: keyframes[0].ease,
+    });
+  }
+  return keyframes;
+}
+
+function vec3Literal(value: readonly [number, number, number]): string {
+  return `vec3<f32>(${f(value[0])}, ${f(value[1])}, ${f(value[2])})`;
+}
+
+function easingExpression(ease: TimelineKeyframe['ease'], raw: string): string {
+  switch (ease) {
+    case 'linear': return raw;
+    case 'smooth': return `smoothstep(0.0, 1.0, ${raw})`;
+    case 'in': return `(${raw} * ${raw})`;
+    case 'out': return `(1.0 - (1.0 - ${raw}) * (1.0 - ${raw}))`;
+  }
+}
+
+/** Emite evaluacion de pista completamente en WGSL; no hay trabajo de CPU por frame. */
+function generateTimelineEvaluation(timeline: M13Timeline, index: number, prefix: string): string[] {
+  const frames = resolveTimeline(timeline);
+  const name = `${prefix}${index}`;
+  const first = frames[0];
+  const lines = [
+    `  let ${name}Time = ${timeline.loop ? `fract(u.time / ${f(timeline.duration)}) * ${f(timeline.duration)}` : `min(u.time, ${f(timeline.duration)})`};`,
+    `  var ${name}Pos = ${vec3Literal(first.position)};`,
+    `  var ${name}Rot = ${vec3Literal(first.rotation)};`,
+    `  var ${name}Scale = ${vec3Literal(first.scale)};`,
+  ];
+
+  for (let i = 0; i < frames.length - 1; i += 1) {
+    const from = frames[i];
+    const to = frames[i + 1];
+    const raw = `${name}Raw${i}`;
+    const eased = `${name}Ease${i}`;
+    lines.push(`  if (${name}Time >= ${f(from.t)} && ${name}Time < ${f(to.t)}) {`);
+    lines.push(`    let ${raw} = clamp((${name}Time - ${f(from.t)}) / ${f(to.t - from.t)}, 0.0, 1.0);`);
+    lines.push(`    let ${eased} = ${easingExpression(to.ease, raw)};`);
+    lines.push(`    ${name}Pos = mix(${vec3Literal(from.position)}, ${vec3Literal(to.position)}, ${eased});`);
+    lines.push(`    ${name}Rot = mix(${vec3Literal(from.rotation)}, ${vec3Literal(to.rotation)}, ${eased});`);
+    lines.push(`    ${name}Scale = mix(${vec3Literal(from.scale)}, ${vec3Literal(to.scale)}, ${eased});`);
+    lines.push('  }');
+  }
+  const last = frames[frames.length - 1];
+  lines.push(`  if (${name}Time >= ${f(last.t)}) {`);
+  lines.push(`    ${name}Pos = ${vec3Literal(last.position)};`);
+  lines.push(`    ${name}Rot = ${vec3Literal(last.rotation)};`);
+  lines.push(`    ${name}Scale = ${vec3Literal(last.scale)};`);
+  lines.push('  }');
+  return lines;
+}
+
+function generateTemporalMapFunction(scene: M13SceneV02): string {
+  const [bx, by, bz] = scene.bounds;
+  const exterior = scene.walls === undefined || scene.ceiling === undefined;
+  const lines: string[] = ['fn map(p: vec3<f32>) -> f32 {'];
+  if (exterior) {
+    lines.push(`  var d = p.y + ${f(by)};`);
+  } else {
+    lines.push(`  let room = -sdBox(p, vec3<f32>(${f(bx)}, ${f(by)}, ${f(bz)}));`);
+    if (scene.window) {
+      const [wx, wy, wz] = scene.window.position;
+      const [sx, sy, sz] = scene.window.size;
+      lines.push(`  let windowPos = p - vec3<f32>(${f(wx)}, ${f(wy)}, ${f(wz)});`);
+      lines.push(`  let windowCut = sdBox(windowPos, vec3<f32>(${f(sx)}, ${f(sy)}, ${f(sz)}));`);
+      lines.push('  var d = opSub(room, windowCut);');
+    } else {
+      lines.push('  var d = room;');
+    }
+  }
+  scene.objects.forEach((obj, i) => {
+    lines.push(isTimelineAnimation(obj.animate)
+      ? generateTemporalObjectSdf(obj, i)
+      : generateObjectSdf(obj as M13Object, i));
+    lines.push(`  d = opUnion(d, obj${i});`);
+  });
+  lines.push('  return d;');
+  lines.push('}');
+  return lines.join('\n');
+}
+
+function generateTemporalObjectSdf(obj: M13ObjectV02, index: number): string {
+  if (!isTimelineAnimation(obj.animate)) throw new Error('[m13/compiler] Timeline esperado.');
+  const [px, py, pz] = obj.position;
+  const baseScale = typeof obj.scale === 'number' ? [obj.scale, obj.scale, obj.scale] as const : obj.scale;
+  const audioCh = audioChannel(obj.audio_reactive);
+  const yOffset = audioCh ? `${audioCh} * 0.1` : '0.0';
+  const extraR = audioCh ? `+ ${audioCh} * 0.05` : '+ 0.0';
+  const pre = generateTimelineEvaluation(obj.animate, index, 'tl');
+  let localP = `(p - (vec3<f32>(${f(px)}, ${f(py)} + (${yOffset}), ${f(pz)}) + tl${index}Pos))`;
+
+  if (hasStaticRotation(obj as M13Object)) {
+    const m = rotationInverseMatrix(obj.rotation!);
+    pre.push(`  let rotM${index} = mat3x3<f32>(vec3<f32>(${f(m[0][0])}, ${f(m[1][0])}, ${f(m[2][0])}), vec3<f32>(${f(m[0][1])}, ${f(m[1][1])}, ${f(m[2][1])}), vec3<f32>(${f(m[0][2])}, ${f(m[1][2])}, ${f(m[2][2])}));`);
+    localP = `(rotM${index} * ${localP})`;
+  }
+  // R = Rz * Ry * Rx. Para evaluar el SDF aplicamos R^-1 en orden Z, Y, X.
+  pre.push(`  let tl${index}Rad = radians(tl${index}Rot);`);
+  pre.push(`  let tl${index}Z = vec3<f32>(cos(tl${index}Rad.z) * ${localP}.x + sin(tl${index}Rad.z) * ${localP}.y, -sin(tl${index}Rad.z) * ${localP}.x + cos(tl${index}Rad.z) * ${localP}.y, ${localP}.z);`);
+  pre.push(`  let tl${index}Y = vec3<f32>(cos(tl${index}Rad.y) * tl${index}Z.x - sin(tl${index}Rad.y) * tl${index}Z.z, tl${index}Z.y, sin(tl${index}Rad.y) * tl${index}Z.x + cos(tl${index}Rad.y) * tl${index}Z.z);`);
+  pre.push(`  let tl${index}X = vec3<f32>(tl${index}Y.x, cos(tl${index}Rad.x) * tl${index}Y.y + sin(tl${index}Rad.x) * tl${index}Y.z, -sin(tl${index}Rad.x) * tl${index}Y.y + cos(tl${index}Rad.x) * tl${index}Y.z);`);
+  pre.push(`  let tl${index}P = tl${index}X / tl${index}Scale;`);
+  pre.push(`  let tl${index}DistanceScale = min(tl${index}Scale.x, min(tl${index}Scale.y, tl${index}Scale.z));`);
+  localP = `tl${index}P`;
+  const prefix = pre.join('\n') + '\n';
+  const distance = ` * tl${index}DistanceScale`;
+  switch (obj.kind) {
+    case 'sphere': return `${prefix}  let obj${index} = sdSphere(${localP}, ${f(baseScale[0])} ${extraR})${distance};`;
+    case 'box': return `${prefix}  let obj${index} = sdBox(${localP}, ${vec3Literal(baseScale)})${distance};`;
+    case 'round_box': return `${prefix}  let obj${index} = sdRoundBox(${localP}, ${vec3Literal(baseScale)}, 0.05)${distance};`;
+    case 'cylinder': return `${prefix}  let obj${index} = sdCylinder(${localP}, ${f(baseScale[1])}, ${f(baseScale[0])})${distance};`;
+    case 'torus': return `${prefix}  let obj${index} = sdTorus(${localP}, vec2<f32>(${f(baseScale[0])}, ${f(baseScale[1])}))${distance};`;
+    case 'concept': return `${prefix}  let obj${index} = sdf_${obj.concept!}(${localP}, ${vec3Literal(baseScale)})${distance};`;
+  }
+}
+
 function generateMaterialFunction(scene: M13SceneV01): string {
   const [, by] = scene.bounds;
   const exterior = scene.walls === undefined || scene.ceiling === undefined;
@@ -563,6 +714,56 @@ function generateMaterialFunction(scene: M13SceneV01): string {
   });
 
   // default: paredes
+  lines.push(`  return mat_${wallsId}(p, n, u.audioAmp);`);
+  lines.push('}');
+  return lines.join('\n');
+}
+
+/** Materiales para una escena temporal: el volumen de seleccion sigue la posicion
+ * de la pista y se expande con su escala maxima para no perder el material al animar. */
+function generateTemporalMaterialFunction(scene: M13SceneV02): string {
+  const [, by] = scene.bounds;
+  const exterior = scene.walls === undefined || scene.ceiling === undefined;
+  const floorId = scene.floor.concept;
+  const wallsId = scene.walls?.concept ?? floorId;
+  const ceilingId = scene.ceiling?.concept ?? floorId;
+  const lines: string[] = ['fn material(p: vec3<f32>, n: vec3<f32>) -> vec3<f32> {'];
+  lines.push('  // Piso (normal hacia arriba, y bajo)');
+  lines.push(`  if (n.y > 0.7 && p.y < -${f(by * 0.83)}) {`);
+  lines.push(`    return mat_${floorId}(p, n, u.audioAmp);`);
+  lines.push('  }');
+  if (!exterior) {
+    lines.push('  // Techo (normal hacia abajo)');
+    lines.push('  if (n.y < -0.7) {');
+    lines.push(`    return mat_${ceilingId}(p, n, u.audioAmp);`);
+    lines.push('  }');
+  }
+
+  scene.objects.forEach((obj, index) => {
+    const [px, py, pz] = obj.position;
+    const matId = effectiveConceptId(obj as M13Object);
+    const baseRadius = typeof obj.scale === 'number' ? obj.scale * 1.4 : Math.hypot(...obj.scale) * 1.15;
+    let center = `vec3<f32>(${f(px)}, ${f(py)}, ${f(pz)})`;
+    let radius = baseRadius;
+    if (isTimelineAnimation(obj.animate)) {
+      lines.push(...generateTimelineEvaluation(obj.animate, index, 'matTl'));
+      center = `(vec3<f32>(${f(px)}, ${f(py)}, ${f(pz)}) + matTl${index}Pos)`;
+      radius *= Math.max(...resolveTimeline(obj.animate).flatMap((keyframe) => keyframe.scale));
+    } else if (obj.animate?.mode === 'bob') {
+      radius += obj.animate.amplitude;
+    } else if (obj.animate?.mode === 'pulse') {
+      radius += baseRadius * Math.min(obj.animate.amplitude, 0.9);
+    }
+    const matArg = obj.seed === undefined
+      ? 'p'
+      : (() => {
+          const [ox, oy, oz] = seedOffset(obj.seed);
+          return `p + vec3<f32>(${f(ox)}, ${f(oy)}, ${f(oz)})`;
+        })();
+    lines.push(`  if (length(p - ${center}) < ${f(radius)}) {`);
+    lines.push(`    return mat_${matId}(${matArg}, n, u.audioAmp);`);
+    lines.push('  }');
+  });
   lines.push(`  return mat_${wallsId}(p, n, u.audioAmp);`);
   lines.push('}');
   return lines.join('\n');

@@ -3049,6 +3049,12 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - Keyframes validan transformacion, `t` unico y dentro de `duration`; se ordenan por tiempo y usan easing `smooth` por default.
 - Cap de 16 keyframes por objeto. El compilador rechaza timelines hasta T-603 para no aceptar escenas sin backend WGSL.
 
+### T-603 - compilador temporal WGSL
+- El compilador genera en WGSL la seleccion de tramo, easing y transformaciones de `position`, `rotation` y `scale`; no agrega CPU por frame.
+- Las transformaciones temporales son relativas a la base del objeto. Campos omitidos conservan el valor anterior y antes del primer keyframe parten de identidad.
+- Materiales siguen el centro temporal y su radio se ajusta a la escala maxima para evitar perder la asignacion durante la animacion.
+- typecheck, pruebas de timeline y hash-regression v0.1 pasaron antes de este checkpoint.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

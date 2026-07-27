@@ -51,13 +51,51 @@ ${keyframes}
 `)).toThrow(/objects\.0\.animate/);
   });
 
-  it('does not let a timeline reach the legacy compiler before T-603', () => {
+  it('compiles position, rotation and scale in WGSL without CPU per-frame work', () => {
     const scene = parseScene(`${BASE}
     animate:
-      duration: 1
+      duration: 4
+      loop: false
+      keyframes:
+        - { t: 0, position: [0, 0, 0], rotation: [0, 0, 0], scale: 1 }
+        - { t: 4, position: [2, 1, 0], rotation: [0, 180, 0], scale: [2, 1, 1], ease: out }
+`);
+    const { wgsl } = compileScene(scene);
+    expect(wgsl).toContain('let tl0Time = min(u.time, 4.000000);');
+    expect(wgsl).toContain('tl0Pos = mix(');
+    expect(wgsl).toContain('tl0Rot = mix(');
+    expect(wgsl).toContain('tl0Scale = mix(');
+    expect(wgsl).toContain('let tl0Rad = radians(tl0Rot);');
+    expect(wgsl).toContain('let tl0P = tl0X / tl0Scale;');
+    expect(wgsl).toContain('let tl0DistanceScale = min(');
+  });
+
+  it('compiles loop timelines deterministically', () => {
+    const scene = parseScene(`${BASE}
+    animate:
+      duration: 2
+      loop: true
       keyframes:
         - { t: 0, position: [0, 0, 0] }
+        - { t: 2, position: [1, 0, 0], ease: linear }
 `);
-    expect(() => compileScene(scene)).toThrow(/T-603/);
+    const a = compileScene(scene).wgsl;
+    const b = compileScene(scene).wgsl;
+    expect(a).toBe(b);
+    expect(a).toContain('fract(u.time / 2.000000) * 2.000000');
+  });
+
+  it('carries omitted transform fields and interpolates from identity before the first keyframe', () => {
+    const scene = parseScene(`${BASE}
+    animate:
+      duration: 4
+      keyframes:
+        - { t: 2, position: [2, 0, 0], ease: linear }
+        - { t: 4, rotation: [0, 90, 0] }
+`);
+    const { wgsl } = compileScene(scene);
+    expect(wgsl).toContain('tl0Pos = mix(vec3<f32>(0.000000, 0.000000, 0.000000), vec3<f32>(2.000000, 0.000000, 0.000000), tl0Ease0);');
+    expect(wgsl).toContain('tl0Pos = mix(vec3<f32>(2.000000, 0.000000, 0.000000), vec3<f32>(2.000000, 0.000000, 0.000000), tl0Ease1);');
+    expect(wgsl).toContain('tl0Scale = mix(vec3<f32>(1.000000, 1.000000, 1.000000), vec3<f32>(1.000000, 1.000000, 1.000000), tl0Ease1);');
   });
 });
