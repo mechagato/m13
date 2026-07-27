@@ -1,7 +1,7 @@
 # Spec — Fase 6: Edición temporal + replay determinista + Sabio Compositor
 
 **Proyecto:** m13 motor gráfico · **Fase:** 6 de 6 · codename **"tiempo"**
-**Estado:** BORRADOR v1 — esperando check-in de Gato (OQ-6.x en §10)
+**Estado:** AUTORIZADA 2026-07-27 — ejecutar desde `main`; artefacto de produccion previo sin procedencia no cuenta como evidencia.
 **Fecha:** 2026-07-03 · **Spec anterior:** phase-5-spec.md (WebXR inmersivo)
 **Series:** tasks T-6xx · decisiones D-6xxx · CHANGELOG target 0.4.0
 **Roadmap:** ago-sep 2026 (después de Fase 5). Cierra la última fase del Constitution.
@@ -113,9 +113,12 @@ Schema v0.2 (`animate` v2 + `events` + versioning + migración) · compiler de k
 Spec → plan → tasks (T-6xx) → implement con commits chicos; auditoría adversarial del WGSL antes
 de deploy; hash-regression + determinismo en CI; validación visual de Gato; BITÁCORA + memoria .phi.
 
-## 10. Open questions (Gato — resolver en el check-in)
-- **OQ-6.1** Keyframes de MATERIAL/luz: ¿luz/fog en Fase 6 (viable) y material como P2, o todo material a fase futura?
-- **OQ-6.2** Replay: ¿link `#replay=` (comparte paseo por URL, mi recomendación) y/o archivo `.m13replay`?
-- **OQ-6.3** Sabio Compositor: ¿en Fase 6 (P2) o se difiere (es agente, no motor)?
-- **OQ-6.4** Easing default de keyframes: ¿`smooth` (smoothstep, recomendado) o `linear`?
-- **OQ-6.5** ¿La demo temporal de cierre es "amanecer sobre Chichén" (recomendada, Innovafest) u otra?
+## 10. Decisiones de ejecucion (Gato - 2026-07-27)
+- **D-6001:** v1 anima `position`, `rotation` y `scale`; material y fog quedan fuera. `light_flash`
+  es el unico evento P1 permitido por runtime.
+- **D-6002:** replay se exporta primero como archivo `.m13replay`; `#replay=` solo se habilita si
+  el payload pasa un limite explicito de tamaño.
+- **D-6003:** Sabio Compositor se entrega como P2 despues de que timeline, migracion y replay pasen
+  sus gates de determinismo.
+- **D-6004:** easing por default `smooth`.
+- **D-6005:** demo de cierre: amanecer sobre Chichen Itza.
