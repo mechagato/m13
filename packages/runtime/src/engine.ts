@@ -197,7 +197,7 @@ export class M13Engine {
       throw new Error('[m13/engine] El engine ya fue liberado con dispose() — crea una nueva instancia.');
     }
     const text = looksLikeUrl(yamlOrUrl) ? await fetchText(yamlOrUrl) : yamlOrUrl;
-    const scene = parseScene(text);
+    const scene = parseScene(text, { strict: true });
     const compiled = compileScene(scene);
     const newHash = await hashWgsl(compiled.wgsl);
 
