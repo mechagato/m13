@@ -5,6 +5,16 @@ Pasos para llevar el demo a `https://motor13.neonodos.com` y validar en Quest 3.
 ## Fase 5 - protocolo actual de Quest 3 (T-501 y T-513)
 
 **URL canonica para esta prueba:** `https://m13.phi-core.com`.
+
+### Sincronizacion verificable - 2026-07-27
+
+- Cloudflare Pages: proyecto `motor13`, dominio `m13.phi-core.com`, sin Git provider.
+- Fuente publicada: checkout `main` SHA `bacd8551580be12b460b36d86fccea4fd541fec9`.
+- Deploy Pages: `https://9a195c15.motor13.pages.dev`.
+- Verificacion publica: `index-D2h4AOp8.js` y SHA-256 de
+  `scenes/chichen_amanecer.m13` = `766bd876bf74ab03315c13b1084aa80c8566a078e6fae8fe130ec31c14b67f40`,
+  identico al archivo local.
+- Esta es la version que debe usarse para T-501/T-513 y validacion visual de Fase 6.
 No usar las instrucciones historicas de `motor13.neonodos.com` para cerrar Fase 5. El endpoint
 canonico respondio HTTP 200 el 2026-07-27 y el bundle publico contiene el runtime WebXR.
 
