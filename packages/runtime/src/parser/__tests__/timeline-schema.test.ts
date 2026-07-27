@@ -98,4 +98,31 @@ ${keyframes}
     expect(wgsl).toContain('tl0Pos = mix(vec3<f32>(2.000000, 0.000000, 0.000000), vec3<f32>(2.000000, 0.000000, 0.000000), tl0Ease1);');
     expect(wgsl).toContain('tl0Scale = mix(vec3<f32>(1.000000, 1.000000, 1.000000), vec3<f32>(1.000000, 1.000000, 1.000000), tl0Ease1);');
   });
+
+  it('compiles light_flash as a bounded shader-only light pulse', () => {
+    const scene = parseScene(`${BASE}
+events:
+  - { t: 3, kind: light_flash }
+  - { t: 4, kind: light_flash, duration: 0.5, intensity: 2 }
+`);
+    expect(scene.events).toEqual([
+      { t: 3, kind: 'light_flash', duration: 0.15, intensity: 1 },
+      { t: 4, kind: 'light_flash', duration: 0.5, intensity: 2 },
+    ]);
+    const { wgsl } = compileScene(scene);
+    expect(wgsl).toContain('fn sceneLightIntensity() -> f32 {');
+    expect(wgsl).toContain('abs(u.time - 3.000000) / 0.150000');
+    expect(wgsl).toContain('u.lightIntensity * (1.0 + flash)');
+    expect(wgsl).toContain('shadow * sceneLightIntensity()');
+  });
+
+  it('requires v0.2 for temporal scene events', () => {
+    expect(() => parseScene(`
+version: "0.1"
+name: legacy_event
+floor: { concept: piso_madera_envejecida }
+events:
+  - { t: 1, kind: light_flash }
+`)).toThrow(/requiere version: "0.2"/);
+  });
 });

@@ -3055,6 +3055,11 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - Materiales siguen el centro temporal y su radio se ajusta a la escala maxima para evitar perder la asignacion durante la animacion.
 - typecheck, pruebas de timeline y hash-regression v0.1 pasaron antes de este checkpoint.
 
+### T-604 - evento temporal P1
+- `events` solo existe en `.m13 v0.2` y admite exclusivamente `light_flash`, con cap de 16 eventos.
+- El compiler genera un pulso triangular acotado que modula `lightIntensity` en WGSL; no hay audio runtime, callbacks ni side effects.
+- El fragmento raymarch temporal solo se usa cuando hay eventos, asi que los hashes de v0.1 no cambian.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

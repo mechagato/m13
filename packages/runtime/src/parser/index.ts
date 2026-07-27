@@ -22,6 +22,7 @@ const KNOWN_ROOT_KEYS = new Set([
   'cameraSpeed',
   'window',
   'objects',
+  'events',
 ]);
 
 export interface ParseOptions {
@@ -66,6 +67,9 @@ export function validateScene(raw: unknown, opts: ParseOptions = {}): M13Scene {
     throw new Error(
       `[m13/parser] m13 v${raw.version} no soportado por este runtime (soporta ${SUPPORTED_VERSIONS.join(', ')})`,
     );
+  }
+  if (isPlainObject(raw) && raw.version === '0.1' && raw.events !== undefined) {
+    throw new Error('[m13/parser] events requiere version: "0.2".');
   }
 
   // 2. Validación Zod estándar.

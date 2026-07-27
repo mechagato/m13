@@ -9,7 +9,7 @@ base de implementacion: `main` y CI son la fuente canonica.
 | T-601 | Modelo `.m13 v0.2`, migracion v0.1 -> v0.2 y parser estricto por version | ✅ v0.1 conserva hashes; v0.2 enruta y rechaza contrato invalido |
 | T-602 | Tipos temporales, orden/cap de keyframes y easing `smooth` | ✅ pruebas de contrato, limites y orden canonico |
 | T-603 | Compiler de transform keyframes a WGSL | ✅ position/rotation/scale y easing se emiten en WGSL; pruebas de determinismo y hashes v0.1 verdes |
-| T-604 | Evento P1 `light_flash` sin side effects | evento determinista y fuera de runtime de audio real |
+| T-604 | Evento P1 `light_flash` sin side effects | ✅ schema v0.2 y pulso triangular acotado en WGSL; sin audio runtime |
 | T-605 | `RecordController` 2D y formato `.m13replay` | record -> export -> replay reproduce pose con interpolacion estable |
 | T-606 | Carga/comparticion de replay con limite de bytes | payload invalido o sobredimensionado no llega al runtime |
 | T-607 | Demo `chichen_amanecer.m13` y controles del example | animacion visible; v0.1 no regresa visualmente |

@@ -40,10 +40,10 @@ proyecto hermano): determinismo + replay = lockstep/rollback netcode sin sincron
 - Easing por keyframe: `ease: linear|smooth|in|out` (default `smooth` = smoothstep).
 
 ### FR-6.2 — Eventos temporales (P1 ligero)
-- `events: [{ t: 3, kind: 'audio_pulse' | 'light_flash', ... }]` a nivel de escena — disparadores
-  determinísticos evaluados en el shading (p.ej. un `light_flash` que modula `lightIntensity`
-  alrededor de `t`). Alcance mínimo: los que se resuelven en WGSL sin estado. Los que requieran
-  side-effects (sonido real) se marcan como editor-time/host, no runtime.
+- `events: [{ t: 3, kind: 'light_flash', duration: 0.15, intensity: 1 }]` a nivel de escena —
+  disparadores determinísticos evaluados en el shading que modulan `lightIntensity` alrededor de
+  `t`. Alcance P1: solo los que se resuelven en WGSL sin estado. Audio real y cualquier side-effect
+  quedan como editor-time/host, no runtime.
 
 ### FR-6.3 — Replay determinista
 - `RecordController` en `@m13/runtime`: en modo RECORD graba por frame `{ t, camPos, yaw, pitch }`

@@ -76,6 +76,17 @@ const legacyAnimateSchema = z.object({
 });
 
 export const MAX_KEYFRAMES_PER_OBJECT = 16;
+export const MAX_SCENE_EVENTS = 16;
+
+/** Evento temporal P1: pulso de luz puramente funcional, evaluado por el shader. */
+const lightFlashEventSchema = z.object({
+  t: finiteNumber.min(0),
+  kind: z.literal('light_flash'),
+  /** Semiancho del pulso triangular, en segundos. */
+  duration: finiteNumber.positive().default(0.15),
+  /** Multiplicador adicional sobre la intensidad base de la luz. */
+  intensity: finiteNumber.min(0).default(1),
+});
 
 const keyframeSchema = z
   .object({
@@ -217,6 +228,7 @@ export const m13SceneV01Schema = m13SceneBaseSchema.extend({
 export const m13SceneV02Schema = m13SceneBaseSchema.extend({
   version: z.literal('0.2'),
   objects: z.array(objectSchemaV02).max(MAX_SCENE_OBJECTS).default([]),
+  events: z.array(lightFlashEventSchema).max(MAX_SCENE_EVENTS).default([]),
 });
 
 export const m13SceneSchema = z.discriminatedUnion('version', [m13SceneV01Schema, m13SceneV02Schema]);
@@ -229,6 +241,7 @@ export type M13Scene = z.infer<typeof m13SceneSchema>;
 export type M13Object = z.infer<typeof objectSchema>;
 export type M13ObjectV02 = z.infer<typeof objectSchemaV02>;
 export type M13Timeline = z.infer<typeof timelineAnimateSchema>;
+export type M13LightFlashEvent = z.infer<typeof lightFlashEventSchema>;
 export type M13Material = z.infer<typeof materialSchema>;
 export type M13Light = z.infer<typeof lightSchema>;
 export type M13Surface = z.infer<typeof surfaceSchema>;
@@ -236,5 +249,5 @@ export type M13Surface = z.infer<typeof surfaceSchema>;
 /** Migración explícita y sin pérdidas; no se aplica implícitamente al compilar una escena v0.1. */
 export function migrateSceneToV02(scene: M13Scene): M13SceneV02 {
   if (scene.version === '0.2') return scene;
-  return { ...scene, version: '0.2' };
+  return { ...scene, version: '0.2', events: [] };
 }

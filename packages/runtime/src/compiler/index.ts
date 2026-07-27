@@ -62,6 +62,7 @@ export function compileScene(scene: M13Scene): CompiledScene {
   // v0.2 sin timeline conserva el camino estático byte-idéntico a v0.1.
   const staticScene = scene as M13SceneV01;
   const temporalScene = scene.version === '0.2' && scene.objects.some((obj) => isTimelineAnimation(obj.animate));
+  const hasLightFlash = scene.version === '0.2' && scene.events.length > 0;
   const conceptIds = collectConceptIds(staticScene);
   const concepts = conceptIds.map((id) => {
     const c = getConcept(id);
@@ -87,7 +88,7 @@ export function compileScene(scene: M13Scene): CompiledScene {
     COMMON_WGSL,
     matParamsBlock,
     '\n// ===== constantes de escena =====\n',
-    generateSceneConstants(staticScene),
+    hasLightFlash ? generateTemporalSceneConstants(scene as M13SceneV02) : generateSceneConstants(staticScene),
     '\n// ===== conceptos materiales =====\n',
     ...concepts.map((c) => c.wgsl),
     sdfSection,
@@ -95,7 +96,7 @@ export function compileScene(scene: M13Scene): CompiledScene {
     temporalScene ? generateTemporalMapFunction(scene as M13SceneV02) : generateMapFunction(staticScene),
     '\n// ===== material() generada =====\n',
     temporalScene ? generateTemporalMaterialFunction(scene as M13SceneV02) : generateMaterialFunction(staticScene),
-    RAYMARCH_WGSL,
+    hasLightFlash ? RAYMARCH_WGSL.replace('u.lightIntensity', 'sceneLightIntensity()') : RAYMARCH_WGSL,
   ].join('\n');
 
   return { wgsl, scene, conceptsUsed: conceptIds, matParams };
@@ -294,7 +295,7 @@ function generateMatParamsStruct(layout: MatParamsLayout): string {
  * raymarcher, así `ambient.background` por fin llega al pixel (antes el miss
  * renderizaba negro puro ignorando background).
  */
-function generateSceneConstants(scene: M13SceneV01): string {
+function generateSceneConstants(scene: Pick<M13Scene, 'ambient' | 'sky' | 'walls' | 'ceiling'>): string {
   let bg: readonly [number, number, number] = scene.ambient.background;
   // F10: el cielo solo aplica en exterior (en interior el miss casi nunca se ve y
   // alteraría el hash silenciosamente). Sin sky/exterior → background tal cual (byte-idéntico).
@@ -341,6 +342,20 @@ function rotationInverseMatrix(deg: readonly [number, number, number]): number[]
 
 function hasStaticRotation(obj: M13Object): boolean {
   return obj.rotation !== undefined && obj.rotation.some((v) => v !== 0);
+}
+
+/** Solo se agrega a escenas v0.2 con eventos, para no modificar hashes v0.1. */
+function generateTemporalSceneConstants(scene: M13SceneV02): string {
+  const lines = [generateSceneConstants(scene)];
+  lines.push('fn sceneLightIntensity() -> f32 {');
+  lines.push('  var flash: f32 = 0.0;');
+  for (const event of scene.events) {
+    // El schema solo admite light_flash en P1. max evita que eventos solapados exploten la luz.
+    lines.push(`  flash = max(flash, (1.0 - clamp(abs(u.time - ${f(event.t)}) / ${f(event.duration)}, 0.0, 1.0)) * ${f(event.intensity)});`);
+  }
+  lines.push('  return u.lightIntensity * (1.0 + flash);');
+  lines.push('}');
+  return lines.join('\n');
 }
 
 function isTimelineAnimation(
