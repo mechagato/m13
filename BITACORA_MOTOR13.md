@@ -3060,6 +3060,12 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - El compiler genera un pulso triangular acotado que modula `lightIntensity` en WGSL; no hay audio runtime, callbacks ni side effects.
 - El fragmento raymarch temporal solo se usa cuando hay eventos, asi que los hashes de v0.1 no cambian.
 
+### T-605 - RecordController 2D
+- Nuevo `.m13replay` compacto: version, hash WGSL y frames `[t,x,y,z,yaw,pitch]` a 15 Hz por default.
+- El controlador es puro: valida JSON, orden temporal, limites y hash de escena; interpola posicion y el arco corto de yaw de forma determinista.
+- `M13Engine` puede grabar/exportar/cargar/reproducir. En replay no consulta input vivo y usa el reloj grabado como `u.time`.
+- XR queda explicitamente fuera de esta entrega 2D; no se finge captura de headset.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

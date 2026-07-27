@@ -46,8 +46,9 @@ proyecto hermano): determinismo + replay = lockstep/rollback netcode sin sincron
   quedan como editor-time/host, no runtime.
 
 ### FR-6.3 — Replay determinista
-- `RecordController` en `@m13/runtime`: en modo RECORD graba por frame `{ t, camPos, yaw, pitch }`
-  (2D) o `{ t, rigPos, rigYaw, viewerPose? }` (XR) a un buffer; `export()` → JSON compacto.
+- `RecordController` en `@m13/runtime`: en modo RECORD toma muestras 2D compactas
+  `[t, x, y, z, yaw, pitch]` a 15 Hz por default; `export()` → JSON `.m13replay` con hash WGSL.
+  La captura de rig/pose XR queda para una extension posterior del mismo contrato.
 - En modo REPLAY, el engine ignora el input en vivo y reproduce la trayectoria grabada contra el
   MISMO `u.time` → frame idéntico (verificable: hash de screenshot estable). Sin grabar geometría:
   solo la escena `.m13` + la trayectoria.

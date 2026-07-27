@@ -21,6 +21,22 @@ export interface CameraVectors {
   up: Vec3;
 }
 
+/** Vectores de camara desde una pose serializable; replay los usa sin consultar input. */
+export function cameraVectorsFromPose(pos: Vec3, yaw: number, pitch: number): CameraVectors {
+  const cy = Math.cos(yaw);
+  const sy = Math.sin(yaw);
+  const cp = Math.cos(pitch);
+  const sp = Math.sin(pitch);
+  const forward: Vec3 = [sy * cp, sp, -cy * cp];
+  const right: Vec3 = [cy, 0, sy];
+  const up: Vec3 = [
+    right[1] * forward[2] - right[2] * forward[1],
+    right[2] * forward[0] - right[0] * forward[2],
+    right[0] * forward[1] - right[1] * forward[0],
+  ];
+  return { pos: [pos[0], pos[1], pos[2]], forward, right, up };
+}
+
 export class FlyCamera {
   pos: [number, number, number];
   yaw = 0;
@@ -235,17 +251,8 @@ export class FlyCamera {
 
   update(dt: number): CameraVectors {
     const gamepadMove = this.pollGamepad(dt);
-    const cy = Math.cos(this.yaw);
-    const sy = Math.sin(this.yaw);
-    const cp = Math.cos(this.pitch);
-    const sp = Math.sin(this.pitch);
-    const fwd: Vec3 = [sy * cp, sp, -cy * cp];
-    const right: Vec3 = [cy, 0, sy];
-    const up: Vec3 = [
-      right[1] * fwd[2] - right[2] * fwd[1],
-      right[2] * fwd[0] - right[0] * fwd[2],
-      right[0] * fwd[1] - right[1] * fwd[0],
-    ];
+    const vectors = cameraVectorsFromPose(this.pos, this.yaw, this.pitch);
+    const { forward: fwd, right } = vectors;
     const v = this.speed * dt;
     if (this.input.forward) {
       this.pos[0] += fwd[0] * v;
@@ -280,6 +287,6 @@ export class FlyCamera {
     this.pos[0] = Math.max(-bx, Math.min(bx, this.pos[0]));
     this.pos[1] = Math.max(-by, Math.min(by, this.pos[1]));
     this.pos[2] = Math.max(-bz, Math.min(bz, this.pos[2]));
-    return { pos: [this.pos[0], this.pos[1], this.pos[2]], forward: fwd, right, up };
+    return cameraVectorsFromPose(this.pos, this.yaw, this.pitch);
   }
 }

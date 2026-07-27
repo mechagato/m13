@@ -17,6 +17,8 @@ export { MAX_KEYFRAMES_PER_OBJECT, MAX_SCENE_OBJECTS, migrateSceneToV02 } from '
 export type { M13Scene, M13SceneV01, M13SceneV02, M13Object, M13ObjectV02, M13Material, M13Light, M13Timeline, M13LightFlashEvent } from './parser/schema.js';
 
 export { compileScene, hashWgsl } from './compiler/index.js';
+export { RecordController, M13_REPLAY_VERSION, DEFAULT_REPLAY_HZ, interpolateReplayPose } from './replay/record-controller.js';
+export type { CameraPose, M13Replay } from './replay/record-controller.js';
 export type { CompiledScene, MatParamSlot, MatParamsLayout } from './compiler/index.js';
 
 export { FlyCamera } from './camera/fly-camera.js';

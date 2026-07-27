@@ -15,10 +15,11 @@ import {
   type SceneResources,
   type UniformInputs,
 } from './renderer/index.js';
-import { FlyCamera, type FlyCameraOptions } from './camera/fly-camera.js';
+import { FlyCamera, cameraVectorsFromPose, type FlyCameraOptions } from './camera/fly-camera.js';
 import { XRCameraController, type XRLocomotionInput } from './camera/xr-camera.js';
 import { MicAudioInput } from './audio/mic-input.js';
 import type { FrameStats, Vec3 } from './types.js';
+import { RecordController, type M13Replay } from './replay/record-controller.js';
 
 // ---- Tipos WebXR mínimos (Fase 5). @types/webxr no trae XRGPUBinding aún, así que
 // declaramos localmente solo lo que usamos y accedemos vía cast — sin dependencia nueva.
@@ -168,6 +169,9 @@ export class M13Engine {
   private xrRafId = 0;
   private xrLastTime = 0;
   private preXRQuality: Quality | null = null;
+  /** Grabacion/replay 2D: durante replay no se consulta input de FlyCamera. */
+  private recordController = new RecordController();
+  private replayStartedAt: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts: M13EngineOptions = {}) {
     this.canvas = canvas;
@@ -316,6 +320,36 @@ export class M13Engine {
     if (this.audio) void this.audio.stop();
     this.audio = new MicAudioInput();
     return this.audio;
+  }
+
+  /** Inicia una grabacion de camara 2D a frecuencia fija (default 15 Hz). */
+  startRecording(sampleHz?: number): void {
+    if (!this.lastWgslHash) throw new Error('[m13/replay] startRecording() sin escena cargada.');
+    if (this.replayStartedAt !== null) throw new Error('[m13/replay] No se puede grabar durante replay.');
+    this.recordController.startRecording(this.lastWgslHash, sampleHz);
+  }
+
+  stopRecording(): M13Replay {
+    return this.recordController.stopRecording();
+  }
+
+  exportRecording(): string {
+    return this.recordController.export();
+  }
+
+  loadReplay(serialized: string): M13Replay {
+    if (!this.lastWgslHash) throw new Error('[m13/replay] loadReplay() sin escena cargada.');
+    return this.recordController.load(serialized, this.lastWgslHash);
+  }
+
+  /** Reproduce desde t=0; el reloj del replay tambien alimenta `u.time`. */
+  startReplay(now = performance.now()): void {
+    if (this.recordController.replayAt(0) === null) throw new Error('[m13/replay] No hay replay cargado.');
+    this.replayStartedAt = now;
+  }
+
+  stopReplay(): void {
+    this.replayStartedAt = null;
   }
 
   /**
@@ -640,7 +674,9 @@ export class M13Engine {
   private tick(now: number): void {
     const dt = Math.min((now - this.lastTime) / 1000, 0.05);
     this.lastTime = now;
-    const time = (now - this.t0) / 1000;
+    const elapsedTime = (now - this.t0) / 1000;
+    const replayTime = this.replayStartedAt === null ? null : (now - this.replayStartedAt) / 1000;
+    const time = replayTime ?? elapsedTime;
     this.frameCount++;
     this.fpsAccum += 1 / Math.max(dt, 0.0001);
     this.fpsCounter++;
@@ -658,7 +694,10 @@ export class M13Engine {
     if (this.loading || !this.renderer || !this.compiled) return;
     const scene = this.compiled.scene;
 
-    const cam = this.camera
+    const replayPose = replayTime === null ? null : this.recordController.replayAt(replayTime);
+    const cam = replayPose
+      ? cameraVectorsFromPose(replayPose.pos, replayPose.yaw, replayPose.pitch)
+      : this.camera
       ? this.camera.update(dt)
       : {
           pos: [...scene.spawn] as Vec3,
@@ -666,6 +705,9 @@ export class M13Engine {
           right: [1, 0, 0] as Vec3,
           up: [0, 1, 0] as Vec3,
         };
+    if (this.camera && replayTime === null) {
+      this.recordController.record(elapsedTime, { pos: cam.pos, yaw: this.camera.yaw, pitch: this.camera.pitch });
+    }
     const amp = this.audio ? this.audio.sample() : 0;
     const bands = this.audio ? this.audio.getBands() : [0, 0, 0];
 
