@@ -76,6 +76,14 @@ metadata: {type: project}
 - **STOPPER GATO:** T-501 (spike WebGPU+WebXR en el Quest — interop nueva, fallback 2D si falta) y
   T-513 (Chichén en VR + FPS estéreo). Ver `docs/spec/phase-5-spec.md` + `docs/tasks/phase-5-tasks.md`.
 
+## Actualizacion de credibilidad - 2026-07-27
+- XR estereo corregido: el segundo ojo ya no limpia el framebuffer del primero.
+- Cobertura real agregada para renderer, ciclo XR de dos ojos y recuperacion de fallo de inicializacion.
+- Carga publica estricta: los campos desconocidos ahora fallan en vez de omitirse.
+- CI: coverage, lint estricto, build completo y audit de produccion. Dependencias sin hallazgos high/critical.
+- README/benchmark alineados: 30.8x es peso de assets y 2.5x es carga inicial; no se publica FPS sin medicion.
+- **Gate sigue abierto:** T-501/T-513 necesitan Quest 3 fisico. No marcar Fase 5 como completada hasta anexar evidencia de visor.
+
 ## Siguiente acción
 Esperar T-501/T-513 de Gato en el Quest (valida VR real + ajusta `quest_xr`). Mientras, se puede
 arrancar **Fase 6** (edición temporal + determinismo/replay = cimiento del multiplayer m13-platform).

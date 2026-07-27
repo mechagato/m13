@@ -203,6 +203,21 @@ Registrar en phi como cron cada 6h cuando el deploy esté en vivo.
 
 ---
 
+## Registro de evidencia de release (actual)
+
+Este bloque evita interpretar los checks historicos de Fase 1 como evidencia de XR actual.
+
+| Evidencia | Estado | Fuente o comando |
+|---|---|---|
+| Render estereo XR no borra el primer ojo | Verificado local | `engine-xr.test.ts` |
+| Renderer y contrato de escena | Verificado local | `pnpm test:coverage` |
+| Calidad de integracion | Verificado local | `pnpm lint --max-warnings 0`, `pnpm build` |
+| Riesgo de dependencias de produccion | Sin high/critical | `pnpm audit --prod --audit-level high` |
+| WebGPU + WebXR en Quest 3 | Pendiente de hardware | T-501 |
+| Escena, FPS estereo, locomocion y voz en Quest 3 | Pendiente de hardware | T-513 |
+
+No declarar Fase 5 ni soporte Quest como cerrados sin adjuntar fecha, navegador/version, escena, FPS y resultado de T-501/T-513.
+
 ## Estado al cierre de Fase 1
 
 Cuando T-059 + T-061 se completen, marcar en BITACORA:

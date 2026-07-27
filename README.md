@@ -1,145 +1,65 @@
 # m13
 
-> A local-first world synthesis engine for WebXR and the modern web.
-> Built on semantic representation, signed distance fields, and continuous detail.
+> Local-first world synthesis for WebGPU and WebXR.
 
-**Status:** Research · Phase 1 complete (`.m13` language + runtime + editor) · [Live demo](https://motor13.neonodos.com)
-**License:** TBD (pending — see `constitution.md` §8.4)
-**Platform:** WebGPU only
+**Status:** Research. Phases 1 and 2 are complete. Phase 5 WebXR is implemented in code but remains pending validation on a physical Quest headset. Phase 6 is drafted and not started.
 
----
+**Live demo:** https://m13.phi-core.com
 
-## Numbers that matter
+**Platform:** WebGPU only. **License:** TBD; see `constitution.md`.
 
-- **30.8× lighter** than the equivalent Three.js scene (2,014 bytes vs 62,115 — real benchmark, `docs/papers/phase-1-benchmark.md`)
-- **A PNG screenshot of a scene weighs 601× more than the scene itself** (462 KB vs 769 bytes) — and the screenshot is one frozen angle; the scene is walkable, animated, 60 fps
-- **The URL is the world:** scenes travel as `#scene=` share links — zero backend, zero download; whoever opens the link receives the full walkable 3D world
-- **Any LLM becomes a front-end:** the `@m13/mcp` server lets Claude/ChatGPT generate validated `.m13` scenes and return a walkable link (editor-time only — the renderer never calls a cloud)
+## What Is m13?
 
----
+m13 describes worlds as compact `.m13` YAML descriptors and synthesizes their SDF geometry and procedural materials locally in the browser. Rendering does not call a cloud service. LLM and MCP integrations are editor-time tools only.
 
-## What is m13?
+## Verified Evidence
 
-`m13` is an experimental graphics engine that **does not store worlds as polygon meshes**. Instead, it describes scenes as compact semantic descriptors (`.m13` files) and synthesizes geometry, materials, and detail locally on the user's device — entirely in the browser, with zero cloud runtime dependency.
+- **30.8x smaller scene assets** in one reproducible textured-room comparison: 2,014 B `.m13` versus 62,115 B of Three.js HTML, JS, and textures.
+- Including engine bundles, measured first load is approximately **2.5x smaller**. This is not an FPS benchmark.
+- Existing v0.1 scenes have deterministic WGSL hash regression tests.
+- The public demo supports local scene generation, procedural materials, continuous detail, share links, and WebXR entry when the browser supports the WebGPU/WebXR interop.
 
-The name honors **Julián Carrillo's Sonido 13**, a Mexican music theory built on subdividing the discrete intervals of the traditional scale into a continuum of microtones. `m13` applies the same principle to 3D detail: rather than choosing between fixed levels of geometric detail, the engine evaluates continuous mathematical functions that scale infinitely between scales.
+See `docs/papers/phase-1-benchmark.md` for methodology and limitations. Quest stereo rendering, FPS, and locomotion remain hardware gates, not verified claims.
 
----
-
-## Why?
-
-Modern game engines like Unity and Unreal are extraordinary, but they suffer from a problem that gets worse every year: **asset weight**. A typical AAA game ships with tens of gigabytes of textures, meshes, and baked data. Mobile and XR hardware can't easily handle this. Iteration cycles are slow. Memory bandwidth — not compute — is the real bottleneck.
-
-`m13` flips the equation. By representing a scene as **what it is** instead of **how it looks pixel by pixel**, a complete habitable room can be described in kilobytes of YAML and synthesized at runtime using GPU compute shaders + optional local neural inference. The result: lighter projects, faster iteration, and a path to high-fidelity XR experiences on commodity hardware.
-
-This is **not** a Unity/Unreal killer. It's a different category, targeting:
-
-- WebXR experiences (Meta Quest 3, Vision Pro, mobile XR)
-- Real-time architectural and product visualization
-- Configurators and procedural product showcases
-- Open research into semantic and continuous-detail rendering
-
----
-
-## Architecture (TL;DR)
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  .m13 descriptor (YAML, kilobytes)                      │
-│   ▼                                                      │
-│  Parser → Scene IR → Shader Compiler                    │
-│   ▼                                                      │
-│  WebGPU runtime:                                         │
-│    • SDF raymarching (architecture)                     │
-│    • Procedural synthesis (materials)                   │
-│    • Neural inference via ONNX (advanced materials)     │
-│    • Gaussian Splatting (captured objects)              │
-│   ▼                                                      │
-│  90 fps, foveated, locally rendered                     │
-└─────────────────────────────────────────────────────────┘
+.m13 YAML descriptor
+  -> parser and schema validation
+  -> deterministic WGSL compiler
+  -> local WebGPU SDF renderer
 ```
 
-Workload distribution (target):
-
-- **GPU compute shaders:** 55–65% (raymarching, procedural eval)
-- **NPU / Neural Engine:** 15–20% (material synthesis when available)
-- **CPU:** 10–15% (parser, scheduler, basic physics)
-- **RAM:** aggressive caching of synthesized results
-
----
+Current runtime capabilities are SDF raymarching, procedural materials, continuous detail, audio-reactive inputs, and WebXR code paths. Local neural synthesis, Gaussian Splatting, and foveation are future research, not current runtime features.
 
 ## Roadmap
 
-| Phase | Codename                              | Status      |
-|-------|---------------------------------------|-------------|
-| 0     | Proof of principle (SDF raymarching)  | ✅ Done     |
-| 1     | `.m13` language + concept library     | ✅ Done     |
-| 2     | Continuous detail (Sonido 13 visual)  | 📋 Planned  |
-| 3     | Local neural material synthesis       | 📋 Planned  |
-| 4     | Hybrid composition + Gaussian Splatting | 📋 Planned |
-| 5     | WebXR + Quest 3 + voice editing       | 📋 Planned  |
-| 6     | Temporal editing + composer agent     | 📋 Future   |
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | SDF proof of principle | Done |
+| 1 | `.m13` language and concepts | Done |
+| 2 | Continuous detail | Done |
+| 3 | Local neural synthesis | Planned |
+| 4 | Gaussian Splatting | Planned |
+| 5 | WebXR and voice authoring | Implemented; Quest gate pending |
+| 6 | Temporal editing and composer | Drafted; not started |
 
-See `docs/spec/` for detailed specifications of each phase.
-
----
-
-## Run the Phase 0 demo
-
-The Phase 0 demo is a single self-contained HTML file. No build step required.
+## Development
 
 ```bash
-# Option A: open directly
-open m13-phase0.html
-
-# Option B: serve locally (recommended for pointer lock)
-python3 -m http.server 8000
-# then visit http://localhost:8000/m13-phase0.html
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-**Requirements:**
+The full continuation record lives in `BITACORA_MOTOR13.md`; the current hardware protocol is in `docs/DEPLOY.md`.
 
-- Chrome / Edge 113+ (desktop or Android)
-- Safari Technology Preview with WebGPU flag
-- Quest 3 browser (Chromium-based)
+## Principles
 
-**Controls:**
+- Local-first runtime: no cloud dependency to render a scene.
+- WebGPU only: no WebGL or Three.js in the renderer core.
+- Deterministic scene compilation.
+- LLM use is editor-time only.
 
-- Click — capture cursor
-- WASD — move
-- Space / Shift — fly up/down
-- M — toggle microphone (audio modulates wall detail and the gold sphere)
-- Esc — release cursor
-
-The demo renders a closed room (10×6×10 m) entirely with raymarched SDFs. **Zero polygons, zero pre-loaded textures.** The entire file weighs ~25 KB.
-
----
-
-## Project documents
-
-- [`constitution.md`](./constitution.md) — non-negotiable architectural principles
-- [`BITACORA_MOTOR13.md`](./BITACORA_MOTOR13.md) — development session log (Spanish)
-- [`docs/spec/phase-1-spec.md`](./docs/spec/phase-1-spec.md) — Phase 1 specification
-
----
-
-## Contributing
-
-The project is in research phase and not yet open to external contributions. Once a public license is finalized (post-Phase 3), contribution guidelines will be published here.
-
-For research collaborations or commercial inquiries, contact NeoNodos.
-
----
-
-## Credits and influences
-
-- **Julián Carrillo** — Sonido 13 (microtonalism, 1895 onward)
-- **Iñigo Quílez** — pioneering SDF and raymarching techniques on Shadertoy
-- **3D Gaussian Splatting** — Kerbl et al., SIGGRAPH 2023
-- **NeRF and neural scene representations** — Mildenhall et al., 2020
-
-Built in Monterrey, México by NeoNodos.
-
----
-
-*"El motor no descarga gráficos. Descarga significado."*
+"El motor no descarga graficos. Descarga significado."

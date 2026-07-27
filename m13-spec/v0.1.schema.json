@@ -169,6 +169,26 @@
         "ceiling": {
           "$ref": "#/definitions/M13Scene/properties/walls"
         },
+        "sky": {
+          "type": "object",
+          "properties": {
+            "horizon": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background"
+            },
+            "zenith": {
+              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background"
+            }
+          },
+          "required": [
+            "horizon",
+            "zenith"
+          ],
+          "additionalProperties": false
+        },
+        "cameraSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "window": {
           "type": "object",
           "properties": {
@@ -225,6 +245,9 @@
                 ],
                 "default": 1
               },
+              "seed": {
+                "type": "number"
+              },
               "material": {
                 "anyOf": [
                   {
@@ -249,7 +272,28 @@
                 ]
               },
               "audio_reactive": {
-                "type": "boolean",
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "band": {
+                        "type": "string",
+                        "enum": [
+                          "bass",
+                          "mid",
+                          "treble"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "band"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
                 "default": false
               },
               "animate": {
@@ -291,9 +335,7 @@
       },
       "required": [
         "name",
-        "walls",
-        "floor",
-        "ceiling"
+        "floor"
       ],
       "additionalProperties": false
     }

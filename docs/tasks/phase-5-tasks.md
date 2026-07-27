@@ -30,6 +30,13 @@ Pendientes de hardware (Gato): SC5-1 (Chichén en VR), SC5-2 (≥60fps estéreo)
 sin mareo), SC5-6 (voz). ✅ ya: SC5-4 (11 escenas cargan / 2D sin regresión — 181 tests, hashes
 intactos), SC5-5 (entrar/salir sin fugas — dispose XR limpio).
 
+## Sprint de credibilidad - 2026-07-27
+- T-504 tiene regresion cubierta: el primer ojo limpia y el segundo conserva el framebuffer compartido.
+- T-507 tiene cobertura de renderer con GPU falsa, sesion XR de dos ojos y recuperacion ante fallo de inicializacion.
+- La carga de escenas publicas aplica validacion estricta para evitar compatibilidad ficticia.
+- CI exige coverage, lint sin warnings, build completo y audit de dependencias de produccion.
+- T-501 y T-513 siguen como STOPPER de hardware. Esta actualizacion no es evidencia de Quest ni cierra SC5-1/2/3/6.
+
 ## Riesgo vivo
 **Interop WebGPU↔WebXR** (`XRGPUBinding`) es muy nueva; el navegador del Quest podría no traerla
 aún → el código lanza error claro y el usuario usa la vista 2D. T-501 lo confirma en el visor.

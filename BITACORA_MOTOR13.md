@@ -3027,6 +3027,13 @@ Fase 5, HUD VR mínimo (v1 sin HUD).**
 typecheck 6/6 · **181/181 tests** (11 nuevos de la cámara XR) · build OK · hashes regenerados ·
 determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 
+### Sprint de credibilidad - 2026-07-27
+- Corregido el render estereo: solo el primer ojo limpia el color; el segundo preserva su viewport.
+- Agregadas pruebas de renderer con GPU falsa, regresiones XR de dos ojos y recuperacion ante fallo de referencia.
+- `loadScene` ahora rechaza campos desconocidos en escenas publicas; no silencia drift de contrato.
+- CI exige coverage, lint sin warnings, build completo y audit de produccion sin vulnerabilidades high/critical.
+- Dependencias actualizadas y README/benchmark alineados con las metricas realmente medidas.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

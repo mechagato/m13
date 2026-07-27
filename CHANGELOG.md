@@ -7,6 +7,13 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Credibility Sprint
+- Fixed WebXR stereo passes: only the first eye clears the shared projection texture; failed XR setup now closes its session.
+- Added fake-GPU coverage for renderer lifecycle, XR eye ordering, and strict public scene loading.
+- Public scene loading now rejects unknown fields instead of silently dropping typos.
+- Upgraded the editor and MCP dependency graph; production audit has no high or critical findings.
+- Clarified benchmark and phase claims. Quest validation remains pending for Phase 5.
+
 ## [0.2.0] - 2026-06-26
 
 **Fase 2 — Sonido 13 visual + exterior + audio.** El detalle deja de ser fijo y se vuelve
