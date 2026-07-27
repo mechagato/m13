@@ -3076,6 +3076,11 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - Se agrega al selector/precache del example sin tocar `chichen_itza.m13` v0.1 ni los 11 hashes congelados.
 - Contrato y WGSL determinista verificados por test. La validacion visual fluida/sin pops sigue pendiente de navegador real y, si se dispone, Quest.
 
+### T-608 - Sabio Compositor editor-time
+- `composeTemporalScene(prompt)` convierte intencion temporal a una receta v0.2 local con keyframes y `light_flash`.
+- `runComposeTemporalScene` del MCP valida parser y WGSL antes de entregar YAML. No existe llamada LLM dentro de `@m13/runtime`.
+- T-609 conserva como pendientes la prueba visual, despliegue trazable y evidencia final; no se declara Fase 6 cerrada solo por tests.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo
