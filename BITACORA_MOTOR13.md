@@ -3040,6 +3040,11 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - Se detecto una discrepancia de procedencia: `m13.phi-core.com` carga artefactos temporales ausentes en `main`.
   Se audita y reconcilia antes de considerar Fase 6 iniciada o completada.
 
+### T-601 - versionado de schema v0.2
+- Parser soporta v0.1 y v0.2 mediante union discriminada; documentos v0.1 sin `version` se normalizan de forma explicita.
+- `migrateSceneToV02()` es puro y no se aplica al compilar v0.1; hash-regression mantiene las 11 escenas existentes.
+- 40 pruebas de parser/hash y typecheck pasaron antes de este checkpoint.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

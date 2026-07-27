@@ -31,10 +31,10 @@ describe('parser — casos de error', () => {
     expect(() => parseScene(broken)).toThrow(/\[m13\/parser\] YAML inválido/);
   });
 
-  it('versión no soportada (0.2) → error claro con número de versión', () => {
-    const yaml = VALID_BASE.replace('"0.1"', '"0.2"');
+  it('versión no soportada (0.3) → error claro con número de versión', () => {
+    const yaml = VALID_BASE.replace('"0.1"', '"0.3"');
     expect(() => parseScene(yaml)).toThrow(
-      /\[m13\/parser\] m13 v0\.2 no soportado por este runtime/,
+      /\[m13\/parser\] m13 v0\.3 no soportado por este runtime/,
     );
   });
 

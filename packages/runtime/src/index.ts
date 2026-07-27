@@ -11,9 +11,10 @@ export type { M13EngineOptions, SceneLoadInfo, Quality, QualityPreset } from './
 
 export { writeMatParams, destroyRenderer } from './renderer/index.js';
 
-export { parseScene, validateScene, SUPPORTED_VERSION } from './parser/index.js';
+export { parseScene, validateScene, SUPPORTED_VERSION, SUPPORTED_VERSIONS } from './parser/index.js';
 export type { ParseOptions } from './parser/index.js';
-export type { M13Scene, M13Object, M13Material, M13Light } from './parser/schema.js';
+export { MAX_SCENE_OBJECTS, migrateSceneToV02 } from './parser/schema.js';
+export type { M13Scene, M13SceneV01, M13SceneV02, M13Object, M13Material, M13Light } from './parser/schema.js';
 
 export { compileScene, hashWgsl } from './compiler/index.js';
 export type { CompiledScene, MatParamSlot, MatParamsLayout } from './compiler/index.js';

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { parseScene, validateScene, SUPPORTED_VERSION } from '../index.js';
+import { parseScene, validateScene, SUPPORTED_VERSIONS } from '../index.js';
+import { migrateSceneToV02 } from '../schema.js';
 
 /**
  * T-008 — Tests del parser para casos VÁLIDOS.
@@ -33,7 +34,8 @@ describe('parser — casos válidos', () => {
   it('parsea una escena minimal y aplica todos los defaults', () => {
     const scene = parseScene(MINIMAL_VALID);
 
-    expect(scene.version).toBe(SUPPORTED_VERSION);
+    expect(scene.version).toBe('0.1');
+    expect(SUPPORTED_VERSIONS).toContain(scene.version);
     expect(scene.name).toBe('minimal_room');
     expect(scene.description).toBeUndefined();
     expect(scene.bounds).toEqual([5, 3, 5]);
@@ -219,6 +221,16 @@ objects:
     const scene = validateScene(raw);
     expect(scene.name).toBe('desde_objeto');
     expect(scene.bounds).toEqual([5, 3, 5]);
+  });
+
+  it('enruta v0.2 y migra una escena v0.1 sin alterar sus campos', () => {
+    const legacy = parseScene(MINIMAL_VALID);
+    const migrated = migrateSceneToV02(legacy);
+    const v02 = parseScene(MINIMAL_VALID.replace('"0.1"', '"0.2"'));
+
+    expect(migrated).toMatchObject({ ...legacy, version: '0.2' });
+    expect(v02.version).toBe('0.2');
+    expect(v02.bounds).toEqual(legacy.bounds);
   });
 
   it('opcion silent suprime warnings de campos desconocidos', () => {

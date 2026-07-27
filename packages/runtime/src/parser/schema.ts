@@ -120,7 +120,7 @@ const objectSchema = z
 
 // ---------- escena raíz ----------
 
-export const m13SceneSchema = z.object({
+const m13SceneBaseSchema = z.object({
   version: z.string().default('0.1'),
   name: z.string(),
   description: z.string().optional(),
@@ -153,10 +153,30 @@ export const m13SceneSchema = z.object({
   objects: z.array(objectSchema).max(MAX_SCENE_OBJECTS).default([]),
 });
 
+/** Schema de escenas legadas. Mantenerlo estable protege el WGSL v0.1. */
+export const m13SceneV01Schema = m13SceneBaseSchema.extend({
+  version: z.literal('0.1').default('0.1'),
+});
+
+/** v0.2 reserva el contrato versionado; T-602 agrega timeline/keyframes a este schema. */
+export const m13SceneV02Schema = m13SceneBaseSchema.extend({
+  version: z.literal('0.2'),
+});
+
+export const m13SceneSchema = z.discriminatedUnion('version', [m13SceneV01Schema, m13SceneV02Schema]);
+
 // ---------- tipos exportados ----------
 
+export type M13SceneV01 = z.infer<typeof m13SceneV01Schema>;
+export type M13SceneV02 = z.infer<typeof m13SceneV02Schema>;
 export type M13Scene = z.infer<typeof m13SceneSchema>;
 export type M13Object = z.infer<typeof objectSchema>;
 export type M13Material = z.infer<typeof materialSchema>;
 export type M13Light = z.infer<typeof lightSchema>;
 export type M13Surface = z.infer<typeof surfaceSchema>;
+
+/** Migración explícita y sin pérdidas; no se aplica implícitamente al compilar una escena v0.1. */
+export function migrateSceneToV02(scene: M13Scene): M13SceneV02 {
+  if (scene.version === '0.2') return scene;
+  return { ...scene, version: '0.2' };
+}

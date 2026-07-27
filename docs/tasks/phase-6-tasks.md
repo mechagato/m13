@@ -6,7 +6,7 @@ base de implementacion: `main` y CI son la fuente canonica.
 
 | Task | Entrega | Gate de terminado |
 |---|---|---|
-| T-601 | Modelo `.m13 v0.2`, migracion v0.1 -> v0.2 y parser estricto por version | v0.1 conserva hashes; v0.2 rechaza contrato invalido |
+| T-601 | Modelo `.m13 v0.2`, migracion v0.1 -> v0.2 y parser estricto por version | ✅ v0.1 conserva hashes; v0.2 enruta y rechaza contrato invalido |
 | T-602 | Tipos temporales, orden/cap de keyframes y easing `smooth` | pruebas de interpolacion, limites y no finitos |
 | T-603 | Compiler de transform keyframes a WGSL | mismo tiempo produce WGSL/hash determinista; sin CPU por frame para transform |
 | T-604 | Evento P1 `light_flash` sin side effects | evento determinista y fuera de runtime de audio real |

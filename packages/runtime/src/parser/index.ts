@@ -1,8 +1,10 @@
 import { parse as parseYaml } from 'yaml';
 import { m13SceneSchema, type M13Scene } from './schema.js';
 
-/** Versión del formato soportada por este runtime. */
-export const SUPPORTED_VERSION = '0.1';
+/** Última versión del formato soportada por este runtime. */
+export const SUPPORTED_VERSION = '0.2';
+/** Todas las versiones que el parser puede leer y validar. */
+export const SUPPORTED_VERSIONS = ['0.1', '0.2'] as const;
 
 /** Keys reconocidas en el nivel raíz de un documento .m13. */
 const KNOWN_ROOT_KEYS = new Set([
@@ -55,15 +57,22 @@ export function parseScene(yamlText: string, opts: ParseOptions = {}): M13Scene 
  * Valida un objeto contra el schema .m13 y devuelve la escena con defaults aplicados.
  */
 export function validateScene(raw: unknown, opts: ParseOptions = {}): M13Scene {
-  // 1. Validación de versión antes del schema general: error explícito si no es 0.1.
-  if (isPlainObject(raw) && typeof raw.version === 'string' && raw.version !== SUPPORTED_VERSION) {
+  // 1. Validación de versión antes del schema general: error explícito si no tiene ruta.
+  if (
+    isPlainObject(raw) &&
+    typeof raw.version === 'string' &&
+    !SUPPORTED_VERSIONS.includes(raw.version as (typeof SUPPORTED_VERSIONS)[number])
+  ) {
     throw new Error(
-      `[m13/parser] m13 v${raw.version} no soportado por este runtime (se esperaba v${SUPPORTED_VERSION})`,
+      `[m13/parser] m13 v${raw.version} no soportado por este runtime (soporta ${SUPPORTED_VERSIONS.join(', ')})`,
     );
   }
 
   // 2. Validación Zod estándar.
-  const result = m13SceneSchema.safeParse(raw);
+  // Los documentos v0.1 históricos podían omitir version; normalizarlos antes de usar la unión
+  // discriminada conserva ese contrato y deja errores precisos para el resto de los campos.
+  const rawForSchema = isPlainObject(raw) && raw.version === undefined ? { ...raw, version: '0.1' } : raw;
+  const result = m13SceneSchema.safeParse(rawForSchema);
   if (!result.success) {
     const issues = result.error.issues
       .map((i) => `  · ${i.path.join('.') || '<root>'} — ${i.message}`)
