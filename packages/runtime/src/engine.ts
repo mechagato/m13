@@ -447,7 +447,8 @@ export class M13Engine {
     const session = await xr.requestSession('immersive-vr', {
       optionalFeatures: ['local-floor'],
     });
-    this.xrSession = session;
+    try {
+      this.xrSession = session;
     const binding = new XRGPUBindingCtor(session, this.core.device);
     this.xrBinding = binding;
     const layer = binding.createProjectionLayer({ colorFormat: this.core.format });
@@ -467,7 +468,20 @@ export class M13Engine {
     this.stop(); // pausar el loop 2D
     session.addEventListener('end', () => this.onXRSessionEnd());
     this.xrLastTime = 0;
-    this.xrRafId = session.requestAnimationFrame((t, f) => this.onXRFrame(t, f));
+      this.xrRafId = session.requestAnimationFrame((t, f) => this.onXRFrame(t, f));
+    } catch (err) {
+      this.xrSession = null;
+      this.xrBinding = null;
+      this.xrLayer = null;
+      this.xrRefSpace = null;
+      this.xrCamera = null;
+      if (this.preXRQuality) {
+        this.quality = this.preXRQuality;
+        this.preXRQuality = null;
+      }
+      await session.end().catch(() => undefined);
+      throw err;
+    }
   }
 
   /** Sale de VR (termina la sesión; el 'end' event reanuda el loop 2D). */
@@ -541,7 +555,7 @@ export class M13Engine {
         viewport: [vp.x, vp.y, vp.width, vp.height],
       });
       const encoder = device.createCommandEncoder();
-      renderEyePass(this.renderer!, encoder, sub.colorTexture.createView(), vp, true);
+      renderEyePass(this.renderer!, encoder, sub.colorTexture.createView(), vp, i === 0);
       device.queue.submit([encoder.finish()]);
     });
 
