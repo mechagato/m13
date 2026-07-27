@@ -3034,6 +3034,12 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - CI exige coverage, lint sin warnings, build completo y audit de produccion sin vulnerabilidades high/critical.
 - Dependencias actualizadas y README/benchmark alineados con las metricas realmente medidas.
 
+### Reordenamiento de fases - 2026-07-27
+- **D-2026-07-27:** Fase 3 queda congelada: no ONNX, dataset, entrenamiento, inferencia ni licencia neural hasta nueva orden.
+- Orden autorizado: evidencia fisica de Fase 5 -> Fase 6 -> Spec Kit y ejecucion de Fase 4.
+- Se detecto una discrepancia de procedencia: `m13.phi-core.com` carga artefactos temporales ausentes en `main`.
+  Se audita y reconcilia antes de considerar Fase 6 iniciada o completada.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

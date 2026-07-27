@@ -10,23 +10,27 @@ import { z } from 'zod';
 
 // ---------- primitivos ----------
 
-const vec3 = z.tuple([z.number(), z.number(), z.number()]);
+const finiteNumber = z.number().finite();
+const vec3 = z.tuple([finiteNumber, finiteNumber, finiteNumber]);
 // Dimensiones físicas (bounds, scale, size): 0 o negativo produce SDFs degeneradas
 // y clamps de cámara invertidos — se rechazan en parse, no en runtime.
 const positiveVec3 = z.tuple([
-  z.number().positive(),
-  z.number().positive(),
-  z.number().positive(),
+  finiteNumber.positive(),
+  finiteNumber.positive(),
+  finiteNumber.positive(),
 ]);
 // Canales de color: sin cota superior (HDR válido) pero nunca negativos.
-const rgb = z.tuple([z.number().min(0), z.number().min(0), z.number().min(0)]);
+const rgb = z.tuple([finiteNumber.min(0), finiteNumber.min(0), finiteNumber.min(0)]);
+
+/** Límite de complejidad para evitar shaders generados que bloqueen la GPU. */
+export const MAX_SCENE_OBJECTS = 256;
 
 // ---------- iluminación ----------
 
 const lightSchema = z.object({
   position: vec3.default([0, 2.5, 0]),
   color: rgb.default([1.0, 0.92, 0.78]),
-  intensity: z.number().min(0).default(1.0),
+  intensity: finiteNumber.min(0).default(1.0),
 });
 
 const ambientSchema = z.object({
@@ -34,7 +38,7 @@ const ambientSchema = z.object({
   ambientColor: rgb.default([0.08, 0.075, 0.07]),
   tint: rgb.default([1.0, 1.0, 1.0]),
   fogColor: rgb.default([0.05, 0.045, 0.04]),
-  fogDensity: z.number().min(0).default(0.015),
+  fogDensity: finiteNumber.min(0).default(0.015),
 });
 
 // ---------- material (concepto) ----------
@@ -74,7 +78,7 @@ const objectSchema = z
     position: vec3,
     /** Rotación estática en grados (Euler XYZ extrínseco, orden de aplicación X→Y→Z). */
     rotation: vec3.optional(),
-    scale: z.union([z.number().positive(), positiveVec3]).default(1),
+    scale: z.union([finiteNumber.positive(), positiveVec3]).default(1),
     /** Seed por instancia (P5/T-251): descorrelaciona el muestreo del material de ESTE
      *  objeto (offset de dominio) → mismo concepto, vetas/grano distintos. No toca la geometría.
      *  `.finite()`: NaN/Infinity romperían el literal WGSL del offset (F3 auditoría). */
@@ -89,8 +93,8 @@ const objectSchema = z
     animate: z
       .object({
         mode: z.enum(['bob', 'rotate', 'pulse']),
-        speed: z.number().default(1.0),
-        amplitude: z.number().min(0).default(0.1),
+        speed: finiteNumber.default(1.0),
+        amplitude: finiteNumber.min(0).default(0.1),
       })
       .optional(),
   })
@@ -139,14 +143,14 @@ export const m13SceneSchema = z.object({
     })
     .optional(),
   // Velocidad de cámara (m/s) para la escena. Útil en explanadas grandes; default 2.5.
-  cameraSpeed: z.number().positive().optional(),
+  cameraSpeed: finiteNumber.positive().optional(),
   window: z
     .object({
       position: vec3,
       size: positiveVec3,
     })
     .optional(),
-  objects: z.array(objectSchema).default([]),
+  objects: z.array(objectSchema).max(MAX_SCENE_OBJECTS).default([]),
 });
 
 // ---------- tipos exportados ----------

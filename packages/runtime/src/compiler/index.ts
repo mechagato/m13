@@ -1,4 +1,4 @@
-import type { M13Scene, M13Object, M13Material } from '../parser/schema.js';
+import { MAX_SCENE_OBJECTS, type M13Scene, type M13Object, type M13Material } from '../parser/schema.js';
 import { COMMON_WGSL } from '../shaders/common.js';
 import { RAYMARCH_WGSL } from '../shaders/raymarch.js';
 import { getConcept, type Concept } from '@m13/synth';
@@ -56,6 +56,9 @@ export interface CompiledScene {
  * Esto permite caché por hash en M13Engine.
  */
 export function compileScene(scene: M13Scene): CompiledScene {
+  if (scene.objects.length > MAX_SCENE_OBJECTS) {
+    throw new Error(`[m13/compiler] La escena excede el máximo de ${MAX_SCENE_OBJECTS} objetos.`);
+  }
   const conceptIds = collectConceptIds(scene);
   const concepts = conceptIds.map((id) => {
     const c = getConcept(id);

@@ -84,6 +84,11 @@ metadata: {type: project}
 - README/benchmark alineados: 30.8x es peso de assets y 2.5x es carga inicial; no se publica FPS sin medicion.
 - **Gate sigue abierto:** T-501/T-513 necesitan Quest 3 fisico. No marcar Fase 5 como completada hasta anexar evidencia de visor.
 
+## Reordenamiento de fases - 2026-07-27
+- **Fase 3 congelada:** no ONNX, dataset, entrenamiento, inferencia ni decision de licencia hasta nueva orden.
+- **Orden activo:** cerrar evidencia de Fase 5 en Quest, ejecutar Fase 6 y despues crear/aprobar el Spec Kit de Fase 4.
+- **Riesgo de procedencia:** `m13.phi-core.com` contiene artefactos temporales que no estan en el checkout `main` actual. No contar esas funciones como Fase 6 verificada hasta localizar su revision fuente y pruebas.
+
 ## Siguiente acción
 Esperar T-501/T-513 de Gato en el Quest (valida VR real + ajusta `quest_xr`). Mientras, se puede
 arrancar **Fase 6** (edición temporal + determinismo/replay = cimiento del multiplayer m13-platform).

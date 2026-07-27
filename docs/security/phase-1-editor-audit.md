@@ -11,6 +11,17 @@
 
 ## Resumen ejecutivo
 
+### Addendum 2026-07-27 - remediacion de limites de escena
+
+- **H-02 resuelto en codigo:** `MAX_SCENE_OBJECTS = 256` se aplica en el schema y se vuelve a
+  comprobar en `compileScene`, incluso si un consumidor omite el parser. Los enlaces `#scene=`
+  rechazan YAML decodificado mayor a 64 KiB antes de parsear o compilar GPU.
+- **H-03 resuelto en codigo:** todos los numeros que llegan a WGSL usan validacion `.finite()`;
+  YAML con `Infinity` falla en el parser con un error de schema.
+- Las pruebas cubren el maximo de objetos, el bypass directo al compilador, numeros no finitos y
+  payload compartido sobredimensionado. Ver `parser-errors.test.ts`, `compiler-limits.test.ts` y
+  `share-scene.test.ts`.
+
 El núcleo de la cadena más peligrosa — **share link `#scene=` → YAML arbitrario →
 parser → compiler → WGSL** — está **bien defendido contra inyección de shader y XSS**.
 El compilador resuelve todos los ids de material/concepto contra el registry de

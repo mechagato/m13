@@ -26,6 +26,10 @@ la IP** (fbm_continuous/pixelFootprint) y cubren FlyCamera.
 
 ## §1 — Orden de ejecución (recomendado: Innovafest-first)
 
+**Decisión vigente 2026-07-27:** Fase 3 queda congelada hasta nueva autorización. No se recolecta
+dataset, entrena modelo, añade ONNX ni se toma una decisión de licencia por esta fase. El orden
+activo es: evidencia física de Fase 5 -> Fase 6 -> Spec Kit y ejecución de Fase 4.
+
 ```
 JULIO        Fase 5 — WebXR inmersivo (Quest 3)          ← el wow de Innovafest
 AGO-SEP      Fase 6 — Edición temporal + Compositor       ← segundo diferenciador demo
@@ -71,19 +75,20 @@ escenas temporales — LLM solo en autoría, nunca runtime).
 retro-compatible) — se instala aquí porque Fase 6 es la primera que muta el formato fuerte.
 **Demo:** Chichén con amanecer→atardecer + evento (fuego ceremonial a las X seg) — material Innovafest.
 
-## §4 — Fase 3: Síntesis neural local ONNX (OCT-NOV + dataset desde YA · est. 4-8 sem, paralelo)
+## §4 — Fase 3: Síntesis neural local ONNX (CONGELADA por decisión 2026-07-27)
 
 **Qué entrega (tesis H4):** materiales/formas sintetizados por red neural LOCAL (onnxruntime-web,
 backend WebGPU) — cero nube en runtime (§3.1 intacto).
 **Dos caminos (Idea 6):** A) LLM chico local fine-tuneado (prompt→.m13 sin internet — cierra el
 círculo D-025-06 al 100%) · B) Neural SDFs (DeepSDF — la red ES la forma, la tesis Sonido 13 con pesos).
-**Arranque INMEDIATO y barato (no espera a octubre):** persistir TODA escena generada (demo/editor/
-MCP) como dataset — la fábrica de datos auto-validada ya existe; el tiempo juega a favor.
-**Stoppers:** entrenamiento en el servidor de Gato · decisión npm publish + licencia (§8.4 dice
+**Estado actual:** no ejecutar dataset, entrenamiento ni integración ONNX mientras el congelamiento
+permanezca vigente. Este texto conserva la intención técnica para una reanudación futura.
+**Stoppers al reanudar:** entrenamiento en el servidor de Gato · decisión npm publish + licencia (§8.4 dice
 "privado hasta Fase 3" — aquí se resuelve con el abogado, alineado al registro IP).
 
-## §5 — Fase 4: Gaussian Splatting híbrido (ENE-MAR 2027 · est. 4-6 sem)
+## §5 — Fase 4: Gaussian Splatting híbrido (después de Fase 6 · est. 4-6 sem)
 
+**Pre-gate:** crear y aprobar Spec Kit (spec, plan y tasks) antes de modificar el renderer.
 **Qué entrega:** captura real (splats de fotogrametría) coexistiendo con síntesis SDF en la misma
 escena. **Requiere re-arquitectura:** `MultiPipelineRenderer` (raymarch + splatting + composición
 con depth), `kind: gaussian_splat` en el schema, y `ModelRegistry` (caché/versionado/hash de

@@ -2,7 +2,7 @@
 
 > Local-first world synthesis for WebGPU and WebXR.
 
-**Status:** Research. Phases 1 and 2 are complete. Phase 5 WebXR is implemented in code but remains pending validation on a physical Quest headset. Phase 6 is drafted and not started.
+**Status:** Research. Phases 1 and 2 are complete. Phase 5 WebXR is implemented in code but remains pending validation on a physical Quest headset. Phase 3 neural work is frozen. Phase 6 source work has not started; deployed artifacts with temporal features are being reconciled to a verifiable source revision before implementation resumes.
 
 **Live demo:** https://m13.phi-core.com
 
@@ -39,10 +39,10 @@ Current runtime capabilities are SDF raymarching, procedural materials, continuo
 | 0 | SDF proof of principle | Done |
 | 1 | `.m13` language and concepts | Done |
 | 2 | Continuous detail | Done |
-| 3 | Local neural synthesis | Planned |
-| 4 | Gaussian Splatting | Planned |
+| 3 | Local neural synthesis | Frozen by product decision |
+| 4 | Gaussian Splatting | Planned after Phase 6 |
 | 5 | WebXR and voice authoring | Implemented; Quest gate pending |
-| 6 | Temporal editing and composer | Drafted; not started |
+| 6 | Temporal editing and composer | Drafted; production/source provenance audit open |
 
 ## Development
 

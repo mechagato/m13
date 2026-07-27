@@ -4,6 +4,7 @@ import { SCENES } from './scenes.js';
 import { STYLES, generateScene, generateFromPrompt } from '@m13/generator';
 import type { StyleId } from '@m13/generator';
 import { hasLlmEndpoint, generateWithLlm, getLlmUrl } from './llm.js';
+import { encodeSceneHash, readSharedSceneHash } from './share-scene.js';
 
 // ============================================
 // DOM refs
@@ -550,28 +551,8 @@ promptForm.addEventListener('submit', (e) => {
 // Share links — la URL ES la escena (local-first,
 // cero backend: base64url del YAML en el hash)
 // ============================================
-function encodeSceneHash(yaml: string): string {
-  const bytes = new TextEncoder().encode(yaml);
-  let bin = '';
-  bytes.forEach((b) => (bin += String.fromCharCode(b)));
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function decodeSceneHash(encoded: string): string {
-  const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-  const bin = atob(b64);
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
 function readSharedScene(): string | null {
-  const m = window.location.hash.match(/^#scene=(.+)$/);
-  if (!m) return null;
-  try {
-    return decodeSceneHash(m[1]!);
-  } catch {
-    return null;
-  }
+  return readSharedSceneHash(window.location.hash);
 }
 
 // ============================================

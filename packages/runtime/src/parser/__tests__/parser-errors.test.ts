@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseScene, validateScene } from '../index.js';
+import { MAX_SCENE_OBJECTS } from '../schema.js';
 
 /**
  * T-009 — Tests del parser para casos INVÁLIDOS.
@@ -181,5 +182,19 @@ light:
 
   it('raw null al validator → error de schema (no crash)', () => {
     expect(() => validateScene(null)).toThrow(/\[m13\/parser\] Escena \.m13 inválida/);
+  });
+
+  it('rechaza números no finitos antes de que lleguen al compilador WGSL', () => {
+    const yaml = `${VALID_BASE}\nbounds: [.inf, 3, 5]\n`;
+    expect(() => parseScene(yaml)).toThrow(/bounds/);
+  });
+
+  it('rechaza escenas que exceden el presupuesto de objetos', () => {
+    const objects = Array.from({ length: MAX_SCENE_OBJECTS + 1 }, (_, i) => `
+  - id: o${i}
+    kind: sphere
+    position: [0, 0, 0]
+    material: metal_dorado_pulido`).join('');
+    expect(() => parseScene(`${VALID_BASE}\nobjects:${objects}`)).toThrow(/objects/);
   });
 });
