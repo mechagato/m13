@@ -3045,6 +3045,10 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - `migrateSceneToV02()` es puro y no se aplica al compilar v0.1; hash-regression mantiene las 11 escenas existentes.
 - 40 pruebas de parser/hash y typecheck pasaron antes de este checkpoint.
 
+### T-602 - contrato temporal v0.2
+- Keyframes validan transformacion, `t` unico y dentro de `duration`; se ordenan por tiempo y usan easing `smooth` por default.
+- Cap de 16 keyframes por objeto. El compilador rechaza timelines hasta T-603 para no aceptar escenas sin backend WGSL.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

@@ -1,4 +1,4 @@
-import { MAX_SCENE_OBJECTS, type M13Scene, type M13Object, type M13Material } from '../parser/schema.js';
+import { MAX_SCENE_OBJECTS, type M13Scene, type M13SceneV01, type M13Object, type M13Material } from '../parser/schema.js';
 import { COMMON_WGSL } from '../shaders/common.js';
 import { RAYMARCH_WGSL } from '../shaders/raymarch.js';
 import { getConcept, type Concept } from '@m13/synth';
@@ -59,7 +59,12 @@ export function compileScene(scene: M13Scene): CompiledScene {
   if (scene.objects.length > MAX_SCENE_OBJECTS) {
     throw new Error(`[m13/compiler] La escena excede el máximo de ${MAX_SCENE_OBJECTS} objetos.`);
   }
-  const conceptIds = collectConceptIds(scene);
+  if (scene.version === '0.2' && scene.objects.some((obj) => isTimelineAnimation(obj.animate))) {
+    throw new Error('[m13/compiler] Timeline v0.2 requiere el compilador temporal de T-603.');
+  }
+  // Después del guard, v0.2 sin timeline comparte exactamente la forma estática v0.1.
+  const staticScene = scene as M13SceneV01;
+  const conceptIds = collectConceptIds(staticScene);
   const concepts = conceptIds.map((id) => {
     const c = getConcept(id);
     if (!c) {
@@ -70,7 +75,7 @@ export function compileScene(scene: M13Scene): CompiledScene {
     return c;
   });
 
-  const matParams = buildMatParamsLayout(scene, concepts);
+  const matParams = buildMatParamsLayout(staticScene, concepts);
   const matParamsBlock =
     matParams.totalFloats > 0 ? `\n${generateMatParamsStruct(matParams)}\n` : '';
 
@@ -84,14 +89,14 @@ export function compileScene(scene: M13Scene): CompiledScene {
     COMMON_WGSL,
     matParamsBlock,
     '\n// ===== constantes de escena =====\n',
-    generateSceneConstants(scene),
+    generateSceneConstants(staticScene),
     '\n// ===== conceptos materiales =====\n',
     ...concepts.map((c) => c.wgsl),
     sdfSection,
     '\n// ===== map() generada =====\n',
-    generateMapFunction(scene),
+    generateMapFunction(staticScene),
     '\n// ===== material() generada =====\n',
-    generateMaterialFunction(scene),
+    generateMaterialFunction(staticScene),
     RAYMARCH_WGSL,
   ].join('\n');
 
@@ -151,7 +156,7 @@ function effectiveConceptId(obj: M13Object): string {
   return materialIdOf(obj.material!);
 }
 
-function collectConceptIds(scene: M13Scene): string[] {
+function collectConceptIds(scene: M13SceneV01): string[] {
   const set = new Set<string>();
   if (scene.walls) set.add(scene.walls.concept);
   set.add(scene.floor.concept);
@@ -176,7 +181,7 @@ function collectConceptIds(scene: M13Scene): string[] {
  *    en orden de aparición (warning para conflictos).
  */
 function buildMatParamsLayout(
-  scene: M13Scene,
+  scene: M13SceneV01,
   concepts: Concept[],
 ): MatParamsLayout {
   // 1. Recolectar params por concept (primer object con ese concept gana).
@@ -291,7 +296,7 @@ function generateMatParamsStruct(layout: MatParamsLayout): string {
  * raymarcher, así `ambient.background` por fin llega al pixel (antes el miss
  * renderizaba negro puro ignorando background).
  */
-function generateSceneConstants(scene: M13Scene): string {
+function generateSceneConstants(scene: M13SceneV01): string {
   let bg: readonly [number, number, number] = scene.ambient.background;
   // F10: el cielo solo aplica en exterior (en interior el miss casi nunca se ve y
   // alteraría el hash silenciosamente). Sin sky/exterior → background tal cual (byte-idéntico).
@@ -340,6 +345,12 @@ function hasStaticRotation(obj: M13Object): boolean {
   return obj.rotation !== undefined && obj.rotation.some((v) => v !== 0);
 }
 
+function isTimelineAnimation(
+  animate: M13Scene['objects'][number]['animate'],
+): boolean {
+  return animate !== undefined && 'keyframes' in animate;
+}
+
 /**
  * Offset de dominio determinista desde un seed (P5/T-251). Descorrelaciona el muestreo
  * de ruido del material → dos instancias del mismo concepto se ven hermanas, no clones.
@@ -367,7 +378,7 @@ function seedOffset(seed: number): [number, number, number] {
   return [h(seed * 0.1031) * K, h(seed * 0.0973 + 19.19) * K, h(seed * 0.1107 + 71.71) * K];
 }
 
-function generateMapFunction(scene: M13Scene): string {
+function generateMapFunction(scene: M13SceneV01): string {
   const [bx, by, bz] = scene.bounds;
   const exterior = scene.walls === undefined || scene.ceiling === undefined;
   const lines: string[] = [];
@@ -497,7 +508,7 @@ function generateObjectSdf(obj: M13Object, index: number): string {
   }
 }
 
-function generateMaterialFunction(scene: M13Scene): string {
+function generateMaterialFunction(scene: M13SceneV01): string {
   const [, by] = scene.bounds;
   const exterior = scene.walls === undefined || scene.ceiling === undefined;
   const floorId = scene.floor.concept;

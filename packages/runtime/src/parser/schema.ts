@@ -69,7 +69,55 @@ const objectKindSchema = z.enum([
   'concept', // T-021: delega geometría al SDF del concept (category 'object_geo')
 ]);
 
-const objectSchema = z
+const legacyAnimateSchema = z.object({
+  mode: z.enum(['bob', 'rotate', 'pulse']),
+  speed: finiteNumber.default(1.0),
+  amplitude: finiteNumber.min(0).default(0.1),
+});
+
+export const MAX_KEYFRAMES_PER_OBJECT = 16;
+
+const keyframeSchema = z
+  .object({
+    t: finiteNumber.min(0),
+    position: vec3.optional(),
+    rotation: vec3.optional(),
+    scale: z.union([finiteNumber.positive(), positiveVec3]).optional(),
+    ease: z.enum(['linear', 'smooth', 'in', 'out']).default('smooth'),
+  })
+  .superRefine((keyframe, ctx) => {
+    if (keyframe.position === undefined && keyframe.rotation === undefined && keyframe.scale === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'keyframe requiere position, rotation o scale',
+      });
+    }
+  });
+
+const timelineAnimateSchema = z
+  .object({
+    duration: finiteNumber.positive(),
+    loop: z.boolean().default(false),
+    keyframes: z.array(keyframeSchema).min(1).max(MAX_KEYFRAMES_PER_OBJECT),
+  })
+  .superRefine((timeline, ctx) => {
+    const seen = new Set<number>();
+    for (const [index, keyframe] of timeline.keyframes.entries()) {
+      if (keyframe.t > timeline.duration) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['keyframes', index, 't'], message: 't no puede exceder duration' });
+      }
+      if (seen.has(keyframe.t)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['keyframes', index, 't'], message: 't debe ser único' });
+      }
+      seen.add(keyframe.t);
+    }
+  })
+  .transform((timeline) => ({
+    ...timeline,
+    keyframes: [...timeline.keyframes].sort((a, b) => a.t - b.t),
+  }));
+
+const objectBaseSchema = z
   .object({
     id: z.string(),
     kind: objectKindSchema,
@@ -90,15 +138,16 @@ const objectSchema = z
     audio_reactive: z
       .union([z.boolean(), z.object({ band: z.enum(['bass', 'mid', 'treble']) })])
       .default(false),
-    animate: z
-      .object({
-        mode: z.enum(['bob', 'rotate', 'pulse']),
-        speed: finiteNumber.default(1.0),
-        amplitude: finiteNumber.min(0).default(0.1),
-      })
-      .optional(),
-  })
-  .superRefine((obj, ctx) => {
+    animate: legacyAnimateSchema.optional(),
+  });
+
+type ObjectKindRuleInput = {
+  kind: z.infer<typeof objectKindSchema>;
+  concept?: string;
+  material?: unknown;
+};
+
+function addObjectKindIssues(obj: ObjectKindRuleInput, ctx: z.RefinementCtx): void {
     if (obj.kind === 'concept') {
       if (obj.concept === undefined) {
         ctx.addIssue({
@@ -116,7 +165,13 @@ const objectSchema = z
         });
       }
     }
-  });
+}
+
+const objectSchema = objectBaseSchema.superRefine(addObjectKindIssues);
+
+const objectSchemaV02 = objectBaseSchema.extend({
+  animate: z.union([legacyAnimateSchema, timelineAnimateSchema]).optional(),
+}).superRefine(addObjectKindIssues);
 
 // ---------- escena raíz ----------
 
@@ -161,6 +216,7 @@ export const m13SceneV01Schema = m13SceneBaseSchema.extend({
 /** v0.2 reserva el contrato versionado; T-602 agrega timeline/keyframes a este schema. */
 export const m13SceneV02Schema = m13SceneBaseSchema.extend({
   version: z.literal('0.2'),
+  objects: z.array(objectSchemaV02).max(MAX_SCENE_OBJECTS).default([]),
 });
 
 export const m13SceneSchema = z.discriminatedUnion('version', [m13SceneV01Schema, m13SceneV02Schema]);
@@ -171,6 +227,8 @@ export type M13SceneV01 = z.infer<typeof m13SceneV01Schema>;
 export type M13SceneV02 = z.infer<typeof m13SceneV02Schema>;
 export type M13Scene = z.infer<typeof m13SceneSchema>;
 export type M13Object = z.infer<typeof objectSchema>;
+export type M13ObjectV02 = z.infer<typeof objectSchemaV02>;
+export type M13Timeline = z.infer<typeof timelineAnimateSchema>;
 export type M13Material = z.infer<typeof materialSchema>;
 export type M13Light = z.infer<typeof lightSchema>;
 export type M13Surface = z.infer<typeof surfaceSchema>;
