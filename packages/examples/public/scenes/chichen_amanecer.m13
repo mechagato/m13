@@ -1,0 +1,72 @@
+version: "0.2"
+name: chichen_amanecer
+description: "Demo temporal: amanecer sobre una interpretacion SDF de Chichen Itza. El sol recorre el cielo en 20 segundos."
+bounds: [42, 30, 42]
+spawn: [0, -16, 33]
+cameraSpeed: 7
+sky:
+  horizon: [0.92, 0.42, 0.2]
+  zenith: [0.08, 0.16, 0.42]
+ambient:
+  background: [0.24, 0.18, 0.28]
+  ambientColor: [0.18, 0.12, 0.11]
+  fogColor: [0.78, 0.36, 0.22]
+  fogDensity: 0.009
+  tint: [1.05, 0.88, 0.76]
+light:
+  position: [8, 18, 22]
+  color: [1.3, 0.72, 0.38]
+  intensity: 1.6
+floor:
+  concept: piedra_volcanica
+events:
+  - { t: 10, kind: light_flash, duration: 0.8, intensity: 0.35 }
+objects:
+  - id: base_0
+    kind: round_box
+    material: piedra_volcanica
+    position: [0, -24, 0]
+    scale: [18, 2.2, 18]
+  - id: base_1
+    kind: round_box
+    material: piedra_volcanica
+    position: [0, -20.3, 0]
+    scale: [14.8, 1.6, 14.8]
+  - id: base_2
+    kind: round_box
+    material: piedra_volcanica
+    position: [0, -17.5, 0]
+    scale: [11.8, 1.3, 11.8]
+  - id: base_3
+    kind: round_box
+    material: piedra_volcanica
+    position: [0, -15.1, 0]
+    scale: [9, 1.1, 9]
+  - id: base_4
+    kind: round_box
+    material: piedra_volcanica
+    position: [0, -13.1, 0]
+    scale: [6.4, 0.9, 6.4]
+  - id: templo
+    kind: box
+    material: piedra_volcanica
+    position: [0, -11.2, 0]
+    scale: [4.2, 1.1, 4.2]
+  - id: escalinata
+    kind: box
+    material: piedra_volcanica
+    position: [0, -19.5, 18]
+    rotation: [-32, 0, 0]
+    scale: [4.1, 1.0, 12.5]
+  - id: sol_amanecer
+    kind: sphere
+    material: metal_dorado_pulido
+    position: [0, 0, 0]
+    scale: 2.2
+    animate:
+      duration: 20
+      loop: true
+      keyframes:
+        - { t: 0, position: [-24, -4, -28], scale: 0.55, ease: smooth }
+        - { t: 10, position: [0, 21, -28], scale: 1.0, ease: out }
+        - { t: 20, position: [24, 8, -28], scale: 0.7, ease: in }

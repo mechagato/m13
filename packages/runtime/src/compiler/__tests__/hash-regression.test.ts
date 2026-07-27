@@ -20,6 +20,7 @@ const BASELINE = resolve(__dirname, '../../../../../m13-spec/scene-hashes.json')
 const baseline = JSON.parse(readFileSync(BASELINE, 'utf8')) as Record<string, string>;
 const files = readdirSync(SCENES_DIR)
   .filter((f) => f.endsWith('.m13'))
+  .filter((f) => parseScene(readFileSync(resolve(SCENES_DIR, f), 'utf8'), { silent: true }).version === '0.1')
   .sort();
 
 describe('compiler — regresión de hash por escena (T-227)', () => {

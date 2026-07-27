@@ -3071,6 +3071,11 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - Replay en URL: maximo 24 KiB y decode previo al runtime; arriba de ese limite se usa archivo `.m13replay`.
 - Al abrir el enlace, el engine valida el hash WGSL antes de iniciar replay; una trayectoria de otra escena falla de forma explicita.
 
+### T-607 - demo temporal Chichen amanecer
+- Nueva `chichen_amanecer.m13` v0.2: piramide SDF exterior, sol con keyframes de 20 segundos y evento `light_flash`.
+- Se agrega al selector/precache del example sin tocar `chichen_itza.m13` v0.1 ni los 11 hashes congelados.
+- Contrato y WGSL determinista verificados por test. La validacion visual fluida/sin pops sigue pendiente de navegador real y, si se dispone, Quest.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

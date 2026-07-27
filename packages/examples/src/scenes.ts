@@ -12,6 +12,13 @@ export interface SceneEntry {
 
 export const SCENES: SceneEntry[] = [
   {
+    id: 'chichen_amanecer',
+    label: 'Chichen amanecer',
+    file: '/scenes/chichen_amanecer.m13',
+    description:
+      'Demo Fase 6: el sol SDF recorre el cielo en un ciclo de 20 segundos. Timeline, easing y light_flash corren localmente en WGSL.',
+  },
+  {
     id: 'chichen',
     label: 'Chichén Itzá',
     file: '/scenes/chichen_itza.m13',
