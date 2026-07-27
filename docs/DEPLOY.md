@@ -2,6 +2,67 @@
 
 Pasos para llevar el demo a `https://motor13.neonodos.com` y validar en Quest 3.
 
+## Fase 5 - protocolo actual de Quest 3 (T-501 y T-513)
+
+**URL canonica para esta prueba:** `https://m13.phi-core.com`.
+No usar las instrucciones historicas de `motor13.neonodos.com` para cerrar Fase 5. El endpoint
+canonico respondio HTTP 200 el 2026-07-27 y el bundle publico contiene el runtime WebXR.
+
+### Preparacion (2 minutos)
+
+1. Cargar el Quest 3, conectar Wi-Fi y actualizar Horizon OS/Meta Quest Browser si hay update.
+2. Abrir Meta Quest Browser, visitar `https://m13.phi-core.com` y esperar a que cargue la escena.
+3. Anotar Horizon OS y version de Meta Quest Browser desde Settings > System > About.
+4. Tomar una captura de la pagina con la URL visible; anotar fecha/hora y el nombre de escena.
+
+### T-501 - compatibilidad WebGPU + WebXR
+
+1. Buscar el boton **Entrar en VR**. Solo aparece si el navegador reporta `immersive-vr` y expone
+   `XRGPUBinding`.
+2. Si el boton no aparece, tomar captura, anotar versiones y registrar **T-501 FAIL**. No inferir
+   que XR funciona solo porque el modo 2D renderiza.
+3. Si aparece, seleccionar **Chichen Itza** y pulsarlo. Aceptar el permiso del sistema para entrar
+   en modo inmersivo.
+4. Registrar uno de estos resultados: entra a VR, aparece error, pantalla negra, se cierra la
+   sesion o el navegador se bloquea. Incluir captura/foto legible del mensaje si existe.
+
+### T-513 - recorrido y confort (solo si T-501 entra a VR)
+
+1. Confirmar que ambos ojos muestran la escena completa, sin que uno borre o invada al otro.
+2. Caminar 60 segundos con stick izquierdo; usar giro por saltos con stick derecho; salir y volver
+   a entrar una vez.
+3. Probar Chichen Itza y sala_galeria. Registrar artefactos, mareo, perdida de tracking, cierres o
+   degradacion visual.
+4. Probar voz solo como evidencia P2: salir de VR, usar el flujo de voz/editor y comprobar que una
+   escena se vuelve a cargar. No confundir autorizacion por voz con audio dentro de VR.
+
+### Medicion de FPS
+
+El statusbar web muestra FPS del canvas 2D. No es por si solo una medicion valida de FPS estereo
+dentro del compositor XR, porque no hay HUD XR en esta version. Para SC5-2 registrar la observacion
+de fluidez y el resultado de T-501/T-513; agregar telemetria XR o una medicion externa antes de
+declarar >=60 FPS estereo.
+
+### Evidencia a devolver
+
+```
+Quest 3 / Horizon OS: ...
+Meta Quest Browser: ...
+Fecha y hora: ...
+URL: https://m13.phi-core.com
+Escena: Chichen Itza / sala_galeria
+T-501: PASS / FAIL + resultado exacto
+T-513 ojos: OK / falla descrita
+T-513 locomocion y confort: OK / falla descrita
+Salida y reingreso: OK / FAIL
+Voz P2: OK / no probada / FAIL
+FPS estereo: no medido / metodo y valor
+Capturas o video: ubicacion o adjuntos
+```
+
+Los pasos T-061 y dominios que siguen son historicos de Fase 1; conservarlos como referencia de
+deploy, pero no usarlos como evidencia de cierre de Fase 5.
+
 ## Estado actual (2026-06-12)
 
 - ✅ **Custom domain LIVE:** [https://motor13.neonodos.com](https://motor13.neonodos.com) (cert + CNAME via API CF, 2026-06-11)
