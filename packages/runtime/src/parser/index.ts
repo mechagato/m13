@@ -82,7 +82,6 @@ export function validateScene(raw: unknown, opts: ParseOptions = {}): M13Scene {
   } else if (!opts.silent && isPlainObject(raw)) {
     for (const key of Object.keys(raw)) {
       if (!KNOWN_ROOT_KEYS.has(key)) {
-        // eslint-disable-next-line no-console
         console.warn(`[m13/parser] campo desconocido: ${key}`);
       }
     }

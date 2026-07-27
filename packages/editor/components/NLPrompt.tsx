@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { chat, extractText, extractYaml, type ChatTelemetry } from '@/lib/llm-client';
 import { FEW_SHOT_MESSAGES, SYSTEM_PROMPT } from '@/lib/system-prompt';
 import { parseScene, compileScene } from '@m13/runtime';

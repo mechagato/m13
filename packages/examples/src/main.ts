@@ -98,7 +98,6 @@ let activePreset: QualityPreset = resolveQualityPreset();
 function fail(msg: string): void {
   errorMsg.textContent = msg;
   errorScreen.classList.add('show');
-  // eslint-disable-next-line no-console
   console.error('[m13]', msg);
 }
 

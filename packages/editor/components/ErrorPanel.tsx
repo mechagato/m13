@@ -41,3 +41,4 @@ export function ErrorPanel({ error, info }: ErrorPanelProps): JSX.Element {
     </div>
   );
 }
+import type { JSX } from 'react';

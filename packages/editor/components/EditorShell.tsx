@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MonacoYaml } from './MonacoYaml';
 import { Preview } from './Preview';
 import { ErrorPanel } from './ErrorPanel';

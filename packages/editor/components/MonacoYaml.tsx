@@ -2,7 +2,7 @@
 
 import { Editor, type OnChange, type OnMount } from '@monaco-editor/react';
 import type * as MonacoType from 'monaco-editor';
-import { useEffect, useRef } from 'react';
+import { type JSX, useEffect, useRef } from 'react';
 import type { YamlMarker } from '@/lib/yaml-marker-bridge';
 
 export interface MonacoYamlProps {

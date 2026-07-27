@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'm13 editor',
