@@ -4,7 +4,7 @@ import { SCENES } from './scenes.js';
 import { STYLES, generateScene, generateFromPrompt } from '@m13/generator';
 import type { StyleId } from '@m13/generator';
 import { hasLlmEndpoint, generateWithLlm, getLlmUrl } from './llm.js';
-import { encodeSceneHash, readSharedSceneHash } from './share-scene.js';
+import { encodeSceneHash, readSharedReplayHash, readSharedSceneHash } from './share-scene.js';
 
 // ============================================
 // DOM refs
@@ -894,6 +894,7 @@ loadSettings();
   engine.attachFlyCamera();
   const s13Mode = readS13Mode();
   const shared = readSharedScene();
+  const sharedReplay = readSharedReplayHash(window.location.hash);
   try {
     if (s13Mode !== null) {
       // Modo A/B Sonido 13 (T-224): toggle GLOBAL del detalle continuo. Misma escena de
@@ -920,6 +921,11 @@ loadSettings();
       showRecipe(shared, 'compartida.m13');
       await engine.loadScene(shared);
       const bytes = new TextEncoder().encode(shared).length;
+      if (sharedReplay !== null) {
+        engine.loadReplay(sharedReplay);
+        engine.startReplay();
+        sceneDescEl.textContent = 'Mundo y paseo recibidos por URL; el replay ignora input vivo.';
+      }
       taskDone(`mundo recibido por link · ${bytes.toLocaleString('es-MX')} bytes viajaron en la URL`);
     } else {
       await loadIdx(0);
@@ -927,7 +933,7 @@ loadSettings();
     engine.start();
     engineOk = true;
   } catch (err) {
-    if (s13Mode !== null || shared !== null) fail((err as Error).message ?? String(err));
+    if (s13Mode !== null || shared !== null || sharedReplay !== null) fail((err as Error).message ?? String(err));
     /* loadIdx ya maneja su propio error */
   }
 })();

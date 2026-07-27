@@ -3066,6 +3066,11 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 - `M13Engine` puede grabar/exportar/cargar/reproducir. En replay no consulta input vivo y usa el reloj grabado como `u.time`.
 - XR queda explicitamente fuera de esta entrega 2D; no se finge captura de headset.
 
+### T-606 - comparticion acotada de replay
+- El hash de URL admite `#scene=...&replay=...` sin romper enlaces `#scene=` existentes.
+- Replay en URL: maximo 24 KiB y decode previo al runtime; arriba de ese limite se usa archivo `.m13replay`.
+- Al abrir el enlace, el engine valida el hash WGSL antes de iniciar replay; una trayectoria de otra escena falla de forma explicita.
+
 ### Pendiente = STOPPER de hardware (Gato)
 - **T-501 spike gate:** confirmar que `immersive-vr` + WebGPU (`XRGPUBinding`) funcionan en el
   navegador del Quest 3. Es interop MUY nueva; podría no estar disponible aún → el código lo

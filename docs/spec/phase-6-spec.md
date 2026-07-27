@@ -52,7 +52,8 @@ proyecto hermano): determinismo + replay = lockstep/rollback netcode sin sincron
 - En modo REPLAY, el engine ignora el input en vivo y reproduce la trayectoria grabada contra el
   MISMO `u.time` → frame idéntico (verificable: hash de screenshot estable). Sin grabar geometría:
   solo la escena `.m13` + la trayectoria.
-- Un replay se comparte como `.m13` + trayectoria (link `#replay=` o archivo). "El paseo viaja en la URL".
+- Un replay se comparte como `.m13` + trayectoria. El link usa `#scene=...&replay=...` solo si
+  el replay serializado no supera 24 KiB; arriba de ese limite se usa archivo `.m13replay`.
 
 ### FR-6.4 — Schema versioning (pre-requisito de la auditoría)
 - `version: "0.2"` para escenas con features de Fase 6. `parseScene` enruta por versión con
@@ -126,3 +127,5 @@ de deploy; hash-regression + determinismo en CI; validación visual de Gato; BIT
 - **D-6006:** las transformaciones de keyframes son relativas al objeto base: `position` se suma,
   `rotation` se compone y `scale` multiplica. Los campos omitidos conservan el ultimo valor; antes
   del primer keyframe parten de identidad. El easing del keyframe destino controla cada tramo.
+- **D-6007:** `#replay=` tiene presupuesto maximo de 24 KiB y exige que `sceneHash` coincida. Un
+  payload mayor se conserva como archivo, no se fuerza dentro de una URL.
