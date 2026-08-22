@@ -2,8 +2,10 @@
   "name": "m13",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "Genaro Isaí García Torres",
   "type": "module",
-  "description": "Continuous 3D format. For Us, NCTM y GGT (kzdr).",
+  "description": "Local-first WebGPU/WebXR world synthesis from .m13 semantic scenes.",
   "workspaces": [
     "packages/*"
   ],

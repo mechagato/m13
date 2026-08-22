@@ -1,6 +1,7 @@
 {
   "name": "@m13/examples",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "m13 example scenes app — load .m13 files and render them",
   "type": "module",
   "private": true,

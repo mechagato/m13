@@ -1,6 +1,7 @@
 {
   "name": "@m13/synth",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "m13 procedural material concept library",
   "type": "module",
   "main": "./src/index.ts",

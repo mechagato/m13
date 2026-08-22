@@ -1,6 +1,7 @@
 {
   "name": "@m13/runtime",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "m13 core engine — semantic scene synthesis for WebGPU",
   "type": "module",
   "main": "./src/index.ts",

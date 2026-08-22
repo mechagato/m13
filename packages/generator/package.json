@@ -1,6 +1,7 @@
 {
   "name": "@m13/generator",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "m13 parametric scene generator — local, deterministic, zero-LLM (D-025-06)",
   "type": "module",
   "main": "./src/index.ts",

@@ -1,8 +1,9 @@
 {
   "name": "@m13/editor",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
-  "description": "m13 editor — Next.js 14 + Monaco + LLM editor-time",
+  "description": "EXPERIMENTAL m13 editor — Next.js + Monaco + external LLM gateway (not required for the demo)",
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
