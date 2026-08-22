@@ -2,9 +2,10 @@
 
 **Versión:** 0.1.1
 **Estado:** Research / Experimental
-**Mantenedor:** NeoNodos · Genaro Isaí "Gato" García Torres
-**Repositorio:** github.com/mechagato/neonodos/motor-13
-**Última actualización:** 2026-07-02
+**Mantenedor:** Genaro Isaí "Gato" García Torres
+**Repositorio:** github.com/mechagato/m13
+**Licencia:** MIT
+**Última actualización:** 2026-08-22
 
 ---
 
@@ -73,7 +74,7 @@ El formato `.m13` describe **qué es** un objeto, no **cómo se ve píxel por p�
 
 El motor evalúa funciones matemáticas continuas (SDFs, ruido, neural fields) en lugar de polígonos discretos. El detalle escala con la atención del usuario (distancia + foveación), no con un LOD fijo.
 
-Inspiración Sonido 13: las subdivisiones de detalle no caen en grid regular sino en secuencias inspiradas en microtonalismo musical, buscando una firma estética única.
+Inspiración Sonido 13: metáfora cultural de subdivisión más allá de una grilla fija. En runtime se implementa como detalle continuo por footprint (`fbm_continuous`) — técnica de gráficos (LOD/fBm), no el motor de escalas musicales de Carrillo. El homenaje es intencional; el claim de “algoritmo musical de Carrillo en GPU” no forma parte de esta constitution.
 
 ### 3.5 Determinismo en runtime
 
@@ -225,9 +226,9 @@ Claude Code es el agente de desarrollo principal, con check-ins humanos en cada 
 - Decisiones tomadas
 - Próximo paso concreto
 
-### 8.4 Licencia (provisional)
+### 8.4 Licencia
 
-El código se desarrolla privado hasta Fase 3. A partir de Fase 4 se evaluará dual-license: MIT para investigación / comercial pagada para uso productivo intensivo. Decisión final pendiente.
+**MIT** (decisión de Gato, 2026-08-22). El repositorio se publica como open source gratuito. Ver `LICENSE` en la raíz. Dual-license comercial queda descartada para este lineamiento; un fork o producto derivado puede tener su propio modelo de negocio sin cambiar la licencia del core.
 
 ---
 

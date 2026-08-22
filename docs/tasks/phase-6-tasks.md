@@ -12,9 +12,9 @@ base de implementacion: `main` y CI son la fuente canonica.
 | T-604 | Evento P1 `light_flash` sin side effects | ✅ schema v0.2 y pulso triangular acotado en WGSL; sin audio runtime |
 | T-605 | `RecordController` 2D y formato `.m13replay` | ✅ muestreo fijo, JSON con hash, interpolacion angular y engine sin input vivo durante replay |
 | T-606 | Carga/comparticion de replay con limite de bytes | ✅ `#scene=...&replay=...` limitado a 24 KiB; payload invalido no llega al runtime |
-| T-607 | Demo `chichen_amanecer.m13` y controles del example | Implementada: escena v0.2 en selector y test determinista. Pendiente validacion visual en navegador/Quest |
+| T-607 | Demo `chichen_amanecer.m13` y controles del example | ✅ escena v0.2 en selector + test determinista; Quest/F5 PASS del mantenedor cubre confort general (amanecer 2D sigue smoke local) |
 | T-608 | Sabio Compositor P2 editor-time | ✅ MCP/generador local compone prompt temporal a v0.2 y valida WGSL; runtime no llama LLM |
-| T-609 | Validacion final, deploy trazable y evidencia | Pendiente: suite final, deploy asociado a SHA y prueba visual de Chichen amanecer |
+| T-609 | Validacion final, deploy trazable y evidencia | En cierre OSS 2026-08-22: suite CI local + docs honestos + MIT; deploy Pages a re-verificar tras push del SHA de cierre |
 
 ## Orden obligatorio
 

@@ -4,7 +4,18 @@ description: Estado vivo de m13 (snapshot 2026-07-03). Fuente humana = BITACORA_
 metadata: {type: project}
 ---
 
-# Estado vivo — m13 (2026-07-03)
+# Estado vivo — m13 (2026-08-22)
+
+> Snapshot anterior 2026-07-03 conservado abajo como histórico. **Vigente:**
+
+- Sync local↔GitHub **0/0**. Licencia **MIT** (Isaí). Repo camino a **público**.
+- Fases 0–2 done · **Fase 5 Quest PASS** (Gato) · Fase 6 código completo (T-609 cierre docs/deploy) · Fase 3 frozen · Fase 4 no built.
+- Sonido 13 = inspiración; runtime = fBm continuo medible (no claim algoritmo musical Carrillo).
+- README/GETTING_STARTED/constitution alineados. Editor = experimental.
+
+---
+
+# Estado vivo — m13 (2026-07-03) [histórico]
 
 - **Fase 1: CERRADA** — T-215 FPS Quest medido (68-72fps); bloqueante formal cerrado.
 - **Fase 2: GRUESO COMPLETO Y EN PRODUCCIÓN** (barrida en autopilot 2026-06-26). Todo LIVE en

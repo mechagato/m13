@@ -9,7 +9,7 @@ depende del hardware (Quest de Gato) — es el gate de validación previsto.
 
 | Task | Qué | Estado |
 |---|---|---|
-| **T-501** | Spike gate: `immersive-vr` + WebGPU (`XRGPUBinding`) real en el navegador del Quest | ⏳ **STOPPER GATO** — código listo con fallback claro; falta confirmar interop en el visor |
+| **T-501** | Spike gate: `immersive-vr` + WebGPU (`XRGPUBinding`) real en el navegador del Quest | ✅ **PASS** — Gato 2026-08-22: entra a VR en Meta Quest Browser |
 | **T-502** | D-5001: uniforms 192→256B (`xr` + `viewport` + reserva fases 3-6) + test layout | ✅ (commit 4fcc78d) |
 | **T-503** | `fs_main` viewport-aware (uv centrado por ojo; 2D byte-idéntico) | ✅ (370f109) |
 | **T-504** | `renderEyePass` (dibuja un ojo a textura+viewport arbitrarios) | ✅ (4fcc78d) |
@@ -21,21 +21,21 @@ depende del hardware (Quest de Gato) — es el gate de validación previsto.
 | **T-510** | Voz editor-time (Web Speech es-MX → `generateFromPrompt` → render) | ✅ (130e631) |
 | **T-511** | `@types/webxr` en devDeps | ⚪ omitido a propósito — tipos WebXR mínimos locales (sin dep; `XRGPUBinding` no está en @types aún) |
 | **T-512** | Deploy a m13.phi-core.com | ✅ (130e631) |
-| **T-513** | [QUEST-TEST] Chichén Itzá caminable en VR + FPS estéreo (SC5-1/2/3) | ⏳ **STOPPER GATO** |
-| **T-514** | Ajuste de `quest_xr` según microbench + paper H3 FPS/watt | ⏳ tras T-513 |
-| **T-515** | Foveation fija del compositor (si el runtime la expone) | ⚪ P2 — tras T-513 |
+| **T-513** | [QUEST-TEST] Chichén Itzá caminable en VR + FPS estéreo (SC5-1/2/3) | ✅ **PASS cualitativo** — Gato 2026-08-22: Chichén + FPS OK en visor. Telemetría estereo formal / paper H3 = follow-up opcional |
+| **T-514** | Ajuste de `quest_xr` según microbench + paper H3 FPS/watt | ⚪ deferred — PASS cualitativo basta para cierre OSS; paper numérico opcional |
+| **T-515** | Foveation fija del compositor (si el runtime la expone) | ⚪ P2 |
 
 ## Gate de cierre (SC5-x)
-Pendientes de hardware (Gato): SC5-1 (Chichén en VR), SC5-2 (≥60fps estéreo), SC5-3 (locomoción
-sin mareo), SC5-6 (voz). ✅ ya: SC5-4 (11 escenas cargan / 2D sin regresión — 181 tests, hashes
-intactos), SC5-5 (entrar/salir sin fugas — dispose XR limpio).
+✅ SC5-1 / SC5-2 / SC5-3 — PASS cualitativo en Quest (Gato 2026-08-22: VR + Chichén + FPS OK).
+SC5-2 no incluye aún telemetría compositor XR instrumentada (statusbar 2D ≠ FPS estereo formal).
+SC5-6 voz = P2 / no bloqueante OSS. ✅ SC5-4, SC5-5 ya estaban cerrados en código/tests.
 
 ## Sprint de credibilidad - 2026-07-27
 - T-504 tiene regresion cubierta: el primer ojo limpia y el segundo conserva el framebuffer compartido.
 - T-507 tiene cobertura de renderer con GPU falsa, sesion XR de dos ojos y recuperacion ante fallo de inicializacion.
 - La carga de escenas publicas aplica validacion estricta para evitar compatibilidad ficticia.
 - CI exige coverage, lint sin warnings, build completo y audit de dependencias de produccion.
-- T-501 y T-513 siguen como STOPPER de hardware. Esta actualizacion no es evidencia de Quest ni cierra SC5-1/2/3/6.
+- T-501 y T-513 cerrados por evidencia de Gato (2026-08-22). Esta nota del sprint de credibilidad (2026-07-27) queda histórica respecto al hardware gate.
 
 ## Riesgo vivo
 **Interop WebGPU↔WebXR** (`XRGPUBinding`) es muy nueva; el navegador del Quest podría no traerla

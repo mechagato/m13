@@ -3091,3 +3091,33 @@ determinismo intacto · deploy verificado ('Entrar en VR' en el bundle de prod).
 ### Próximo
 T-501/T-513 con el Quest de Gato → ajustar `quest_xr` según microbench. Luego Fase 6 (edición
 temporal — cimiento del multiplayer m13-platform).
+
+---
+
+## 2026-08-22 — Entrada 035 — Cierre OSS MIT + honestidad Sonido 13 + Quest PASS
+
+**Sesion companion-m13 (Grok). Orden de Gato:** auditar sync, juzgar el repo con ojo critico, calibrar Sonido 13, preparar MIT publico, y plan de cierre honesto.
+
+### Sync
+Local y `origin/main` en **0/0** al inicio (HEAD `4c5213e`). Sin deudas de push/pull.
+
+### Hardware
+- **T-501 PASS** / **T-513 PASS cualitativo** — Gato: VR completo en Meta Quest (entrar VR + Chichen + FPS OK).
+- T-514 paper H3 numerico = deferred (no bloquea OSS).
+
+### Decisiones
+- **D-2026-08-22-MIT:** licencia **MIT**, copyright Genaro Isai Garcia Torres. Constitution §8.4 actualizado (ya no "privado hasta Fase 3").
+- **D-2026-08-22-S13:** Sonido 13 = inspiracion cultural / metafora de subdivision continua. Runtime = `fbm_continuous` + footprint (tecnica de graficos). No se claima el motor musical de Carrillo como IP algoritmica.
+- **D-2026-08-22-SCOPE:** cierre de hoy = OSS creible (docs + MIT + verticales reales). Fase 3 congelada. Fase 4 no implementada. Editor = experimental.
+- Repo se publica (private → public) al cerrar docs + typecheck/test.
+
+### Entregas
+- `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`
+- `README.md` + `GETTING_STARTED.md` reescritos (estado real, FAQ honesta)
+- `license: MIT` en root y packages
+- Tasks Fase 5/6 y `docs/DEPLOY.md` alineados al PASS de Quest
+- Verticales documentadas sin overclaim (no splat/neural/CSG/multiplayer como producto)
+
+### Proximo
+typecheck + test; push; `gh repo edit --visibility public`; re-deploy Pages con SHA nuevo (T-609 deploy).
+

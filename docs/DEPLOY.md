@@ -2,21 +2,25 @@
 
 Pasos para llevar el demo a `https://motor13.neonodos.com` y validar en Quest 3.
 
-## Fase 5 - protocolo actual de Quest 3 (T-501 y T-513)
+## Fase 5 - protocolo Quest 3 (T-501 y T-513)
 
-**URL canonica para esta prueba:** `https://m13.phi-core.com`.
+**URL canonica:** `https://m13.phi-core.com`.
 
-### Sincronizacion verificable - 2026-07-27
+### Resultado de hardware - 2026-08-22
+
+- **T-501 PASS** · **T-513 PASS cualitativo** — Gato: entra a VR, Chichén caminable, FPS OK en Quest.
+- Telemetría estereo formal (paper H3 FPS/watt) queda opcional; el statusbar web mide el canvas 2D.
+
+### Sincronizacion verificable - 2026-07-27 (baseline pre-cierre OSS)
 
 - Cloudflare Pages: proyecto `motor13`, dominio `m13.phi-core.com`, sin Git provider.
-- Fuente publicada: checkout `main` SHA `bacd8551580be12b460b36d86fccea4fd541fec9`.
+- Fuente publicada entonces: checkout `main` SHA `bacd8551580be12b460b36d86fccea4fd541fec9`.
 - Deploy Pages: `https://9a195c15.motor13.pages.dev`.
-- Verificacion publica: `index-D2h4AOp8.js` y SHA-256 de
-  `scenes/chichen_amanecer.m13` = `766bd876bf74ab03315c13b1084aa80c8566a078e6fae8fe130ec31c14b67f40`,
-  identico al archivo local.
-- Esta es la version que debe usarse para T-501/T-513 y validacion visual de Fase 6.
-No usar las instrucciones historicas de `motor13.neonodos.com` para cerrar Fase 5. El endpoint
-canonico respondio HTTP 200 el 2026-07-27 y el bundle publico contiene el runtime WebXR.
+- SHA-256 de `scenes/chichen_amanecer.m13` =
+  `766bd876bf74ab03315c13b1084aa80c8566a078e6fae8fe130ec31c14b67f40` (coincidía con local).
+- Tras el cierre OSS MIT, re-desplegar Pages desde el nuevo SHA de `main` y anotar el deploy id aquí.
+No usar solo `motor13.neonodos.com` como evidencia de cierre de Fase 5; el endpoint canónico de
+prueba Quest es `m13.phi-core.com`.
 
 ### Preparacion (2 minutos)
 
