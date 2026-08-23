@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts",
+    "__tests__/**/*.ts",
+    "../runtime/node_modules/@webgpu/types/dist/index.d.ts"
+  ]
+}

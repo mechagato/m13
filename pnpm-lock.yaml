@@ -161,6 +161,16 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  packages/geo-twin:
+    dependencies:
+      '@m13/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   packages/mcp:
     dependencies:
       '@m13/generator':
@@ -194,6 +204,9 @@ importers:
       '@hono/node-server':
         specifier: ^2.0.5
         version: 2.0.12(hono@4.12.32)
+      '@m13/geo-twin':
+        specifier: workspace:*
+        version: link:../geo-twin
       '@m13/mcp':
         specifier: workspace:*
         version: link:../mcp

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "@m13/geo-twin": "workspace:*",
     "@m13/mcp": "workspace:*",
     "hono": "^4.7.5"
   },

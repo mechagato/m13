@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>m13 · Geo Twin (GPS→OSM→.m13)</title>
+  <link rel="stylesheet" href="/geo.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <div class="brand">Geo Twin <span>·</span> Camino A</div>
+      <div class="sub">GPS real → OpenStreetMap → mundo .m13 caminable (semántico, no foto)</div>
+    </div>
+    <a class="link" href="/">← MCP playground</a>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h1>1. Captura / path</h1>
+      <p class="hint">Usa GPS del dispositivo o pega JSON <code>[{lat,lng},…]</code>. Mínimo 2 puntos.</p>
+      <div class="actions">
+        <button id="btnStart" class="primary" type="button">Grabar GPS</button>
+        <button id="btnStop" class="ghost" type="button" disabled>Detener</button>
+        <button id="btnDemo" class="ghost" type="button">Path demo MTY</button>
+        <button id="btnClear" class="ghost" type="button">Limpiar</button>
+      </div>
+      <div id="gpsStatus" class="status">Sin puntos</div>
+      <label>Path JSON
+        <textarea id="pathJson" rows="10" spellcheck="false">[]</textarea>
+      </label>
+    </section>
+
+    <section class="card">
+      <h1>2. Generar gemelo</h1>
+      <label>Nombre de escena
+        <input id="sceneName" type="text" value="geo_twin_paseo" />
+      </label>
+      <label class="check">
+        <input id="useOsm" type="checkbox" checked />
+        Consultar OpenStreetMap (edificios cerca del path)
+      </label>
+      <button id="btnBuild" class="primary" type="button">Generar .m13</button>
+      <pre id="buildOut" class="trace"></pre>
+      <div class="actions">
+        <a id="btnOpen" class="btn" href="#" target="_blank" rel="noopener">Abrir en player</a>
+        <button id="btnCopy" class="ghost" type="button">Copiar YAML</button>
+        <button id="btnDownload" class="ghost" type="button">Descargar .m13</button>
+      </div>
+      <p class="hint">Player local: corre <code>pnpm dev</code> en otra terminal (:5173). Producción: m13.phi-core.com share.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Identidad m13: recorrido WebGPU/VR ligero. No clona fachadas reales — cuadras sintéticas alineadas a GPS/OSM.
+  </footer>
+  <script src="/geo.js" type="module"></script>
+</body>
+</html>

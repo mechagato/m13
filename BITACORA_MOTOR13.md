@@ -3240,3 +3240,18 @@ Para probar features agentic antes de mas UI/UX.
 ### Uso
 Export `DEEPSEEK_API_KEY` o pegar key en la UI. Probar primero tools directos, luego chat.
 
+
+---
+
+## 2026-08-23 — Entrada 042 — Geo Twin Camino A (GPS→OSM→.m13)
+
+Pedido Gato: gemelo semantico de calles para experiencia inmersiva (no fotoreal).
+
+### Entregado
+- Package `@m13/geo-twin`: coords, Overpass parse, build .m13 validado/compilado.
+- UI `http://127.0.0.1:8790/geo` (playground): grabar GPS, demo MTY, OSM opcional, share/descarga.
+- Tests geo-twin 5/5.
+
+### Uso
+`pnpm playground` → /geo → Path demo o GPS → Generar → `pnpm dev` y abrir player_url_local.
+
