@@ -210,3 +210,19 @@ AdemÃ¡s de MCP/App/portal/landing/cobro:
 
 Â¿Aprobamos **v4** (agentic-first **+** blindaje confidencial industrial honesto) como canon Ãºnico y al aprobar persistimos D0 en GitHub?
 
+
+---
+
+## STATUS UPDATE — 2026-08-22 (post D4)
+
+| Sprint | Estado | Repo / commit |
+|---|---|---|
+| D0 Canon | HECHO | m13 |
+| D1 MCP m13 | HECHO | m13 `0db026c` |
+| D2 Gateway token | HECHO | m13 `137192e` |
+| D3 FlowCAD MCP | HECHO | flowcad `7b36cb2` |
+| D4 Comp3D packaging | HECHO | proy3-qro `81f1667` |
+| **Landings web** | **DIFERIDAS AL FINAL** (orden Gato) | — |
+| TLS prod gateway / App store register | Pendiente operativo | cuando haya host HTTPS |
+
+Principio vigente: agentic-first sin landings todavia; portales de config si; demos/API/MCP listos.
