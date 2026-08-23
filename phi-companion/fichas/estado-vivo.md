@@ -8,10 +8,11 @@ metadata: {type: project}
 
 > Snapshot anterior 2026-07-03 conservado abajo como histórico. **Vigente:**
 
-- Sync local↔GitHub **0/0**. Licencia **MIT** (Isaí). Repo camino a **público**.
-- Fases 0–2 done · **Fase 5 Quest PASS** (Gato) · Fase 6 código completo (T-609 cierre docs/deploy) · Fase 3 frozen · Fase 4 no built.
-- Sonido 13 = inspiración; runtime = fBm continuo medible (no claim algoritmo musical Carrillo).
-- README/GETTING_STARTED/constitution alineados. Editor = experimental.
+- **SSOT:** `docs/plans/plan-canonico-plataforma.md` (v4) — MCP + ChatGPT Apps primero; portales config + landings; FlowCAD desktop no se frena; confidencialidad industrial (no claim “inhackeable”).
+- Suite: m13 = entrega espacial; FlowCAD = CAD+Three; Comp3D (`proy3-qro`) = compress/weight — no mezclar visores.
+- Licencia **MIT** · repo **público** · Quest PASS · F3 frozen · F4 no built.
+- Siguiente: D1 capa conversacional + security skeleton (`docs/security/threat-model-v1.md`).
+- Sonido 13 = inspiración; runtime = fBm continuo medible.
 
 ---
 

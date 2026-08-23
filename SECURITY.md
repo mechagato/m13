@@ -6,9 +6,12 @@ The `main` branch of this repository is the supported line for security fixes.
 
 ## Runtime threat model (summary)
 
+Full skeleton: [`docs/security/threat-model-v1.md`](./docs/security/threat-model-v1.md) · product canon §2: [`docs/plans/plan-canonico-plataforma.md`](./docs/plans/plan-canonico-plataforma.md).
+
 - **Rendering is local.** Opening a `.m13` scene should not require contacting m13 servers.
-- **Shared scenes** (`#scene=` / `#replay=`) are untrusted input. The runtime validates schema, bounds complexity, and rejects unknown fields on public loads.
-- **LLM / MCP tools are editor-time.** They must not be wired into the frame loop.
+- **Shared scenes** (`#scene=` / `#replay=`) are untrusted input and, for confidential (S2/S3) customer data, must not rely on cleartext YAML in the URL — use tokenized/private publish when that path ships.
+- **LLM / MCP tools are editor-time.** They must not be wired into the frame loop, and must not receive customer CAD binaries (S3) in prompts/logs.
+- We do **not** claim systems are “unhackable”; we design for **minimize retention, tenant isolation, and vault-outside-chat**.
 
 ## Reporting a vulnerability
 

@@ -3121,3 +3121,28 @@ Local y `origin/main` en **0/0** al inicio (HEAD `4c5213e`). Sin deudas de push/
 ### Proximo
 typecheck + test; push; `gh repo edit --visibility public`; re-deploy Pages con SHA nuevo (T-609 deploy).
 
+
+---
+
+## 2026-08-22 — Entrada 036 — Plan canonico v4 (SSOT) + suite FlowCAD/Comp3D + seguridad
+
+**Sesion companion-m13 (Grok).** Gato freno implementacion de portal hasta analizar hermanos en GitHub y redefinir orden de lanzamiento.
+
+### Analisis repos
+- `mechagato/flowcad`: CAD/OCC + desktop; handoff 2026-07-04 confirma visor **Three.js** (no SDF); `kind:mesh` en m13 diferido; desambiguar `.m13` mesh vs YAML motor (`.fcm`).
+- `mechagato/proy3-qro` + `handoff_comp3d` = **Comp3D**: CompData Compression + compWeight Reduction; viewer mesh OBJ/STL; MCP `comp3d_*`.
+- Veredicto: vender suite juntos; **no** unificar renderers.
+
+### Canon v4 (aprobado)
+Orden: MCP → ChatGPT Apps (UI embebida) → portales config → landings; FlowCAD desktop sigue + MCP/App.
+Post ≥3 meses ingreso mensual: contratar + jefe de desarrollo → Desktop-all / Web / WABA / movil nativo.
+Seguridad: clasificacion S0–S3, zero-retention, share privado (no YAML clear en URL para S2/S3), tenant isolation, LLM sin binarios S3. Prohibido claim "inhackeable".
+
+### Persistencia D0
+- `docs/plans/plan-canonico-plataforma.md`
+- `docs/security/threat-model-v1.md`
+- Pointers README + memoria .phi
+
+### Proximo
+Sprint D1 (tools/adaptadores + security skeleton). No adelantar etapa 2.
+

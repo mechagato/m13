@@ -5,6 +5,8 @@
 **License:** [MIT](./LICENSE) · **Live demo:** https://m13.phi-core.com  
 **Status:** Research MVP you can run today. Not a Unity/Unreal replacement.
 
+**Canonical plan (SSOT):** [`docs/plans/plan-canonico-plataforma.md`](./docs/plans/plan-canonico-plataforma.md) — agentic-first launch (MCP + ChatGPT Apps + config portals + landings), suite role vs FlowCAD/Comp3D, and industrial confidentiality controls. Security skeleton: [`docs/security/threat-model-v1.md`](./docs/security/threat-model-v1.md).
+
 m13 describes worlds as compact `.m13` YAML and synthesizes SDF geometry + procedural materials **on the user’s device**. The renderer never calls a cloud service. LLM and MCP tools exist only at **editor-time**.
 
 ## Inspiration: Sonido 13 (honest framing)
@@ -113,6 +115,9 @@ pnpm build
 
 ## Docs
 
+- [docs/plans/plan-canonico-plataforma.md](./docs/plans/plan-canonico-plataforma.md) — **canonical roadmap**
+- [docs/security/threat-model-v1.md](./docs/security/threat-model-v1.md)
+- [docs/commercial/onepager-industria-ehs.md](./docs/commercial/onepager-industria-ehs.md)
 - [GETTING_STARTED.md](./GETTING_STARTED.md)
 - [constitution.md](./constitution.md)
 - [CONTRIBUTING.md](./CONTRIBUTING.md)

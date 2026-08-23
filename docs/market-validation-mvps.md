@@ -40,6 +40,9 @@ imagenes, capacidad y precio.
 Modelar un solo pasillo o proceso con tres riesgos y un checklist. Comparar tiempo para completar
 induccion y errores en un ejercicio supervisado. No afirmar cumplimiento normativo solo por usar el simulador.
 
+**P0 comercial (2026-08-22):** oferta y precios en
+`docs/commercial/onepager-industria-ehs.md`.
+
 ### Educacion clinica
 
 Modelar una ruta de induccion o flujo de roles sin datos de pacientes ni recomendacion clinica. Medir
