@@ -3190,3 +3190,18 @@ Gateway HTTPS + portal config minimo + publish tokenizado; wiring real ChatGPT A
 ### Proximo
 TLS/prod deploy del gateway; registro ChatGPT App; D3 FlowCAD en su repo.
 
+
+---
+
+## 2026-08-22 — Entrada 039 — D3 FlowCAD MCP (repo hermano)
+
+Segun orden canonico: tras D2 m13, D3 = FlowCAD MCP/App sin frenar desktop.
+
+### Hecho en `mechagato/flowcad` (commit `7b36cb2`)
+- Carpeta `mcp/`: FastMCP stdio + tools HTTP al backend + sanitize S3 + chatgpt-app skeleton.
+- Tests unitarios 5/5.
+- Desktop intacto.
+
+### Siguiente en el orden
+**D4 Comp3D** packaging en `proy3-qro` (MCP/App + UI cards + landing / zero-retention).
+
