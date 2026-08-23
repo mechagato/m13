@@ -3205,3 +3205,22 @@ Segun orden canonico: tras D2 m13, D3 = FlowCAD MCP/App sin frenar desktop.
 ### Siguiente en el orden
 **D4 Comp3D** packaging en `proy3-qro` (MCP/App + UI cards + landing / zero-retention).
 
+
+---
+
+## 2026-08-22 — Entrada 040 — D4 Comp3D + landings diferidas
+
+Orden Gato: landings al final; completar el resto.
+
+### Comp3D (`proy3-qro` `81f1667`)
+- MCP productizado (ui_card, sanitize, compress/optimize, stdio).
+- zero_retention default ON (borra upload fuente).
+- ChatGPT App OpenAPI/manifest — **sin** landing marketing.
+
+### m13
+- Canon actualizado (D1–D4 hechos; landings diferidas).
+- `docs/DEPLOY_GATEWAY.md` (TLS/ops, no landing).
+
+### Pendiente explicito
+Landings marketing (m13 / FlowCAD / Comp3D) al cierre.
+
