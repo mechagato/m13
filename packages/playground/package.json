@@ -1,0 +1,23 @@
+{
+  "name": "@m13/playground",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "description": "Local HTML playground to test m13 / FlowCAD / Comp3D MCP tools via DeepSeek (one MCP active at a time)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "@m13/mcp": "workspace:*",
+    "hono": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.4.5"
+  }
+}

@@ -3224,3 +3224,19 @@ Orden Gato: landings al final; completar el resto.
 ### Pendiente explicito
 Landings marketing (m13 / FlowCAD / Comp3D) al cierre.
 
+
+---
+
+## 2026-08-22 — Entrada 041 — Playground local MCP + DeepSeek
+
+Para probar features agentic antes de mas UI/UX.
+
+### Entregado
+- `@m13/playground` en `http://127.0.0.1:8790`
+- Un MCP activo por turno: m13 → flowcad → comp3d
+- Chat DeepSeek (tool calling) + panel de tool directo
+- `pnpm playground`
+
+### Uso
+Export `DEEPSEEK_API_KEY` o pegar key en la UI. Probar primero tools directos, luego chat.
+

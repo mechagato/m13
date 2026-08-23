@@ -189,6 +189,28 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  packages/playground:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^2.0.5
+        version: 2.0.12(hono@4.12.32)
+      '@m13/mcp':
+        specifier: workspace:*
+        version: link:../mcp
+      hono:
+        specifier: ^4.7.5
+        version: 4.12.32
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.19
+      tsx:
+        specifier: ^4.22.3
+        version: 4.22.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   packages/runtime:
     dependencies:
       '@m13/synth':

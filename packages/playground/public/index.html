@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>m13 · MCP Playground</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <div class="brand">MCP Playground <span>·</span> suite NeoNodos</div>
+      <div class="sub">Un MCP activo por turno · DeepSeek tools · sin landings</div>
+    </div>
+    <div id="health" class="pill">…</div>
+  </header>
+
+  <section class="bar">
+    <div class="mcp-switch" id="mcpSwitch"></div>
+    <div class="keyrow">
+      <label>DeepSeek API key
+        <input id="apiKey" type="password" placeholder="sk-… o deja vacío si ya está en env" autocomplete="off" />
+      </label>
+      <label>Modelo
+        <input id="model" type="text" value="deepseek-chat" />
+      </label>
+    </div>
+  </section>
+
+  <main class="grid">
+    <section class="card chat-card">
+      <h1>Chat (DeepSeek + tools del MCP activo)</h1>
+      <div id="chatLog" class="chat"></div>
+      <form id="chatForm" class="composer">
+        <textarea id="chatInput" rows="3" placeholder="Ej. lista plantillas EHS y crea una escena privada…"></textarea>
+        <button class="primary" type="submit">Enviar</button>
+      </form>
+      <details>
+        <summary>Tool trace</summary>
+        <pre id="toolTrace" class="trace"></pre>
+      </details>
+    </section>
+
+    <section class="card">
+      <h1>Invocar tool directo (sin LLM)</h1>
+      <p class="hint">Sirve para validar el MCP antes del chat. Elige tool, edita JSON args, ejecuta.</p>
+      <label>Tool
+        <select id="toolSelect"></select>
+      </label>
+      <label>Arguments (JSON)
+        <textarea id="toolArgs" rows="8">{}</textarea>
+      </label>
+      <button id="btnCall" class="ghost" type="button">Ejecutar tool</button>
+      <pre id="toolOut" class="trace"></pre>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Orden sugerido: <b>m13 → flowcad → comp3d</b>.
+    FlowCAD necesita API (:8787). Comp3D intenta Python local o API (:8080).
+    Gateway m13 opcional (:8788) para publish tokenizado.
+  </footer>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
