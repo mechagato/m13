@@ -11,6 +11,7 @@ import {
   runListConcepts,
   runListTemplates,
   runCreateFromTemplate,
+  runPublishScene,
   SHARE_BASE_URL,
 } from '../src/tools.js';
 import { buildFormatGuide } from '../src/format-guide.js';
@@ -196,6 +197,19 @@ describe('templates EHS — lógica', () => {
     expect(created.share.mode).toBe('public');
     if (created.share.mode === 'public') {
       expect(created.share.share_url.startsWith(`${SHARE_BASE_URL}#scene=`)).toBe(true);
+    }
+  });
+});
+
+describe('publish_m13_scene — gateway / fallback', () => {
+  it('sin M13_GATEWAY_URL cae a private_local airgap', async () => {
+    const prev = process.env.M13_GATEWAY_URL;
+    delete process.env.M13_GATEWAY_URL;
+    try {
+      const out = await runPublishScene({ yaml: VALID_MINIMAL, classification: 'S2' });
+      expect(out.mode).toBe('private_local');
+    } finally {
+      if (prev !== undefined) process.env.M13_GATEWAY_URL = prev;
     }
   });
 });

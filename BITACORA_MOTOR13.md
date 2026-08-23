@@ -3167,3 +3167,26 @@ Sprint D1 (tools/adaptadores + security skeleton). No adelantar etapa 2.
 ### Proximo (D2)
 Gateway HTTPS + portal config minimo + publish tokenizado; wiring real ChatGPT App hosting.
 
+
+---
+
+## 2026-08-22 — Entrada 038 — D2 gateway tokenizado + portal config
+
+**Sesion companion-m13 (Grok).** Continuacion D2 del plan canonico.
+
+### Entregado
+- Nuevo package `@m13/gateway` (Hono): `POST /v1/publish`, `GET /v1/scenes/:id?token=`, revoke, org list metadata-only, template EHS, portal estatico `/portal/`.
+- Vault file-backed con TTL (S2 24h / S3 1h), token hasheado at-rest.
+- Player examples: carga `?p=&token=` via `fetchPrivateScene`.
+- MCP tool `publish_m13_scene` (usa `M13_GATEWAY_URL`; fallback airgap).
+- Tests: gateway 6 + mcp 25 + examples share; suite total **226/226**.
+- `pnpm gateway` script en root.
+
+### Como probar
+1. `pnpm gateway`
+2. `pnpm dev`
+3. Portal `http://127.0.0.1:8788/portal/` → cargar EHS → publicar → abrir `player_url`.
+
+### Proximo
+TLS/prod deploy del gateway; registro ChatGPT App; D3 FlowCAD en su repo.
+

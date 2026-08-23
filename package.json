@@ -12,6 +12,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @m13/examples dev",
+    "gateway": "pnpm --filter @m13/gateway start",
     "typecheck": "pnpm -r typecheck",
     "gen:schema": "tsx tools/gen-json-schema.ts",
     "gen:hashes": "tsx tools/hash-scenes.ts",

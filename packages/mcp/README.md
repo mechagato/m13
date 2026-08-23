@@ -19,10 +19,11 @@ Constitution §3: esto es **editor-time**. El runtime que renderiza jamás llama
 | `compose_temporal_m13_scene` | Sabio Compositor → `.m13` v0.2 temporal |
 | `validate_m13_scene` | Parser Zod + compile WGSL |
 | `share_m13_scene` | `classification` + `visibility`; S2/S3 bloquean `#scene=` público |
+| `publish_m13_scene` | **D2:** publica vía `M13_GATEWAY_URL` → link `?p=&token=` (sin YAML en URL) |
 | `list_m13_concepts` | Catálogo vivo `@m13/synth` |
 | `get_m13_format_guide` | Guía de autoría |
 
-Flujo EHS típico: `list_m13_templates` → `create_m13_from_template` → (portal/airgap para S2) → player.
+Flujo EHS típico: `list_m13_templates` → `create_m13_from_template` → `publish_m13_scene` (gateway) → player.
 
 Flujo creativo S0: `generate_m13_scene` → `share_m13_scene` → abrir `share_url`.
 

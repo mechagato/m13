@@ -6,9 +6,51 @@ info:
     HTTPS adapter for ChatGPT Apps. Domain logic matches @m13/mcp run* tools.
     Host must enforce auth, TLS, and never log S2/S3 YAML bodies.
 servers:
-  - url: https://api.example.com/m13
-    description: Replace with real gateway in D2
+  - url: http://127.0.0.1:8788
+    description: Local @m13/gateway (D2)
+  - url: https://api.example.com
+    description: Production TLS gateway (replace)
 paths:
+  /v1/publish:
+    post:
+      operationId: publish_m13_scene
+      summary: Tokenized private publish (no YAML in player URL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [yaml]
+              properties:
+                yaml:
+                  type: string
+                classification:
+                  type: string
+                  enum: [S0, S1, S2, S3]
+                org_id:
+                  type: string
+      responses:
+        '200':
+          description: player_url with ?p=&token=
+  /v1/scenes/{id}:
+    get:
+      operationId: fetch_private_scene
+      summary: Fetch YAML with bearer token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: yaml + metadata
   /templates:
     get:
       operationId: list_m13_templates

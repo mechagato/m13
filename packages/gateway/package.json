@@ -1,0 +1,43 @@
+{
+  "name": "@m13/gateway",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "m13 HTTPS gateway — tokenized private publish + minimal config portal (D2)",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./vault": {
+      "types": "./src/vault.ts",
+      "import": "./src/vault.ts"
+    }
+  },
+  "bin": {
+    "m13-gateway": "./src/cli.ts"
+  },
+  "files": [
+    "src",
+    "public",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --root ../.. packages/gateway",
+    "start": "tsx src/cli.ts",
+    "dev": "tsx watch src/cli.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "@m13/runtime": "workspace:*",
+    "hono": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.4.5"
+  }
+}

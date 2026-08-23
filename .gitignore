@@ -24,3 +24,8 @@ out/
 
 # Material de referencia: el zip fuente es redundante (extraído en artefactos/)
 ref-claudedesign/*.zip
+
+# D2 gateway local vault (may hold S2/S3 YAML)
+.m13-vault/
+**/.m13-vault/
+

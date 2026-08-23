@@ -70,3 +70,43 @@ export function createSharedReplayHash(sceneYaml: string, replay: string): strin
   if (new TextEncoder().encode(replay).byteLength > MAX_SHARED_REPLAY_BYTES) return null;
   return `#scene=${encodeSceneHash(sceneYaml)}&replay=${encodeReplayHash(replay)}`;
 }
+
+/** Tokenized private publish (D2 gateway): ?p=<id>&token=<token>&gateway=<optional> */
+export function readPrivatePublishParams(
+  search: string,
+  defaultGateway = 'http://127.0.0.1:8788',
+): { id: string; token: string; gateway: string } | null {
+  const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  const id = q.get('p');
+  const token = q.get('token');
+  if (!id || !token) return null;
+  const gateway = (q.get('gateway') ?? defaultGateway).replace(/\/$/, '');
+  return { id, token, gateway };
+}
+
+export async function fetchPrivateScene(params: {
+  id: string;
+  token: string;
+  gateway: string;
+}): Promise<{ yaml: string; name: string; classification: string; scene_hash: string }> {
+  const url = `${params.gateway}/v1/scenes/${encodeURIComponent(params.id)}?token=${encodeURIComponent(params.token)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`[m13/share] publish privado no disponible (${res.status})`);
+  }
+  const data = (await res.json()) as {
+    yaml?: string;
+    name?: string;
+    classification?: string;
+    scene_hash?: string;
+  };
+  if (typeof data.yaml !== 'string' || !data.yaml.trim()) {
+    throw new Error('[m13/share] respuesta de gateway sin yaml');
+  }
+  return {
+    yaml: data.yaml,
+    name: data.name ?? 'escena privada',
+    classification: data.classification ?? 'S2',
+    scene_hash: data.scene_hash ?? '',
+  };
+}

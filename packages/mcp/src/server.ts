@@ -18,6 +18,7 @@ import {
   runListConcepts,
   runListTemplates,
   runCreateFromTemplate,
+  runPublishScene,
 } from './tools.js';
 import { TEMPLATE_IDS } from './templates.js';
 import { buildFormatGuide } from './format-guide.js';
@@ -181,6 +182,30 @@ export function createM13McpServer(): McpServer {
     ({ prompt }) => {
       try {
         return ok(json(runComposeTemporalScene(prompt)));
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  // ---- publish_m13_scene (gateway tokenized) ----
+  server.registerTool(
+    'publish_m13_scene',
+    {
+      title: 'Publicar escena privada (token)',
+      description:
+        'Publica S2/S3 vía M13_GATEWAY_URL → link autenticado (?p=&token=) sin YAML en la URL. ' +
+        'Si no hay gateway, cae a private_local (airgap/hash).',
+      inputSchema: {
+        yaml: z.string().describe('YAML .m13 válido'),
+        classification: z.enum(['S0', 'S1', 'S2', 'S3']).optional(),
+        org_id: z.string().optional(),
+        gateway_url: z.string().url().optional().describe('Override de M13_GATEWAY_URL'),
+      },
+    },
+    async (args) => {
+      try {
+        return ok(json(await runPublishScene(args)));
       } catch (err) {
         return fail(err);
       }

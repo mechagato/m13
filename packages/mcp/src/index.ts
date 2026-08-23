@@ -20,6 +20,7 @@ export {
   runListConcepts,
   runListTemplates,
   runCreateFromTemplate,
+  runPublishScene,
 } from './tools.js';
 export type {
   GenerateSceneInput,
@@ -28,6 +29,8 @@ export type {
   ValidateSceneStats,
   ShareSceneInput,
   ShareSceneOutput,
+  PublishSceneInput,
+  PublishSceneOutput,
   ConceptSummary,
   CreateFromTemplateOutput,
   DataClass,

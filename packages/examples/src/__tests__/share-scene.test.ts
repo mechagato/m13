@@ -5,6 +5,7 @@ import {
   createSharedReplayHash,
   encodeReplayHash,
   encodeSceneHash,
+  readPrivatePublishParams,
   readSharedReplayHash,
   readSharedSceneHash,
 } from '../share-scene.js';
@@ -33,5 +34,19 @@ describe('share-scene', () => {
     const oversized = 'x'.repeat(MAX_SHARED_REPLAY_BYTES + 1);
     expect(readSharedReplayHash(`#replay=${encodeReplayHash(oversized)}`)).toBeNull();
     expect(createSharedReplayHash('scene', oversized)).toBeNull();
+  });
+
+  it('parses tokenized private publish query params', () => {
+    expect(readPrivatePublishParams('?p=abc&token=secret')).toEqual({
+      id: 'abc',
+      token: 'secret',
+      gateway: 'http://127.0.0.1:8788',
+    });
+    expect(readPrivatePublishParams('?p=abc&token=secret&gateway=http://gw.example/')).toEqual({
+      id: 'abc',
+      token: 'secret',
+      gateway: 'http://gw.example',
+    });
+    expect(readPrivatePublishParams('?p=only')).toBeNull();
   });
 });

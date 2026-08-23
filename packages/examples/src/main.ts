@@ -4,7 +4,13 @@ import { SCENES } from './scenes.js';
 import { STYLES, generateScene, generateFromPrompt } from '@m13/generator';
 import type { StyleId } from '@m13/generator';
 import { hasLlmEndpoint, generateWithLlm, getLlmUrl } from './llm.js';
-import { encodeSceneHash, readSharedReplayHash, readSharedSceneHash } from './share-scene.js';
+import {
+  encodeSceneHash,
+  fetchPrivateScene,
+  readPrivatePublishParams,
+  readSharedReplayHash,
+  readSharedSceneHash,
+} from './share-scene.js';
 
 // ============================================
 // DOM refs
@@ -555,6 +561,16 @@ function readSharedScene(): string | null {
   return readSharedSceneHash(window.location.hash);
 }
 
+function readTokenizedPublish(): { id: string; token: string; gateway: string } | null {
+  const envGateway =
+    typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    typeof import.meta.env.VITE_M13_GATEWAY_URL === 'string'
+      ? import.meta.env.VITE_M13_GATEWAY_URL
+      : 'http://127.0.0.1:8788';
+  return readPrivatePublishParams(window.location.search, envGateway);
+}
+
 // ============================================
 // Modo A/B Sonido 13 (T-221, gate Gato): ?s13=on|off
 // Escena de prueba INLINE — no toca la lista SCENES ni el precache del SW. El toggle
@@ -895,6 +911,7 @@ loadSettings();
   const s13Mode = readS13Mode();
   const shared = readSharedScene();
   const sharedReplay = readSharedReplayHash(window.location.hash);
+  const tokenized = readTokenizedPublish();
   try {
     if (s13Mode !== null) {
       // Modo A/B Sonido 13 (T-224): toggle GLOBAL del detalle continuo. Misma escena de
@@ -912,6 +929,17 @@ loadSettings();
       engine.setQuality({ continuousDetail: s13Mode === 'on' });
       showS13Banner(s13Mode);
       taskDone(`modo A/B Sonido 13 — S13 ${s13Mode.toUpperCase()} · usa el banner para alternar`);
+    } else if (tokenized !== null) {
+      // D2: publish privado — YAML viaja por gateway con token, no en el hash
+      entryScreen.classList.add('hidden');
+      setView('explorar');
+      taskBusy('Cargando escena privada…');
+      const priv = await fetchPrivateScene(tokenized);
+      sceneNameEl.textContent = priv.name;
+      sceneDescEl.textContent = `Publish privado ${priv.classification} · hash ${priv.scene_hash.slice(0, 12)}…`;
+      showRecipe(priv.yaml, `${priv.name}.m13`);
+      await engine.loadScene(priv.yaml);
+      taskDone(`inducción privada lista · ${priv.classification}`);
     } else if (shared !== null) {
       // Link compartido: la URL trae el mundo completo — entrar directo
       entryScreen.classList.add('hidden');
@@ -933,7 +961,9 @@ loadSettings();
     engine.start();
     engineOk = true;
   } catch (err) {
-    if (s13Mode !== null || shared !== null || sharedReplay !== null) fail((err as Error).message ?? String(err));
+    if (s13Mode !== null || shared !== null || sharedReplay !== null || tokenized !== null) {
+      fail((err as Error).message ?? String(err));
+    }
     /* loadIdx ya maneja su propio error */
   }
 })();

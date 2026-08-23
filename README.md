@@ -124,6 +124,7 @@ pnpm build
 - [SECURITY.md](./SECURITY.md)
 - [docs/DEPLOY.md](./docs/DEPLOY.md)
 - [packages/mcp/README.md](./packages/mcp/README.md)
+- [packages/gateway/README.md](./packages/gateway/README.md) — private token publish + config portal (D2)
 
 ## Maintainers
 

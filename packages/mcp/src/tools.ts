@@ -290,6 +290,94 @@ export function runCreateFromTemplate(
 }
 
 // ============================================================
+// publish_m13_scene — tokenized via @m13/gateway (D2)
+// ============================================================
+
+export interface PublishSceneInput {
+  yaml: string;
+  classification?: DataClass;
+  org_id?: string;
+  /** Override; default process.env.M13_GATEWAY_URL */
+  gateway_url?: string;
+}
+
+export type PublishSceneOutput =
+  | {
+      mode: 'tokenized';
+      id: string;
+      token: string;
+      scene_hash: string;
+      classification: DataClass;
+      expires_at: string;
+      bytes: number;
+      name: string;
+      player_url: string;
+      fetch_url: string;
+      ui_card: UiCard;
+    }
+  | ShareSceneOutput;
+
+/**
+ * Prefer gateway tokenized publish for S2/S3 when M13_GATEWAY_URL is set.
+ * Falls back to private_local airgap descriptor if gateway unreachable / unset.
+ */
+export async function runPublishScene(input: PublishSceneInput): Promise<PublishSceneOutput> {
+  const classification: DataClass = input.classification ?? 'S2';
+  const validation = runValidateScene(input.yaml);
+  if (!validation.ok) {
+    throw new Error(`Escena inválida — corrígela antes de publicar:\n${validation.error}`);
+  }
+
+  const gateway = (input.gateway_url ?? process.env.M13_GATEWAY_URL ?? '').replace(/\/$/, '');
+  if (!gateway) {
+    return runShareScene({ yaml: input.yaml, classification, visibility: 'private_local' });
+  }
+
+  const res = await fetch(`${gateway}/v1/publish`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Org-Id': input.org_id ?? 'default',
+    },
+    body: JSON.stringify({
+      yaml: input.yaml,
+      classification,
+      org_id: input.org_id ?? 'default',
+    }),
+  });
+  const data = (await res.json()) as Record<string, unknown>;
+  if (!res.ok) {
+    const msg = typeof data.message === 'string' ? data.message : JSON.stringify(data);
+    throw new Error(`[m13/gateway] publish failed (${res.status}): ${msg}`);
+  }
+
+  const player_url = String(data.player_url ?? '');
+  return {
+    mode: 'tokenized',
+    id: String(data.id),
+    token: String(data.token),
+    scene_hash: String(data.scene_hash),
+    classification,
+    expires_at: String(data.expires_at),
+    bytes: Number(data.bytes ?? 0),
+    name: String(data.name ?? 'scene'),
+    player_url,
+    fetch_url: String(data.fetch_url ?? ''),
+    ui_card: {
+      kind: 'private_share',
+      title: String(data.name ?? 'scene'),
+      subtitle: 'Link autenticado (gateway)',
+      metrics: [
+        { label: 'clase', value: classification },
+        { label: 'expira', value: String(data.expires_at ?? '') },
+      ],
+      cta: { label: 'Abrir inducción', url: player_url },
+      security_banner: 'Token bearer en la URL — no lo publiques en canales abiertos.',
+    },
+  };
+}
+
+// ============================================================
 // list_m13_concepts
 // ============================================================
 

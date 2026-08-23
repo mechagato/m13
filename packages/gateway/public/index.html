@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>m13 · portal config</title>
+  <link rel="stylesheet" href="/portal/portal.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">m13 <span>·</span> portal</div>
+    <div class="sub">Publicación privada con token · sin YAML en la URL</div>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h1>Publicar escena S2/S3</h1>
+      <p class="hint">Pega un <code>.m13</code> válido. El gateway valida, guarda con TTL y devuelve un link autenticado para el player.</p>
+      <label>Org id <input id="orgId" type="text" value="default" autocomplete="off" /></label>
+      <label>Clasificación
+        <select id="classification">
+          <option value="S2" selected>S2 confidencial</option>
+          <option value="S3">S3 secreto industrial</option>
+          <option value="S1">S1 interno</option>
+          <option value="S0">S0 público (mejor usar #scene=)</option>
+        </select>
+      </label>
+      <label>YAML
+        <textarea id="yaml" rows="16" spellcheck="false" placeholder="version: &quot;0.1&quot;…"></textarea>
+      </label>
+      <div class="actions">
+        <button id="btnPublish" class="primary" type="button">Publicar con token</button>
+        <button id="btnEhs" class="ghost" type="button">Cargar plantilla EHS</button>
+      </div>
+      <pre id="result" class="result" hidden></pre>
+    </section>
+
+    <section class="card">
+      <h1>Escenas de la org</h1>
+      <p class="hint">Solo metadatos (nombre, hash, expiración). El YAML no se lista.</p>
+      <button id="btnRefresh" class="ghost" type="button">Refrescar</button>
+      <ul id="sceneList" class="list"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Canon D2 · local-first render · vault con TTL ·
+    <a href="/health">/health</a>
+  </footer>
+  <script src="/portal/portal.js" type="module"></script>
+</body>
+</html>
