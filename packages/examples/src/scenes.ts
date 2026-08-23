@@ -12,6 +12,13 @@ export interface SceneEntry {
 
 export const SCENES: SceneEntry[] = [
   {
+    id: 'ehs_pasillo',
+    label: 'EHS pasillo',
+    file: '/scenes/ehs_pasillo.m13',
+    description:
+      'Plantilla P0 inducción industrial: pasillo de montacargas con 3 riesgos (atropello, zona restringida, EPP). Para MCP/ChatGPT App + share privado S2.',
+  },
+  {
     id: 'chichen_amanecer',
     label: 'Chichen amanecer',
     file: '/scenes/chichen_amanecer.m13',

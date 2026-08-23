@@ -32,11 +32,12 @@
 
 ## 4. Controls (phase gate — see canon §2.9)
 
-- [ ] Private publish (tokenized URL; no full YAML in hash for S2/S3)
-- [ ] Zero-retention / TTL delete for any uploaded source held server-side
-- [ ] Metadata-only logs (hash, bytes, org_id, timestamps)
+- [x] Private share mode in MCP (`classification` S2/S3 → `private_local`, hash only; no `#scene=` cleartext) — D1
+- [ ] Portal tokenized publish URL (D2)
+- [x] Retention TTL flags in policy map (`security.ts`) — enforcement when storage exists
+- [ ] Metadata-only logs (hash, bytes, org_id, timestamps) on HTTPS gateway
 - [ ] Tenant-scoped queries + automated A≠B test
-- [ ] TLS everywhere; secrets not in git
+- [ ] TLS everywhere on App gateway; secrets not in git
 - [ ] DPA/NDA + no-train clause before brand pilots
 
 ## 5. Explicit non-claims

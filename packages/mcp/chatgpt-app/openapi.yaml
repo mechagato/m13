@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: m13 Spatial Delivery API
+  version: 0.2.0
+  description: |
+    HTTPS adapter for ChatGPT Apps. Domain logic matches @m13/mcp run* tools.
+    Host must enforce auth, TLS, and never log S2/S3 YAML bodies.
+servers:
+  - url: https://api.example.com/m13
+    description: Replace with real gateway in D2
+paths:
+  /templates:
+    get:
+      operationId: list_m13_templates
+      summary: List vertical templates
+      responses:
+        '200':
+          description: Template summaries + ui_card
+  /templates/{template_id}:
+    post:
+      operationId: create_m13_from_template
+      summary: Instantiate a validated template
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [ehs_pasillo]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                classification:
+                  type: string
+                  enum: [S0, S1, S2, S3]
+                visibility:
+                  type: string
+                  enum: [public, private_local]
+      responses:
+        '200':
+          description: Scene + share package + ui_card
+  /share:
+    post:
+      operationId: share_m13_scene
+      summary: Public or private share
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [yaml]
+              properties:
+                yaml:
+                  type: string
+                classification:
+                  type: string
+                  enum: [S0, S1, S2, S3]
+                visibility:
+                  type: string
+                  enum: [public, private_local]
+      responses:
+        '200':
+          description: share_url or private_local descriptor
+  /validate:
+    post:
+      operationId: validate_m13_scene
+      summary: Validate .m13 YAML
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [yaml]
+              properties:
+                yaml:
+                  type: string
+      responses:
+        '200':
+          description: ok/stats or error
+  /generate:
+    post:
+      operationId: generate_m13_scene
+      summary: Parametric or prompt generation (S0)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                style:
+                  type: string
+                prompt:
+                  type: string
+                seed:
+                  type: integer
+      responses:
+        '200':
+          description: yaml + public share_url + ui_card

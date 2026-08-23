@@ -1,6 +1,6 @@
 {
   "name": "@m13/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "m13 MCP server — any LLM becomes an m13 front-end. Editor-time only (Constitution §3).",
   "type": "module",

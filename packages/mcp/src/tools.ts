@@ -19,9 +19,21 @@ import {
 } from '@m13/generator';
 import { parseScene, compileScene } from '@m13/runtime';
 import { listConcepts } from '@m13/synth';
+import {
+  type DataClass,
+  type ShareVisibility,
+  type PrivateShareDescriptor,
+  buildPrivateShareDescriptor,
+  resolveShareVisibility,
+  sha256Hex,
+} from './security.js';
+import { getTemplate, listTemplates, type TemplateId } from './templates.js';
+import { cardPrivateShare, cardTemplate, cardWorldReady, type UiCard } from './cards.js';
 
 /** Demo público donde el share link abre el mundo 3D caminable. */
 export const SHARE_BASE_URL = 'https://m13.phi-core.com/';
+
+export type { DataClass, ShareVisibility, PrivateShareDescriptor, UiCard, TemplateId };
 
 /** Ids de estilo válidos del generador paramétrico (derivados de STYLES, no drift). */
 export const STYLE_IDS = STYLES.map((s) => s.id) as [StyleId, ...StyleId[]];
@@ -66,6 +78,8 @@ export interface GenerateSceneOutput {
   bytes: number;
   share_url: string;
   yaml: string;
+  /** Embedded UI hint for ChatGPT Apps / agentic hosts */
+  ui_card: UiCard;
 }
 
 export function runGenerateScene(input: GenerateSceneInput): GenerateSceneOutput {
@@ -83,12 +97,15 @@ export function runGenerateScene(input: GenerateSceneInput): GenerateSceneOutput
   const scene = parseScene(result.yaml, { silent: true });
   compileScene(scene);
 
+  const bytes = utf8Bytes(result.yaml);
+  const share_url = buildShareUrl(result.yaml);
   return {
     label: result.label,
     seed: result.seed,
-    bytes: utf8Bytes(result.yaml),
-    share_url: buildShareUrl(result.yaml),
+    bytes,
+    share_url,
     yaml: result.yaml,
+    ui_card: cardWorldReady({ label: result.label, bytes, share_url, classification: 'S0' }),
   };
 }
 
@@ -98,7 +115,16 @@ export function runComposeTemporalScene(prompt: string): GenerateSceneOutput {
   const result = composeTemporalScene(prompt);
   const scene = parseScene(result.yaml, { silent: true });
   compileScene(scene);
-  return { label: result.label, seed: result.seed, bytes: utf8Bytes(result.yaml), share_url: buildShareUrl(result.yaml), yaml: result.yaml };
+  const bytes = utf8Bytes(result.yaml);
+  const share_url = buildShareUrl(result.yaml);
+  return {
+    label: result.label,
+    seed: result.seed,
+    bytes,
+    share_url,
+    yaml: result.yaml,
+    ui_card: cardWorldReady({ label: result.label, bytes, share_url, classification: 'S0' }),
+  };
 }
 
 // ============================================================
@@ -139,20 +165,128 @@ export function runValidateScene(yaml: string): ValidateSceneOutput {
 }
 
 // ============================================================
-// share_m13_scene
+// share_m13_scene (public | private_local)
 // ============================================================
 
-export interface ShareSceneOutput {
-  share_url: string;
-  bytes: number;
+export interface ShareSceneInput {
+  yaml: string;
+  /** S0–S3. S2/S3 force private_local (no cleartext #scene=). */
+  classification?: DataClass;
+  /** Requested visibility; ignored when classification forbids public hash share. */
+  visibility?: ShareVisibility;
 }
 
-export function runShareScene(yaml: string): ShareSceneOutput {
-  const validation = runValidateScene(yaml);
+export type ShareSceneOutput =
+  | {
+      mode: 'public';
+      share_url: string;
+      bytes: number;
+      scene_hash: string;
+      classification: DataClass;
+      ui_card: UiCard;
+    }
+  | (PrivateShareDescriptor & { ui_card: UiCard });
+
+export function runShareScene(yamlOrInput: string | ShareSceneInput): ShareSceneOutput {
+  const input: ShareSceneInput =
+    typeof yamlOrInput === 'string' ? { yaml: yamlOrInput } : yamlOrInput;
+  const classification: DataClass = input.classification ?? 'S0';
+  const visibility = resolveShareVisibility(classification, input.visibility ?? 'public');
+
+  const validation = runValidateScene(input.yaml);
   if (!validation.ok) {
     throw new Error(`Escena inválida — corrígela antes de compartir:\n${validation.error}`);
   }
-  return { share_url: buildShareUrl(yaml), bytes: utf8Bytes(yaml) };
+
+  if (visibility === 'private_local') {
+    const priv = buildPrivateShareDescriptor(input.yaml, classification);
+    return {
+      ...priv,
+      ui_card: cardPrivateShare({
+        scene_hash: priv.scene_hash,
+        classification,
+      }),
+    };
+  }
+
+  const share_url = buildShareUrl(input.yaml);
+  const bytes = utf8Bytes(input.yaml);
+  const scene_hash = sha256Hex(input.yaml);
+  const label = validation.ok ? validation.stats.name : 'scene';
+  return {
+    mode: 'public',
+    share_url,
+    bytes,
+    scene_hash,
+    classification,
+    ui_card: cardWorldReady({ label, bytes, share_url, classification }),
+  };
+}
+
+// ============================================================
+// templates (EHS / spatial)
+// ============================================================
+
+export function runListTemplates() {
+  return listTemplates().map((t) => ({
+    ...t,
+    ui_card: cardTemplate({
+      title: t.title,
+      description: t.description,
+      checklist: t.checklist,
+      classification: t.default_classification,
+    }),
+  }));
+}
+
+export interface CreateFromTemplateOutput {
+  template_id: TemplateId;
+  label: string;
+  bytes: number;
+  yaml: string;
+  checklist: string[];
+  classification: DataClass;
+  /** Public share only if classification allows; EHS default is private */
+  share: ShareSceneOutput;
+  ui_card: UiCard;
+}
+
+export function runCreateFromTemplate(
+  templateId: string,
+  opts?: { classification?: DataClass; visibility?: ShareVisibility },
+): CreateFromTemplateOutput {
+  const template = getTemplate(templateId);
+  const scene = parseScene(template.yaml, { silent: true });
+  compileScene(scene);
+  const classification = opts?.classification ?? template.default_classification;
+  const share = runShareScene({
+    yaml: template.yaml,
+    classification,
+    visibility: opts?.visibility,
+  });
+  const bytes = utf8Bytes(template.yaml);
+  return {
+    template_id: template.id,
+    label: scene.name,
+    bytes,
+    yaml: template.yaml,
+    checklist: template.checklist,
+    classification,
+    share,
+    ui_card:
+      share.mode === 'public'
+        ? cardWorldReady({
+            label: scene.name,
+            bytes,
+            share_url: share.share_url,
+            classification,
+          })
+        : cardPrivateShare({
+            scene_hash: share.scene_hash,
+            classification,
+            checklist: template.checklist,
+          }),
+  };
 }
 
 // ============================================================

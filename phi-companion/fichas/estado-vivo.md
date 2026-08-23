@@ -11,7 +11,8 @@ metadata: {type: project}
 - **SSOT:** `docs/plans/plan-canonico-plataforma.md` (v4) — MCP + ChatGPT Apps primero; portales config + landings; FlowCAD desktop no se frena; confidencialidad industrial (no claim “inhackeable”).
 - Suite: m13 = entrega espacial; FlowCAD = CAD+Three; Comp3D (`proy3-qro`) = compress/weight — no mezclar visores.
 - Licencia **MIT** · repo **público** · Quest PASS · F3 frozen · F4 no built.
-- Siguiente: D1 capa conversacional + security skeleton (`docs/security/threat-model-v1.md`).
+- **D1 hecho:** `@m13/mcp` v0.2 — templates EHS, share privado S2/S3, `ui_card`, ChatGPT App skeleton (`packages/mcp/chatgpt-app/`).
+- Siguiente: **D2** gateway HTTPS + portal config + publish tokenizado.
 - Sonido 13 = inspiración; runtime = fBm continuo medible.
 
 ---

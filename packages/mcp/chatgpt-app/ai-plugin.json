@@ -1,0 +1,15 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "m13 Spatial",
+  "name_for_model": "m13_spatial",
+  "description_for_human": "Create walkable WebGPU worlds and EHS induction templates. Confidential scenes never use public URL embeds.",
+  "description_for_model": "Use m13 tools to generate/validate/share .m13 scenes and EHS templates. For classification S2/S3 use private_local share (hash only). Never paste confidential YAML into the chat. Prefer create_m13_from_template for industrial induction.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://api.example.com/m13/openai.yaml"
+  },
+  "logo_url": "https://m13.phi-core.com/icons/icon-192.png",
+  "contact_email": "isai@neonodos.com",
+  "legal_info_url": "https://github.com/mechagato/m13/blob/main/SECURITY.md"
+}

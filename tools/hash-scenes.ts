@@ -18,8 +18,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SCENES_DIR = resolve(__dirname, '../packages/examples/public/scenes');
 const OUT = resolve(__dirname, '../m13-spec/scene-hashes.json');
 
+// Solo v0.1 — el baseline T-227 congela el contrato pre-temporal (ver hash-regression.test.ts).
 const files = readdirSync(SCENES_DIR)
   .filter((f) => f.endsWith('.m13'))
+  .filter((f) => {
+    const yaml = readFileSync(resolve(SCENES_DIR, f), 'utf8');
+    return parseScene(yaml, { silent: true }).version === '0.1';
+  })
   .sort();
 
 const hashes: Record<string, string> = {};

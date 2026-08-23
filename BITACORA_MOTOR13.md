@@ -3146,3 +3146,24 @@ Seguridad: clasificacion S0–S3, zero-retention, share privado (no YAML clear e
 ### Proximo
 Sprint D1 (tools/adaptadores + security skeleton). No adelantar etapa 2.
 
+
+---
+
+## 2026-08-22 — Entrada 037 — D1 MCP productivo + ChatGPT App skeleton + share privado
+
+**Sesion companion-m13 (Grok).** Orden: adelante con D1 del plan canonico v4.
+
+### Entregado
+- `@m13/mcp` v0.2: tools `list_m13_templates`, `create_m13_from_template`, `compose_temporal_m13_scene`; `share_m13_scene` con `classification`/`visibility`.
+- Plantilla `ehs_pasillo` (3 riesgos + checklist); escena en `packages/examples/public/scenes/ehs_pasillo.m13` + selector.
+- Security skeleton: `security.ts` (S0–S3, private_local, sha256); `cards.ts` (ui_card para hosts agentic).
+- ChatGPT App adapter: `packages/mcp/chatgpt-app/` (OpenAPI + ai-plugin + README).
+- Tests MCP 24/24 · typecheck mcp+examples OK.
+
+### Decisiones
+- EHS default **S2 → sin URL publica** (airgap/hash hasta portal token D2).
+- Domain tools unicos; MCP stdio ahora, HTTPS OpenAPI como cascara ChatGPT.
+
+### Proximo (D2)
+Gateway HTTPS + portal config minimo + publish tokenizado; wiring real ChatGPT App hosting.
+

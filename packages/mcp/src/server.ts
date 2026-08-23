@@ -12,19 +12,24 @@ import { z } from 'zod';
 import {
   STYLE_IDS,
   runGenerateScene,
+  runComposeTemporalScene,
   runValidateScene,
   runShareScene,
   runListConcepts,
+  runListTemplates,
+  runCreateFromTemplate,
 } from './tools.js';
+import { TEMPLATE_IDS } from './templates.js';
 import { buildFormatGuide } from './format-guide.js';
 
 const SERVER_NAME = 'm13';
-const SERVER_VERSION = '0.1.0';
+const SERVER_VERSION = '0.2.0';
 
-const INSTRUCTIONS = `Servidor MCP del motor m13 — síntesis semántica de mundos 3D (WebGPU, local-first).
-Flujo típico: generate_m13_scene (paramétrico) o escribe el YAML a mano siguiendo
-get_m13_format_guide → validate_m13_scene hasta que pase → share_m13_scene para
-obtener el link caminable. La URL contiene la escena completa (base64url), cero backend.`;
+const INSTRUCTIONS = `Servidor MCP del motor m13 — entrega espacial local-first (WebGPU/WebXR).
+Flujo cobrable EHS: list_m13_templates → create_m13_from_template → share_m13_scene
+(con classification S2 = share privado, sin YAML en la URL).
+Flujo creativo: generate_m13_scene / compose_temporal_m13_scene → validate → share (S0 público).
+Nunca subas planos CAD S3 ni YAML confidencial al hilo del LLM.`;
 
 /** Resultado de texto estándar para un tool MCP. */
 function ok(text: string) {
@@ -95,15 +100,87 @@ export function createM13McpServer(): McpServer {
     {
       title: 'Compartir escena m13',
       description:
-        'Valida un YAML .m13 y devuelve un share_url que abre el mundo 3D caminable en el navegador ' +
-        '(WASD + mouse). La URL ES la escena (base64url en el hash) — cero backend, local-first.',
+        'Valida y publica una escena. classification S0/S1 puede usar URL pública #scene=; ' +
+        'S2/S3 fuerzan private_local (hash + instrucciones airgap — sin YAML en la URL). ' +
+        'Incluye ui_card para widgets de ChatGPT Apps.',
       inputSchema: {
         yaml: z.string().describe('Contenido YAML completo del archivo .m13 (debe ser válido)'),
+        classification: z
+          .enum(['S0', 'S1', 'S2', 'S3'])
+          .optional()
+          .describe('Clasificación de datos. Default S0. S2/S3 = sin share público.'),
+        visibility: z
+          .enum(['public', 'private_local'])
+          .optional()
+          .describe('Visibilidad pedida; S2/S3 ignoran public.'),
       },
     },
-    ({ yaml }) => {
+    (args) => {
       try {
-        return ok(json(runShareScene(yaml)));
+        return ok(json(runShareScene(args)));
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  // ---- list_m13_templates ----
+  server.registerTool(
+    'list_m13_templates',
+    {
+      title: 'Listar plantillas verticales',
+      description:
+        'Plantillas cobrables (EHS pasillo, etc.) con checklist y clasificación default. ' +
+        'No incluye el YAML completo en el listado.',
+    },
+    () => ok(json(runListTemplates())),
+  );
+
+  // ---- create_m13_from_template ----
+  server.registerTool(
+    'create_m13_from_template',
+    {
+      title: 'Crear escena desde plantilla',
+      description:
+        'Instancia una plantilla validada (parse+compile). EHS default classification=S2 → share privado.',
+      inputSchema: {
+        template_id: z
+          .enum(['ehs_pasillo'])
+          .describe(`Id de plantilla (${TEMPLATE_IDS.join(', ')})`),
+        classification: z.enum(['S0', 'S1', 'S2', 'S3']).optional(),
+        visibility: z.enum(['public', 'private_local']).optional(),
+      },
+    },
+    (args) => {
+      try {
+        return ok(
+          json(
+            runCreateFromTemplate(args.template_id, {
+              classification: args.classification,
+              visibility: args.visibility,
+            }),
+          ),
+        );
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  // ---- compose_temporal_m13_scene ----
+  server.registerTool(
+    'compose_temporal_m13_scene',
+    {
+      title: 'Componer escena temporal',
+      description:
+        'Sabio Compositor local: prompt → .m13 v0.2 con keyframes/light_flash. Sin LLM en runtime.',
+      inputSchema: {
+        prompt: z.string().describe('Intención temporal en lenguaje natural'),
+      },
+    },
+    ({ prompt }) => {
+      try {
+        return ok(json(runComposeTemporalScene(prompt)));
       } catch (err) {
         return fail(err);
       }

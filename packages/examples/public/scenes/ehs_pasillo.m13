@@ -1,0 +1,75 @@
+﻿# ehs_pasillo — plantilla inducción industrial (P0)
+version: "0.1"
+name: ehs_pasillo_montacargas
+description: "Inducción EHS — pasillo de montacargas con 3 puntos de riesgo. Plantilla m13 P0."
+
+bounds: [8, 3.2, 14]
+spawn: [0, 0, -5.5]
+
+ambient:
+  background: [0.06, 0.07, 0.08]
+  ambientColor: [0.12, 0.13, 0.14]
+  tint: [1.0, 1.0, 0.98]
+  fogColor: [0.06, 0.07, 0.08]
+  fogDensity: 0.018
+
+light:
+  position: [0, 2.4, 0]
+  color: [1.0, 0.95, 0.85]
+  intensity: 1.35
+
+walls:
+  concept: pared_concreto_pulido
+  params:
+    darkness: 0.55
+    roughness: 0.45
+
+floor:
+  concept: piso_concreto_industrial
+
+ceiling:
+  concept: pared_yeso_blanco
+
+objects:
+  - id: riesgo_atropello
+    kind: cylinder
+    position: [-2.2, -2.55, -1.5]
+    scale: [0.35, 0.12, 0.35]
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.7
+
+  - id: riesgo_zona_restringida
+    kind: box
+    position: [2.4, -2.2, 1.2]
+    scale: [0.5, 0.5, 0.5]
+    material:
+      concept: metal_dorado_pulido
+
+  - id: riesgo_epp
+    kind: sphere
+    position: [0, -2.1, 3.5]
+    scale: [0.4, 0.4, 0.4]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.4
+
+  - id: rack_izq
+    kind: round_box
+    position: [-3.2, -1.6, 0]
+    scale: [0.35, 1.4, 4.5]
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.35
+
+  - id: rack_der
+    kind: round_box
+    position: [3.2, -1.6, 0]
+    scale: [0.35, 1.4, 4.5]
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.35

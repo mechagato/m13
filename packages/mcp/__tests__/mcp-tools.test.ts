@@ -9,9 +9,12 @@ import {
   runValidateScene,
   runShareScene,
   runListConcepts,
+  runListTemplates,
+  runCreateFromTemplate,
   SHARE_BASE_URL,
 } from '../src/tools.js';
 import { buildFormatGuide } from '../src/format-guide.js';
+import { resolveShareVisibility, sha256Hex } from '../src/security.js';
 
 /**
  * Tests de la LÓGICA de los 5 tools MCP (no del transporte stdio).
@@ -131,10 +134,13 @@ describe('validate_m13_scene — lógica', () => {
 describe('share_m13_scene — lógica', () => {
   it('share_url decodifica de vuelta al YAML original (roundtrip base64url)', () => {
     const { yaml } = runGenerateScene({ style: 'cocina', seed: 99 });
-    const { share_url } = runShareScene(yaml);
-    const encoded = share_url.split('#scene=')[1]!;
+    const shared = runShareScene(yaml);
+    expect(shared.mode).toBe('public');
+    if (shared.mode !== 'public') throw new Error('expected public');
+    const encoded = shared.share_url.split('#scene=')[1]!;
     const decoded = Buffer.from(encoded, 'base64url').toString('utf8');
     expect(decoded).toBe(yaml);
+    expect(shared.ui_card.kind).toBe('world_ready');
   });
 
   it('buildShareUrl roundtripea también con caracteres no-ASCII (acentos en descripciones)', () => {
@@ -149,6 +155,48 @@ describe('share_m13_scene — lógica', () => {
 
   it('YAML inválido → lanza (valida antes de compartir)', () => {
     expect(() => runShareScene('no: es: escena:')).toThrow(/inválida/i);
+  });
+
+  it('S2 fuerza private_local aunque pidan public (sin #scene= cleartext)', () => {
+    expect(resolveShareVisibility('S2', 'public')).toBe('private_local');
+    const shared = runShareScene({ yaml: VALID_MINIMAL, classification: 'S2', visibility: 'public' });
+    expect(shared.mode).toBe('private_local');
+    if (shared.mode !== 'private_local') throw new Error('expected private');
+    expect(shared.scene_hash).toBe(sha256Hex(VALID_MINIMAL));
+    expect(shared.do_not_echo_yaml_in_chat).toBe(true);
+    expect(shared.ui_card.kind).toBe('private_share');
+    expect('share_url' in shared).toBe(false);
+  });
+});
+
+describe('templates EHS — lógica', () => {
+  it('list_m13_templates incluye ehs_pasillo con checklist', () => {
+    const list = runListTemplates();
+    expect(list.some((t) => t.id === 'ehs_pasillo')).toBe(true);
+    const ehs = list.find((t) => t.id === 'ehs_pasillo')!;
+    expect(ehs.checklist.length).toBe(3);
+    expect(ehs.default_classification).toBe('S2');
+    expect(ehs.ui_card.kind).toBe('template');
+  });
+
+  it('create_m13_from_template valida, compila y usa share privado por default', () => {
+    const created = runCreateFromTemplate('ehs_pasillo');
+    expect(created.classification).toBe('S2');
+    expect(created.share.mode).toBe('private_local');
+    expect(created.checklist).toHaveLength(3);
+    expect(() => parseScene(created.yaml, { silent: true })).not.toThrow();
+    expect(() => compileScene(parseScene(created.yaml, { silent: true }))).not.toThrow();
+  });
+
+  it('create_m13_from_template puede forzar S0 público para demos', () => {
+    const created = runCreateFromTemplate('ehs_pasillo', {
+      classification: 'S0',
+      visibility: 'public',
+    });
+    expect(created.share.mode).toBe('public');
+    if (created.share.mode === 'public') {
+      expect(created.share.share_url.startsWith(`${SHARE_BASE_URL}#scene=`)).toBe(true);
+    }
   });
 });
 
