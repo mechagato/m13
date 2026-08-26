@@ -34,6 +34,7 @@ import { pedestalMarmol } from './concepts/pedestal_marmol.js';
 import { lamparaColgante } from './concepts/lampara_colgante.js';
 import { esferaDecorativa } from './concepts/esfera_decorativa.js';
 import { cuboBasico } from './concepts/cubo_basico.js';
+import { patinQuad } from './concepts/patin_quad.js';
 
 /**
  * Categorías válidas de un concepto. `object_geo` aplica a conceptos que
@@ -166,6 +167,8 @@ const RAW_CONCEPTS: Concept[] = [
   lamparaColgante,
   esferaDecorativa,
   cuboBasico,
+  // object_geo extra (seed 1019+)
+  patinQuad,
 ];
 
 /**

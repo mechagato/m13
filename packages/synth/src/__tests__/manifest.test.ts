@@ -46,8 +46,11 @@ const D3_GEO_IDS = [
   'cubo_basico',
 ];
 
-const ALL_IDS = [...BOOTSTRAP_IDS, ...D3_MATERIAL_IDS, ...D3_GEO_IDS];
-const TOTAL_COUNT = ALL_IDS.length; // 18 — el detalle continuo (T-224) migró los 4
+const EXTRA_GEO_IDS = [
+  'patin_quad',
+];
+const ALL_IDS = [...BOOTSTRAP_IDS, ...D3_MATERIAL_IDS, ...D3_GEO_IDS, ...EXTRA_GEO_IDS];
+const TOTAL_COUNT = ALL_IDS.length; // 19 — el detalle continuo (T-224) migró los 4
 // conceptos del showcase a fbm_detail; el prototipo piedra_volcanica_s13 se retiró.
 
 describe('synth — Concept registry y manifest', () => {
@@ -55,7 +58,7 @@ describe('synth — Concept registry y manifest', () => {
   // T-017 — Registry & interface
   // ============================================
 
-  it('listConcepts retorna los 18 conceptos del catálogo', () => {
+  it('listConcepts retorna los 19 conceptos del catálogo', () => {
     const ids = listConcepts().map((c) => c.id).sort();
     expect(ids).toEqual([...ALL_IDS].sort());
     expect(listConcepts()).toHaveLength(TOTAL_COUNT);
@@ -156,9 +159,12 @@ describe('synth — Concept registry y manifest', () => {
     }
   });
 
-  it('pedestal_marmol y lampara_colgante declaran params (otros geos no)', () => {
+  it('pedestal_marmol, lampara_colgante y patin_quad declaran params (esfera/cubo no)', () => {
     expect(getConcept('pedestal_marmol')!.paramsSchema).toBeDefined();
     expect(getConcept('lampara_colgante')!.paramsSchema).toBeDefined();
+    expect(getConcept('patin_quad')!.paramsSchema).toBeDefined();
+    expect(getConcept('patin_quad')!.seed).toBe(1019);
+    expect(getConcept('patin_quad')!.wgslSdf).toContain('sdf_patin_quad');
     // esfera_decorativa y cubo_basico no necesitan params en v0.1 (usan scale del object)
     expect(getConcept('esfera_decorativa')!.paramsSchema).toBeUndefined();
     expect(getConcept('cubo_basico')!.paramsSchema).toBeUndefined();
@@ -249,6 +255,7 @@ describe('synth — Concept registry y manifest', () => {
     pared_ladrillo_viejo: 1010,
     pared_madera_oscura: 1011,
     pared_yeso_blanco: 1012,
+    patin_quad: 1019,
     pedestal_marmol: 1013,
     piedra_volcanica: 1014,
     piso_concreto_industrial: 1015,

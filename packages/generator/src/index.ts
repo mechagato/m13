@@ -2,7 +2,7 @@
  * Generador paramétrico LOCAL de escenas .m13 — tab "Crear".
  *
  * Demuestra D-025-06: el motor NO necesita IA para crear mundos. Plantillas
- * TS arman el YAML variando materiales (18 conceptos de @m13/synth), colores
+ * TS arman el YAML variando materiales (19 conceptos de @m13/synth), colores
  * de luz, bounds y objetos con un RNG sembrado. Cada click = escena distinta.
  *
  * Cero red, cero LLM: corre 100% en el dispositivo del usuario.
@@ -55,7 +55,7 @@ export interface GenResult {
   seed: number;
 }
 
-export type StyleId = 'galeria' | 'cocina' | 'oficina' | 'templo' | 'minimalista' | 'sorpresa';
+export type StyleId = 'galeria' | 'cocina' | 'oficina' | 'templo' | 'minimalista' | 'vitrina_patin' | 'sorpresa';
 
 export const STYLES: Array<{ id: StyleId; label: string }> = [
   { id: 'galeria', label: 'Galería de arte' },
@@ -63,6 +63,7 @@ export const STYLES: Array<{ id: StyleId; label: string }> = [
   { id: 'oficina', label: 'Oficina ejecutiva' },
   { id: 'templo', label: 'Templo' },
   { id: 'minimalista', label: 'Sala minimalista' },
+  { id: 'vitrina_patin', label: 'Vitrina de patín' },
   { id: 'sorpresa', label: 'Sorpréndeme' },
 ];
 
@@ -383,7 +384,7 @@ function genSorpresa(rng: Rng, seed: number): GenResult {
       objects.push({
         id: `obj_${i}`,
         kind: 'concept',
-        concept: pick(rng, ['pedestal_marmol', 'lampara_colgante', 'esfera_decorativa', 'cubo_basico'] as const),
+        concept: pick(rng, ['pedestal_marmol', 'lampara_colgante', 'esfera_decorativa', 'cubo_basico', 'patin_quad'] as const),
         position: [x, range(rng, -2.5, 0.5), z],
         scale: range(rng, 0.2, 0.5),
       });
@@ -425,12 +426,47 @@ function genSorpresa(rng: Rng, seed: number): GenResult {
   };
 }
 
+function genVitrinaPatin(rng: Rng, seed: number): GenResult {
+  const w = range(rng, 4.0, 5.0);
+  const d = range(rng, 4.0, 5.0);
+  const objects: ObjSpec[] = [
+    {
+      id: 'pedestal',
+      kind: 'concept',
+      concept: 'pedestal_marmol',
+      position: [0, -2.6, 0],
+      scale: [0.38, 0.42, 0.38],
+    },
+    {
+      id: 'patin',
+      kind: 'concept',
+      concept: 'patin_quad',
+      position: [0, -1.95, 0],
+      scale: [0.22, 0.18, 0.32],
+    },
+  ];
+  return {
+    label: 'vitrina de patín',
+    seed,
+    yaml: assemble(
+      [
+        header('vitrina_patin', 'Galería chica con patín quad sobre pedestal de mármol', w, 3.2, d),
+        ambientBlock([0.98, 1.0, 1.03], [0.16, 0.17, 0.2], range(rng, 0.008, 0.014)),
+        lightBlock([0, 3.0, 0], [0.98, 0.99, 1.03], range(rng, 1.1, 1.4)),
+        surfaces('pared_yeso_blanco', 'piso_marmol_blanco', 'pared_yeso_blanco'),
+      ],
+      objects,
+    ),
+  };
+}
+
 const GENERATORS: Record<StyleId, (rng: Rng, seed: number) => GenResult> = {
   galeria: genGaleria,
   cocina: genCocina,
   oficina: genOficina,
   templo: genTemplo,
   minimalista: genMinimalista,
+  vitrina_patin: genVitrinaPatin,
   sorpresa: genSorpresa,
 };
 
@@ -450,6 +486,7 @@ export function generateScene(style: StyleId, seed?: number): GenResult {
 // Fallback sin IA: keywords del prompt → plantilla
 // ============================================
 const KEYWORD_MAP: Array<{ re: RegExp; style: StyleId }> = [
+  { re: /pat[ií]n|skate|roller|rollerskates/i, style: 'vitrina_patin' },
   { re: /cocina|kitchen|loft|industrial|ladrillo/i, style: 'cocina' },
   { re: /oficina|office|despacho|ejecutiv|escritorio|terracota/i, style: 'oficina' },
   { re: /galer[ií]a|gallery|museo|arte|escultura|exposici/i, style: 'galeria' },
