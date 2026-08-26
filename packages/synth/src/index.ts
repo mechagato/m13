@@ -35,6 +35,11 @@ import { lamparaColgante } from './concepts/lampara_colgante.js';
 import { esferaDecorativa } from './concepts/esfera_decorativa.js';
 import { cuboBasico } from './concepts/cubo_basico.js';
 import { patinQuad } from './concepts/patin_quad.js';
+import { patinDisco } from './concepts/patin_disco.js';
+import { patinAlas } from './concepts/patin_alas.js';
+import { patinViejo } from './concepts/patin_viejo.js';
+import { patinRacing } from './concepts/patin_racing.js';
+import { patinTriciclo } from './concepts/patin_triciclo.js';
 
 /**
  * Categorías válidas de un concepto. `object_geo` aplica a conceptos que
@@ -167,8 +172,13 @@ const RAW_CONCEPTS: Concept[] = [
   lamparaColgante,
   esferaDecorativa,
   cuboBasico,
-  // object_geo extra (seed 1019+)
+  // Familia patín SDF (6) — seeds 1019..1024, no renumerar 1001-1018
   patinQuad,
+  patinDisco,
+  patinAlas,
+  patinViejo,
+  patinRacing,
+  patinTriciclo,
 ];
 
 /**

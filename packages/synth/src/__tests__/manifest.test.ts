@@ -48,9 +48,14 @@ const D3_GEO_IDS = [
 
 const EXTRA_GEO_IDS = [
   'patin_quad',
+  'patin_disco',
+  'patin_alas',
+  'patin_viejo',
+  'patin_racing',
+  'patin_triciclo',
 ];
 const ALL_IDS = [...BOOTSTRAP_IDS, ...D3_MATERIAL_IDS, ...D3_GEO_IDS, ...EXTRA_GEO_IDS];
-const TOTAL_COUNT = ALL_IDS.length; // 19 — el detalle continuo (T-224) migró los 4
+const TOTAL_COUNT = ALL_IDS.length; // 24 — el detalle continuo (T-224) migró los 4
 // conceptos del showcase a fbm_detail; el prototipo piedra_volcanica_s13 se retiró.
 
 describe('synth — Concept registry y manifest', () => {
@@ -58,7 +63,7 @@ describe('synth — Concept registry y manifest', () => {
   // T-017 — Registry & interface
   // ============================================
 
-  it('listConcepts retorna los 19 conceptos del catálogo', () => {
+  it('listConcepts retorna los 24 conceptos del catálogo', () => {
     const ids = listConcepts().map((c) => c.id).sort();
     expect(ids).toEqual([...ALL_IDS].sort());
     expect(listConcepts()).toHaveLength(TOTAL_COUNT);
@@ -159,12 +164,21 @@ describe('synth — Concept registry y manifest', () => {
     }
   });
 
-  it('pedestal_marmol, lampara_colgante y patin_quad declaran params (esfera/cubo no)', () => {
+  it('pedestal_marmol, lampara_colgante y la familia patín declaran params (esfera/cubo no)', () => {
     expect(getConcept('pedestal_marmol')!.paramsSchema).toBeDefined();
     expect(getConcept('lampara_colgante')!.paramsSchema).toBeDefined();
-    expect(getConcept('patin_quad')!.paramsSchema).toBeDefined();
+    for (const id of EXTRA_GEO_IDS) {
+      const c = getConcept(id)!;
+      expect(c.paramsSchema, `${id} params`).toBeDefined();
+      expect(c.wgslSdf, `${id} sdf`).toContain(`sdf_${id}`);
+      expect(c.category).toBe('object_geo');
+    }
     expect(getConcept('patin_quad')!.seed).toBe(1019);
-    expect(getConcept('patin_quad')!.wgslSdf).toContain('sdf_patin_quad');
+    expect(getConcept('patin_disco')!.seed).toBe(1020);
+    expect(getConcept('patin_alas')!.seed).toBe(1021);
+    expect(getConcept('patin_viejo')!.seed).toBe(1022);
+    expect(getConcept('patin_racing')!.seed).toBe(1023);
+    expect(getConcept('patin_triciclo')!.seed).toBe(1024);
     // esfera_decorativa y cubo_basico no necesitan params en v0.1 (usan scale del object)
     expect(getConcept('esfera_decorativa')!.paramsSchema).toBeUndefined();
     expect(getConcept('cubo_basico')!.paramsSchema).toBeUndefined();
@@ -256,6 +270,11 @@ describe('synth — Concept registry y manifest', () => {
     pared_madera_oscura: 1011,
     pared_yeso_blanco: 1012,
     patin_quad: 1019,
+    patin_disco: 1020,
+    patin_alas: 1021,
+    patin_viejo: 1022,
+    patin_racing: 1023,
+    patin_triciclo: 1024,
     pedestal_marmol: 1013,
     piedra_volcanica: 1014,
     piso_concreto_industrial: 1015,
