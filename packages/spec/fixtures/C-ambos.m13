@@ -1,0 +1,109 @@
+# Fixture C — education (kit) + game (V2) en el mismo documento v0.3.
+version: "0.3"
+name: lab_y_claro
+title: Lab y claro
+description: "Lección de vocabulario + survival mínimo."
+bounds: [16, 4, 16]
+spawn: [0, -1.6, -5]
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.5
+  speed: 2.8
+education:
+  subject: Inglés
+  grade: 2° primaria
+  durationMin: 10
+  language: en
+  difficulty: intro
+  objectives:
+    - Gather fiber
+    - Hablar con Ana
+  bloom:
+    - remember
+    - apply
+  stem: false
+  mode: student
+game:
+  mode: survival
+  seed: 7
+  tick_hz: 20
+  player:
+    health: 100
+    hunger: 100
+    inventory_capacity: 16
+    hotbar: 5
+objects:
+  - id: ana_visual
+    kind: sphere
+    position: [1.2, -1.2, 0]
+    scale: 0.5
+    material: cuero_vintage
+    label: Ana
+    interact: true
+  - id: jabali_0
+    kind: sphere
+    position: [8, -2, 6]
+    scale: 0.6
+    material: metal_bronce_pulido
+npc:
+  - id: ana
+    name: Ana
+    role: teacher
+    object: ana_visual
+    position: [1.2, -1.2, 0]
+    dialog:
+      - "Gather fiber."
+      - "Then we cook."
+    voice: en-US
+    mission: vocab_cook
+  - id: jabali_0
+    object: jabali_0
+    role: enemy
+    health: 30
+    ai:
+      profile: wander
+      radius: 6
+items:
+  - id: fibra
+    stack: 16
+    tags: [resource]
+missions:
+  - id: vocab_cook
+    title: Talk to Ana
+    kind: lesson
+    objective:
+      talk: ana
+    rewards:
+      xp: 40
+    next: primera_comida
+  - id: primera_comida
+    kind: survival
+    steps:
+      - id: come
+        require:
+          flag: ate_once
+zones:
+  - id: camp
+    kind: box
+    position: [0, -2, 0]
+    size: [5, 3, 5]
+    tags: [lesson, biome.clearing]
+events:
+  - trigger: mission_completed
+    target: vocab_cook
+    action:
+      sound: success
+  - t: 1.2
+    kind: light_flash
+    duration: 0.15
+    intensity: 1

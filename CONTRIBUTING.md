@@ -28,6 +28,7 @@ Needs Node.js 20+, pnpm 8+, and a WebGPU browser (Chrome/Edge 113+).
 | Package | Role |
 |---|---|
 | `@m13/runtime` | Parser, compiler, WebGPU renderer, XR, replay |
+| `@m13/spec` | Overlay Zod v0.3 modular (education kit + game). Headless. Strip-to-visual. |
 | `@m13/synth` | Procedural material/geometry concepts |
 | `@m13/generator` | Parametric / prompt → `.m13` (local) |
 | `@m13/mcp` | MCP tools for editor-time scene authoring |

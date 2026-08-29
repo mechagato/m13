@@ -1,0 +1,91 @@
+# Fixture B — valle_minimo (solo game / Vertical 2). Sin education.
+version: "0.3"
+name: valle_minimo
+description: "Claro mínimo — recolectar fibra, craftear caldo, no morir."
+bounds: [20, 4, 20]
+spawn: [0, -1.5, -6]
+floor:
+  concept: piso_madera_envejecida
+walls:
+  concept: pared_yeso_blanco
+ceiling:
+  concept: pared_yeso_blanco
+game:
+  mode: survival
+  seed: 42
+  tick_hz: 20
+  interact_range: 2.0
+  player:
+    health: 100
+    hunger: 100
+    inventory_capacity: 16
+    hotbar: 5
+  bounds_policy: clamp
+objects:
+  - id: jabali_0
+    kind: sphere
+    position: [8, -2, 6]
+    scale: 0.6
+    material: cuero_vintage
+  - id: workbench
+    kind: box
+    position: [0, -2.6, 2]
+    scale: [1.2, 0.5, 0.6]
+    material: pared_madera_oscura
+npc:
+  - id: jabali_0
+    object: jabali_0
+    role: enemy
+    health: 30
+    ai:
+      profile: wander
+      radius: 6
+items:
+  - id: fibra
+    stack: 16
+    tags: [resource]
+  - id: caldo
+    stack: 4
+    tags: [food]
+    hunger_restore: 25
+loot_tables:
+  - id: jabali_drop
+    count: [1, 2]
+    entries:
+      - item: fibra
+        weight: 1
+spawners:
+  - id: jabali_spawner
+    npc: jabali_0
+    position: [8, -2, 6]
+    table: jabali_drop
+    budget: 1
+    radius: 6
+portals:
+  - id: save_rock
+    position: [-4, -2, -4]
+    to: [0, -1.5, -6]
+    radius: 1.2
+crafting:
+  - id: caldo_recipe
+    bench: workbench
+    station: workbench
+    inputs:
+      - item: fibra
+        count: 2
+    output:
+      item: caldo
+      count: 1
+missions:
+  - id: primera_comida
+    kind: survival
+    steps:
+      - id: come
+        require:
+          flag: ate_once
+zones:
+  - id: clearing
+    kind: box
+    position: [0, -2, 0]
+    size: [8, 3, 8]
+    tags: [biome.clearing]

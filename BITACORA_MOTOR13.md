@@ -3255,3 +3255,25 @@ Pedido Gato: gemelo semantico de calles para experiencia inmersiva (no fotoreal)
 ### Uso
 `pnpm playground` → /geo → Path demo o GPS → Generar → `pnpm dev` y abrir player_url_local.
 
+---
+
+## 2026-08-28 — Entrada 043 — Schema Zod v0.3 modular (overlay only)
+
+**Sesión spec. SDD ya aprobado en `docs/game-engine-sdd` (PR #2, draft — no merge, no código ahí).**
+Primer PR de código: overlay, no engine.
+
+### Entregado
+- Package `@m13/spec`: Zod overlay v0.3. Visual v0.1/v0.2 intacto en `@m13/runtime`.
+- Vertical 1 = campos reales del kit (English Lab: `subject/grade/durationMin/...`, `objective.talk: miss_luna`). No se simplificó a `locale/lesson` del YAML resumido del SDD.
+- Vertical 2 = `game` + `items` `loot_tables` `spawners` `portals` `crafting`. Sin `game:` → warning (strict: error).
+- `npc` canónico; `npcs` alias deprecado; choque → error.
+- `stripToVisual()` → doc que `parseScene` v0.1/v0.2 acepta. Events educativos se extraen; `light_flash` se queda.
+- Fixtures A/B/C/D. Tests headless (Node, sin GPU). CLI `tools/validate-overlay.ts` (sin `compileScene`).
+- Cero imports a renderer/compiler.
+
+### Fuera de esta sesión (a propósito)
+ECS, tick, Survival jugable, inventario runtime, física, HUD, WebGPU, WGSL, compileScene, renderer.
+
+### Verificar
+`pnpm --filter @m13/spec test` y `pnpm test` (suite completa, parser visual sigue verde).
+
