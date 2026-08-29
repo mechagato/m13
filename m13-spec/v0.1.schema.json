@@ -2,342 +2,545 @@
   "$ref": "#/definitions/M13Scene",
   "definitions": {
     "M13Scene": {
-      "type": "object",
-      "properties": {
-        "version": {
-          "type": "string",
-          "default": "0.1"
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "bounds": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": [
-            {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            {
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          ],
-          "default": [
-            5,
-            3,
-            5
-          ]
-        },
-        "spawn": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "number"
-            }
-          ],
-          "default": [
-            0,
-            0,
-            -3.5
-          ]
-        },
-        "ambient": {
+      "anyOf": [
+        {
           "type": "object",
           "properties": {
-            "background": {
+            "version": {
+              "type": "string",
+              "const": "0.1",
+              "default": "0.1"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "bounds": {
               "type": "array",
               "minItems": 3,
               "maxItems": 3,
               "items": [
                 {
                   "type": "number",
-                  "minimum": 0
+                  "exclusiveMinimum": 0
                 },
                 {
                   "type": "number",
-                  "minimum": 0
+                  "exclusiveMinimum": 0
                 },
                 {
                   "type": "number",
-                  "minimum": 0
+                  "exclusiveMinimum": 0
                 }
               ],
               "default": [
-                0.05,
-                0.045,
-                0.04
+                5,
+                3,
+                5
               ]
             },
-            "ambientColor": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
-              "default": [
-                0.08,
-                0.075,
-                0.07
-              ]
-            },
-            "tint": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
-              "default": [
-                1,
-                1,
-                1
-              ]
-            },
-            "fogColor": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
-              "default": [
-                0.05,
-                0.045,
-                0.04
-              ]
-            },
-            "fogDensity": {
-              "type": "number",
-              "minimum": 0,
-              "default": 0.015
-            }
-          },
-          "additionalProperties": false,
-          "default": {}
-        },
-        "light": {
-          "type": "object",
-          "properties": {
-            "position": {
-              "$ref": "#/definitions/M13Scene/properties/spawn",
+            "spawn": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn/items/0"
+                },
+                {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn/items/0"
+                }
+              ],
               "default": [
                 0,
-                2.5,
-                0
+                0,
+                -3.5
               ]
             },
-            "color": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background",
-              "default": [
-                1,
-                0.92,
-                0.78
-              ]
-            },
-            "intensity": {
-              "type": "number",
-              "minimum": 0,
-              "default": 1
-            }
-          },
-          "additionalProperties": false,
-          "default": {}
-        },
-        "walls": {
-          "type": "object",
-          "properties": {
-            "concept": {
-              "type": "string"
-            },
-            "params": {
+            "ambient": {
               "type": "object",
-              "additionalProperties": {}
-            }
-          },
-          "required": [
-            "concept"
-          ],
-          "additionalProperties": false
-        },
-        "floor": {
-          "$ref": "#/definitions/M13Scene/properties/walls"
-        },
-        "ceiling": {
-          "$ref": "#/definitions/M13Scene/properties/walls"
-        },
-        "sky": {
-          "type": "object",
-          "properties": {
-            "horizon": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background"
-            },
-            "zenith": {
-              "$ref": "#/definitions/M13Scene/properties/ambient/properties/background"
-            }
-          },
-          "required": [
-            "horizon",
-            "zenith"
-          ],
-          "additionalProperties": false
-        },
-        "cameraSpeed": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "window": {
-          "type": "object",
-          "properties": {
-            "position": {
-              "$ref": "#/definitions/M13Scene/properties/spawn"
-            },
-            "size": {
-              "$ref": "#/definitions/M13Scene/properties/bounds"
-            }
-          },
-          "required": [
-            "position",
-            "size"
-          ],
-          "additionalProperties": false
-        },
-        "objects": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "sphere",
-                  "box",
-                  "round_box",
-                  "cylinder",
-                  "torus",
-                  "concept"
-                ]
-              },
-              "concept": {
-                "type": "string"
-              },
-              "position": {
-                "$ref": "#/definitions/M13Scene/properties/spawn"
-              },
-              "rotation": {
-                "$ref": "#/definitions/M13Scene/properties/spawn"
-              },
-              "scale": {
-                "anyOf": [
-                  {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  {
-                    "$ref": "#/definitions/M13Scene/properties/bounds"
-                  }
-                ],
-                "default": 1
-              },
-              "seed": {
-                "type": "number"
-              },
-              "material": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "concept": {
-                        "type": "string"
-                      },
-                      "params": {
-                        "type": "object",
-                        "additionalProperties": {}
-                      }
+              "properties": {
+                "background": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": [
+                    {
+                      "type": "number",
+                      "minimum": 0
                     },
-                    "required": [
-                      "concept"
-                    ],
-                    "additionalProperties": false
-                  }
-                ]
-              },
-              "audio_reactive": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "band": {
-                        "type": "string",
-                        "enum": [
-                          "bass",
-                          "mid",
-                          "treble"
-                        ]
-                      }
+                    {
+                      "type": "number",
+                      "minimum": 0
                     },
-                    "required": [
-                      "band"
-                    ],
-                    "additionalProperties": false
-                  }
-                ],
-                "default": false
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  ],
+                  "default": [
+                    0.05,
+                    0.045,
+                    0.04
+                  ]
+                },
+                "ambientColor": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background",
+                  "default": [
+                    0.08,
+                    0.075,
+                    0.07
+                  ]
+                },
+                "tint": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background",
+                  "default": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                "fogColor": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background",
+                  "default": [
+                    0.05,
+                    0.045,
+                    0.04
+                  ]
+                },
+                "fogDensity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 0.015
+                }
               },
-              "animate": {
+              "additionalProperties": false,
+              "default": {}
+            },
+            "light": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn",
+                  "default": [
+                    0,
+                    2.5,
+                    0
+                  ]
+                },
+                "color": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background",
+                  "default": [
+                    1,
+                    0.92,
+                    0.78
+                  ]
+                },
+                "intensity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 1
+                }
+              },
+              "additionalProperties": false,
+              "default": {}
+            },
+            "walls": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "concept"
+              ],
+              "additionalProperties": false
+            },
+            "floor": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/walls"
+            },
+            "ceiling": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/walls"
+            },
+            "sky": {
+              "type": "object",
+              "properties": {
+                "horizon": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background"
+                },
+                "zenith": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient/properties/background"
+                }
+              },
+              "required": [
+                "horizon",
+                "zenith"
+              ],
+              "additionalProperties": false
+            },
+            "cameraSpeed": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "window": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                },
+                "size": {
+                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/bounds"
+                }
+              },
+              "required": [
+                "position",
+                "size"
+              ],
+              "additionalProperties": false
+            },
+            "objects": {
+              "type": "array",
+              "items": {
                 "type": "object",
                 "properties": {
-                  "mode": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
                     "type": "string",
                     "enum": [
-                      "bob",
-                      "rotate",
-                      "pulse"
+                      "sphere",
+                      "box",
+                      "round_box",
+                      "cylinder",
+                      "torus",
+                      "concept"
                     ]
                   },
-                  "speed": {
-                    "type": "number",
+                  "concept": {
+                    "type": "string"
+                  },
+                  "position": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                  },
+                  "rotation": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                  },
+                  "scale": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      {
+                        "$ref": "#/definitions/M13Scene/anyOf/0/properties/bounds"
+                      }
+                    ],
                     "default": 1
                   },
-                  "amplitude": {
-                    "type": "number",
-                    "minimum": 0,
-                    "default": 0.1
+                  "seed": {
+                    "type": "number"
+                  },
+                  "material": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "concept": {
+                            "type": "string"
+                          },
+                          "params": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "concept"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "audio_reactive": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "band": {
+                            "type": "string",
+                            "enum": [
+                              "bass",
+                              "mid",
+                              "treble"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "band"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "default": false
+                  },
+                  "animate": {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "bob",
+                          "rotate",
+                          "pulse"
+                        ]
+                      },
+                      "speed": {
+                        "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn/items/0",
+                        "default": 1
+                      },
+                      "amplitude": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 0.1
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
-                  "mode"
+                  "id",
+                  "kind",
+                  "position"
                 ],
                 "additionalProperties": false
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "position"
-            ],
-            "additionalProperties": false
+              },
+              "maxItems": 256,
+              "default": []
+            }
           },
-          "default": []
+          "required": [
+            "name",
+            "floor"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string",
+              "const": "0.2"
+            },
+            "name": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/name"
+            },
+            "description": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/description"
+            },
+            "bounds": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/bounds"
+            },
+            "spawn": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+            },
+            "ambient": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/ambient"
+            },
+            "light": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/light"
+            },
+            "walls": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/walls"
+            },
+            "floor": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/walls"
+            },
+            "ceiling": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/ceiling"
+            },
+            "sky": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/sky"
+            },
+            "cameraSpeed": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/cameraSpeed"
+            },
+            "window": {
+              "$ref": "#/definitions/M13Scene/anyOf/0/properties/window"
+            },
+            "objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/id"
+                  },
+                  "kind": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/kind"
+                  },
+                  "concept": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/concept"
+                  },
+                  "position": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                  },
+                  "rotation": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/rotation"
+                  },
+                  "scale": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/scale"
+                  },
+                  "seed": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/seed"
+                  },
+                  "material": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/material"
+                  },
+                  "audio_reactive": {
+                    "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/audio_reactive"
+                  },
+                  "animate": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/M13Scene/anyOf/0/properties/objects/items/properties/animate"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "duration": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "loop": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "keyframes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "t": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "position": {
+                                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                                },
+                                "rotation": {
+                                  "$ref": "#/definitions/M13Scene/anyOf/0/properties/spawn"
+                                },
+                                "scale": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "$ref": "#/definitions/M13Scene/anyOf/0/properties/bounds"
+                                    }
+                                  ]
+                                },
+                                "ease": {
+                                  "type": "string",
+                                  "enum": [
+                                    "linear",
+                                    "smooth",
+                                    "in",
+                                    "out"
+                                  ],
+                                  "default": "smooth"
+                                }
+                              },
+                              "required": [
+                                "t"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "minItems": 1,
+                            "maxItems": 16
+                          }
+                        },
+                        "required": [
+                          "duration",
+                          "keyframes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "position"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 256,
+              "default": []
+            },
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "t": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "light_flash"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "default": 0.15
+                  },
+                  "intensity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "default": 1
+                  }
+                },
+                "required": [
+                  "t",
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 16,
+              "default": []
+            }
+          },
+          "required": [
+            "version",
+            "name",
+            "floor"
+          ],
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "name",
-        "floor"
-      ],
-      "additionalProperties": false
+      ]
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#"

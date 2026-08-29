@@ -136,6 +136,72 @@
       "categoria": "objeto",
       "categoria_motor": "object_geo",
       "descripcion": "Cubo gris básico — bloque de construcción para prototipado de escenas."
+    },
+    {
+      "id": "patin_quad",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín quad clásico: bota de cuero, placa, 4 ruedas y toe stop — silueta SDF original.",
+      "params": {
+        "bootHeight": 0.38,
+        "wheelScale": 1,
+        "plateSpread": 0.22
+      }
+    },
+    {
+      "id": "patin_disco",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín disco 70s/80s: bota alta chunky y plataforma — silueta SDF original, look dorado.",
+      "params": {
+        "bootHeight": 0.55,
+        "wheelScale": 1.05,
+        "plateSpread": 0.26
+      }
+    },
+    {
+      "id": "patin_alas",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín quad con alas volumétricas en la caña — silueta SDF original, bronce pulido.",
+      "params": {
+        "bootHeight": 0.42,
+        "wheelScale": 1,
+        "plateSpread": 0.22
+      }
+    },
+    {
+      "id": "patin_viejo",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín viejo de perfil bajo, desgastado — silueta SDF original, metal oxidado y cuero.",
+      "params": {
+        "bootHeight": 0.26,
+        "wheelScale": 0.82,
+        "plateSpread": 0.18
+      }
+    },
+    {
+      "id": "patin_racing",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín racing: bota baja, placa larga, ruedas grandes — silueta SDF original, vidrio esmerilado.",
+      "params": {
+        "bootHeight": 0.22,
+        "wheelScale": 1.4,
+        "plateSpread": 0.18
+      }
+    },
+    {
+      "id": "patin_triciclo",
+      "categoria": "objeto",
+      "categoria_motor": "object_geo",
+      "descripcion": "Patín triciclo estilo foot-cycle 1897: 3 ruedas, horquilla propia — silueta SDF original.",
+      "params": {
+        "bootHeight": 0.32,
+        "wheelScale": 1.25,
+        "plateSpread": 0.28
+      }
     }
   ]
 }

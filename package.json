@@ -16,6 +16,7 @@
     "playground": "pnpm --filter @m13/playground start",
     "typecheck": "pnpm -r typecheck",
     "gen:schema": "tsx tools/gen-json-schema.ts",
+    "validate:overlay": "tsx tools/validate-overlay.ts",
     "gen:hashes": "tsx tools/hash-scenes.ts",
     "gen:qr": "tsx tools/gen-qr.ts",
     "bench:compile": "tsx tools/bench-compile.ts",
@@ -48,7 +49,9 @@
     "overrides": {
       "@hono/node-server": "^2.0.5",
       "postcss": "^8.5.23",
-      "sharp": "^0.35.3"
+      "sharp": "^0.35.3",
+      "fast-uri": "^3.1.5",
+      "nanoid": "^3.3.18"
     }
   },
   "engines": {

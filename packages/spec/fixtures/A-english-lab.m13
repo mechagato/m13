@@ -1,0 +1,147 @@
+# Fixture A — recorte fiel de English Lab (campos reales del kit/studio).
+# objective.talk: miss_luna  — no el YAML resumido { type, npc } del SDD.
+version: "0.3"
+name: laboratorio_ingles
+title: English Lab
+description: "Colors and animals. Laboratorio de inglés para niños."
+bounds: [8, 3.2, 7]
+spawn: [0, -1.85, -5]
+ambient:
+  background: [0.12, 0.1, 0.08]
+  ambientColor: [0.22, 0.2, 0.16]
+  tint: [1.04, 1.01, 0.96]
+  fogColor: [0.12, 0.1, 0.08]
+  fogDensity: 0.008
+light:
+  position: [0, 2.4, 0]
+  color: [1.05, 0.96, 0.82]
+  intensity: 1.25
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_madera_envejecida
+ceiling:
+  concept: pared_yeso_blanco
+cameraSpeed: 3.0
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.85, -5]
+  height: 1.35
+  speed: 2.8
+education:
+  subject: Inglés
+  grade: 3° preescolar – 2° primaria
+  durationMin: 12
+  language: en
+  difficulty: intro
+  objectives:
+    - Saludar en inglés
+    - Identificar el color RED
+    - Identificar CAT
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: pizarron
+    kind: box
+    position: [0, -0.2, 6.55]
+    scale: [3.0, 1.35, 0.07]
+    material: pared_concreto_pulido
+    label: Board
+    interact: true
+  - id: red_ball
+    kind: sphere
+    position: [-3.2, -2.15, 0.4]
+    scale: 0.28
+    material: metal_oxidado
+    label: RED
+    interact: true
+  - id: cat
+    kind: sphere
+    position: [2.2, -2.85, -1.2]
+    scale: 0.42
+    material: cuero_vintage
+    label: CAT
+    interact: true
+    animate:
+      mode: bob
+      speed: 1.6
+      amplitude: 0.04
+npc:
+  - id: miss_luna
+    name: Miss Luna
+    role: teacher
+    voice: en-US
+    position: [-2.2, -3.2, 5.2]
+    dialog:
+      - "Hello! I am Miss Luna."
+      - "Hoy jugamos con English. Colors and animals."
+      - "Find something RED. Rojo. Touch the red ball."
+    mission: m1
+zones:
+  - id: colors
+    kind: box
+    position: [-2.4, -2.2, 0.4]
+    hidden: true
+    size: [1.8, 1.2, 1.0]
+    label: Colors table
+quizzes:
+  - id: q_cat
+    prompt: "¿Cómo se dice gato en inglés?"
+    choices:
+      - Dog
+      - Cat
+      - Red
+      - Bird
+    answer: 1
+    bloom: remember
+    xp: 80
+missions:
+  - id: m1
+    title: Say hello
+    description: Habla con Miss Luna. Hello!
+    objective:
+      talk: miss_luna
+    success: "Hello! +40 XP"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+    hints:
+      - Miss Luna está junto al pizarrón. Pulsa E.
+  - id: m2
+    title: Find RED
+    description: Toca la pelota roja. RED = rojo.
+    objective:
+      interact: red_ball
+    success: "Red! Muy bien."
+    rewards:
+      xp: 90
+      stars: 1
+      badge: colors
+    required: true
+    next: m3
+  - id: m3
+    title: Quiz
+    description: ¿Cómo se dice gato?
+    objective:
+      quiz: q_cat
+    success: "You did it!"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: english
+    required: true
+events:
+  - trigger: mission_completed
+    target: m3
+    action:
+      fireworks: true
+      sound: success

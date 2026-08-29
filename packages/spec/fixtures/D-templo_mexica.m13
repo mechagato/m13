@@ -1,0 +1,59 @@
+# templo_mexica — espacio sagrado prehispánico
+# Fixture D — v0.1 de examples/, sin módulos. Copia de packages/examples/public/scenes/templo_mexica.m13
+version: "0.1"
+name: templo_mexica
+description: "Templo de piedra volcánica con brasero ardiente audio-reactivo"
+
+bounds: [5, 3.5, 5]
+spawn: [0, -1, -3.5]
+
+ambient:
+  background: [0.08, 0.04, 0.02]
+  ambientColor: [0.04, 0.025, 0.015]
+  tint: [1.15, 0.92, 0.7]
+  fogColor: [0.08, 0.04, 0.02]
+  fogDensity: 0.025
+
+light:
+  position: [0, -1.5, 0]
+  color: [1.4, 0.7, 0.25]
+  intensity: 1.8
+
+walls:
+  concept: piedra_volcanica
+
+floor:
+  concept: piedra_volcanica
+
+ceiling:
+  concept: piedra_volcanica
+
+objects:
+  - id: brasero_base
+    kind: cylinder
+    position: [0, -2.8, 0]
+    scale: [0.45, 0.2, 0.45]
+    material: piedra_volcanica
+
+  - id: flama
+    kind: sphere
+    position: [0, -2.3, 0]
+    scale: 0.3
+    material: metal_dorado_pulido
+    audio_reactive: true
+    animate:
+      mode: bob
+      speed: 4.0
+      amplitude: 0.08
+
+  - id: columna_izq
+    kind: cylinder
+    position: [-3.5, 0, -3.5]
+    scale: [0.35, 3.0, 0.35]
+    material: piedra_volcanica
+
+  - id: columna_der
+    kind: cylinder
+    position: [3.5, 0, -3.5]
+    scale: [0.35, 3.0, 0.35]
+    material: piedra_volcanica
