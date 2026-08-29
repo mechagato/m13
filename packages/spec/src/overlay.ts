@@ -110,11 +110,9 @@ function checkRefs(overlay: OverlayDocument, objectIds: Set<string>, errors: str
     if (npc.mission && !missionIds.has(npc.mission)) {
       errors.push(`npc.${npc.id}.mission — no existe missions.${npc.mission}`);
     }
-    if (npc.object && !objectIds.has(npc.object) && !npcIds.has(npc.object)) {
-      // object puede coincidir con el id visual; si no está, es error de ref
-      if (!objectIds.has(npc.object)) {
-        errors.push(`npc.${npc.id}.object — no existe objects.${npc.object}`);
-      }
+    // Visual mesh only. stripToVisual drops `npc`, so object must exist in objects[].
+    if (npc.object && !objectIds.has(npc.object)) {
+      errors.push(`npc.${npc.id}.object — no existe objects.${npc.object}`);
     }
   }
 

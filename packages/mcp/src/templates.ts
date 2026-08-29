@@ -130,7 +130,14 @@ export function getTemplate(id: string): SceneTemplate {
 
 export function listTemplates(): Omit<SceneTemplate, 'yaml'>[] {
   return TEMPLATE_IDS.map((id) => {
-    const { yaml: _yaml, ...rest } = TEMPLATES[id];
-    return rest;
+    const t = TEMPLATES[id];
+    return {
+      id: t.id,
+      title: t.title,
+      vertical: t.vertical,
+      default_classification: t.default_classification,
+      description: t.description,
+      checklist: t.checklist,
+    };
   });
 }

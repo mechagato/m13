@@ -67,6 +67,25 @@ items:
     expect(warned.warnings.some((w) => w.includes("catálogo V2 'items'"))).toBe(true);
     expect(() => parseOverlay(yaml, { ...SILENT, strict: true })).toThrow(/catálogo V2 'items'/);
   });
+
+  it('npc.object debe existir en objects[], no basta el id del npc', () => {
+    const yaml = `
+version: "0.3"
+name: npc_object_missing
+floor: { concept: piso_madera_envejecida }
+game:
+  mode: survival
+  seed: 1
+  tick_hz: 20
+npc:
+  - id: ghost
+    object: ghost
+    role: enemy
+    health: 10
+    ai: { profile: idle }
+`;
+    expect(() => parseOverlay(yaml, SILENT)).toThrow(/npc\.ghost\.object/);
+  });
 });
 
 describe('overlay — ambos módulos', () => {
@@ -91,7 +110,7 @@ describe('overlay — v0.1 sin módulos', () => {
   });
 });
 
-describe('overlay — coerción de versión YAML', () => {
+describe('overlay — sucerción de versión YAML', () => {
   it('acepta version: 0.3 sin comillas (float YAML)', () => {
     const yaml = `
 version: 0.3
