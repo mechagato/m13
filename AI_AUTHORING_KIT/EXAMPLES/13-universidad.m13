@@ -1,0 +1,111 @@
+# Universidad
+
+version: "0.3"
+name: universidad
+title: Universidad
+description: Atrio, columnas y misión de orientación.
+bounds: [8, 3.4, 8]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Campus
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Atrio, columnas y misión de orientación.
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: col_1
+    kind: cylinder
+    position: [-4, 0, -4]
+    scale: [0.28, 3.0, 0.28]
+    material: marmol_blanco_vetas
+  - id: col_2
+    kind: cylinder
+    position: [4, 0, -4]
+    scale: [0.28, 3.0, 0.28]
+    material: marmol_blanco_vetas
+  - id: col_3
+    kind: cylinder
+    position: [-4, 0, 4]
+    scale: [0.28, 3.0, 0.28]
+    material: marmol_blanco_vetas
+  - id: col_4
+    kind: cylinder
+    position: [4, 0, 4]
+    scale: [0.28, 3.0, 0.28]
+    material: marmol_blanco_vetas
+  - id: fuente
+    kind: cylinder
+    position: [0, -3.05, 0]
+    scale: [0.9, 0.2, 0.9]
+    material: vidrio_esmerilado
+    label: Fuente
+    interact: true
+npc:
+  - id: orientador
+    name: Orientador
+    role: teacher
+    position: [2, -3.2, -5]
+    dialog:
+      - El atrio organiza el campus.
+      - Encuentra la fuente y luego una columna.
+zones:
+  - id: atrio
+    kind: box
+    position: [0, -2, 0]
+    hidden: false
+    size: [2, 1.5, 2]
+missions:
+  - id: m1
+    title: Orientación
+    description: Habla con el orientador.
+    objective:
+      talk: orientador
+    success: "Completaste: Orientación"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Fuente
+    description: Interactúa con la fuente.
+    objective:
+      interact: fuente
+    success: "Completaste: Fuente"
+    rewards:
+      xp: 90
+      stars: 1
+      badge: campus
+    required: true

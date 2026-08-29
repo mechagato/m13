@@ -1,0 +1,121 @@
+# Aeropuerto
+
+version: "0.3"
+name: aeropuerto
+title: Aeropuerto
+description: Sala de espera y control de seguridad.
+bounds: [8, 3.3, 8]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Logística
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Sala de espera y control de seguridad.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: cinturon
+    kind: box
+    position: [0, -2.9, 2.4]
+    scale: [3.5, 0.12, 0.55]
+    material: metal_oxidado
+    label: Cinta
+    interact: true
+  - id: arco
+    kind: round_box
+    position: [0, -1.6, -1]
+    scale: [1.1, 1.5, 0.12]
+    material: metal_bronce_pulido
+    label: Arco
+    interact: true
+  - id: maleta
+    kind: box
+    position: [-1.2, -2.7, 2.4]
+    scale: [0.45, 0.25, 0.3]
+    material: cuero_vintage
+    label: Equipaje
+    interact: true
+  - id: pantalla
+    kind: box
+    position: [4.5, -0.8, 5.5]
+    scale: [1.6, 0.9, 0.08]
+    material: vidrio_esmerilado
+npc:
+  - id: agente
+    name: Agente
+    role: teacher
+    position: [2, -3.2, -4]
+    dialog:
+      - Pasa el arco antes de recoger la maleta.
+      - No dejes el equipaje sin identificar.
+zones:
+  - id: seguridad
+    kind: box
+    position: [0, -2, -1]
+    hidden: false
+    size: [1.6, 1.5, 1.0]
+missions:
+  - id: m1
+    title: Control
+    description: Habla con el agente.
+    objective:
+      talk: agente
+    success: "Completaste: Control"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Arco
+    description: Pasa el control (interactúa).
+    objective:
+      interact: arco
+    success: "Completaste: Arco"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Equipaje
+    description: Identifica la maleta.
+    objective:
+      interact: maleta
+    success: "Completaste: Equipaje"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: viaje
+    required: true

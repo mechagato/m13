@@ -1,0 +1,127 @@
+# Fábrica
+
+version: "0.3"
+name: fabrica
+title: Fábrica
+description: Línea de ensamble y EHS.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_ladrillo_viejo
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_ladrillo_viejo
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Industria
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Línea de ensamble y EHS.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: banda
+    kind: box
+    position: [0, -2.85, 0]
+    scale: [4.5, 0.18, 0.7]
+    material: metal_oxidado
+  - id: pieza_1
+    kind: box
+    position: [-1.4, -2.45, 0]
+    scale: [0.3, 0.22, 0.3]
+    material: metal_bronce_pulido
+    animate:
+      mode: bob
+      speed: 1.2
+      amplitude: 0.05
+    label: Pieza
+    interact: true
+  - id: robot
+    kind: cylinder
+    position: [3.2, -2.2, 0]
+    scale: [0.28, 0.9, 0.28]
+    material: metal_oxidado
+    label: Brazo
+    interact: true
+  - id: extintor
+    kind: cylinder
+    position: [-5.5, -2.4, 5.2]
+    scale: [0.12, 0.45, 0.12]
+    material: metal_oxidado
+    label: Extintor
+    interact: true
+npc:
+  - id: supervisor
+    name: Supervisor
+    role: teacher
+    position: [-3, -3.2, -4]
+    dialog:
+      - Casco obligatorio en piso de planta.
+      - Sigue la línea y no cruces la banda.
+      - El extintor está en la esquina.
+zones:
+  - id: linea
+    kind: box
+    position: [0, -2.4, 0]
+    hidden: false
+    size: [3.2, 1, 1.0]
+    label: Línea
+missions:
+  - id: m1
+    title: Briefing
+    description: Habla con el supervisor.
+    objective:
+      talk: supervisor
+    success: "Completaste: Briefing"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Extintor
+    description: Localiza el extintor.
+    objective:
+      interact: extintor
+    success: "Completaste: Extintor"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: ehs
+    required: true
+    next: m3
+  - id: m3
+    title: Pieza en línea
+    description: Interactúa con la pieza.
+    objective:
+      interact: pieza_1
+    success: "Completaste: Pieza en línea"
+    rewards:
+      xp: 90
+      stars: 1
+    required: true

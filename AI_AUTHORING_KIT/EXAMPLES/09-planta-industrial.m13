@@ -1,0 +1,121 @@
+# Planta industrial
+
+version: "0.3"
+name: planta_industrial
+title: Planta industrial
+description: Pasillo, válvulas y zona restringida.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_concreto_pulido
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_concreto_pulido
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: EHS
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Pasillo, válvulas y zona restringida.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: valvula
+    kind: torus
+    position: [2.4, -1.6, 2]
+    scale: [0.35, 0.08, 0.35]
+    material:
+      concept: metal_oxidado
+      params:
+        rustAmount: 0.6
+    label: Válvula
+    interact: true
+  - id: tanque
+    kind: cylinder
+    position: [-3.5, -1.6, 3]
+    scale: [0.7, 1.6, 0.7]
+    material: metal_oxidado
+    label: Tanque
+    interact: true
+  - id: senal
+    kind: box
+    position: [0, -0.6, 6.6]
+    scale: [1.2, 0.7, 0.06]
+    material: metal_dorado_pulido
+    label: Señal
+    interact: true
+npc:
+  - id: ehs
+    name: Ehs
+    role: teacher
+    position: [0, -3.2, -4.5]
+    dialog:
+      - Zona restringida más adelante.
+      - Cierra la válvula antes de entrar.
+      - Lee la señal de riesgo.
+zones:
+  - id: restringida
+    kind: box
+    position: [-3.5, -1.6, 3]
+    hidden: false
+    size: [1.4, 1.6, 1.4]
+    label: Área restringida
+missions:
+  - id: m1
+    title: Inducción EHS
+    description: Habla con el oficial.
+    objective:
+      talk: ehs
+    success: "Completaste: Inducción EHS"
+    rewards:
+      xp: 50
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Lee la señal
+    description: Interactúa con la señal.
+    objective:
+      interact: senal
+    success: "Completaste: Lee la señal"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Cierra la válvula
+    description: Interactúa con la válvula.
+    objective:
+      interact: valvula
+    success: "Completaste: Cierra la válvula"
+    rewards:
+      xp: 110
+      stars: 1
+      badge: operador
+    required: true

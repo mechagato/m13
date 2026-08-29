@@ -1,0 +1,116 @@
+# Centro comercial
+
+version: "0.3"
+name: centro_comercial
+title: Centro comercial
+description: Pasillo comercial y vitrinas.
+bounds: [8, 3.2, 8]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Urbanismo
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Pasillo comercial y vitrinas.
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: vitrina_i
+    kind: round_box
+    position: [-4, -1.8, 0]
+    scale: [0.2, 1.2, 1.6]
+    material: vidrio_esmerilado
+    label: Vitrina izquierda
+    interact: true
+  - id: vitrina_d
+    kind: round_box
+    position: [4, -1.8, 0]
+    scale: [0.2, 1.2, 1.6]
+    material: vidrio_esmerilado
+    label: Vitrina derecha
+    interact: true
+  - id: kiosko
+    kind: cylinder
+    position: [0, -2.7, 2.5]
+    scale: [0.7, 0.45, 0.7]
+    material: metal_bronce_pulido
+    label: Kiosko
+    interact: true
+npc:
+  - id: anfitrion
+    name: Anfitrion
+    role: teacher
+    position: [0, -3.2, -5]
+    dialog:
+      - El pasillo conecta dos vitrinas.
+      - Pregunta en el kiosko por la tienda ancla.
+zones:
+  - id: pasillo
+    kind: box
+    position: [0, -2, 0]
+    hidden: false
+    size: [2.5, 1.5, 4]
+missions:
+  - id: m1
+    title: Recepción
+    description: Habla con el anfitrión.
+    objective:
+      talk: anfitrion
+    success: "Completaste: Recepción"
+    rewards:
+      xp: 30
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Kiosko
+    description: Pregunta en el kiosko.
+    objective:
+      interact: kiosko
+    success: "Completaste: Kiosko"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Vitrina
+    description: Observa la vitrina izquierda.
+    objective:
+      interact: vitrina_i
+    success: "Completaste: Vitrina"
+    rewards:
+      xp: 60
+      stars: 1
+      badge: visita
+    required: true

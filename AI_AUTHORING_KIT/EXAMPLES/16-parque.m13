@@ -1,0 +1,118 @@
+# Parque — exterior
+
+version: "0.3"
+name: parque
+title: Parque
+description: Exterior abierto, árboles-columna y cielo.
+bounds: [18, 6, 18]
+spawn: [0, -4.4, -10]
+ambient:
+  background: [0.35, 0.5, 0.62]
+  ambientColor: [0.25, 0.3, 0.22]
+  tint: [1.05, 1.05, 0.95]
+  fogColor: [0.4, 0.5, 0.55]
+  fogDensity: 0.012
+light:
+  position: [4, 8, -4]
+  color: [1, 0.95, 0.8]
+  intensity: 1.6
+floor:
+  concept: piso_concreto_industrial
+sky:
+  horizon: [0.55, 0.7, 0.78]
+  zenith: [0.25, 0.45, 0.75]
+cameraSpeed: 6.0
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -4.4, -10]
+  height: 1.6
+  speed: 5.5
+education:
+  subject: Ciudad
+  grade: primaria
+  durationMin: 12
+  language: es
+  difficulty: intro
+  objectives:
+    - Recorrer el parque
+    - Encontrar la fuente
+  bloom:
+    - remember
+  stem: false
+  mode: student
+objects:
+  - id: arbol_1
+    kind: cylinder
+    position: [-6, -2, -4]
+    scale: [0.35, 4, 0.35]
+    material: pared_madera_oscura
+  - id: copa_1
+    kind: sphere
+    position: [-6, 1.6, -4]
+    scale: 1.4
+    material: piedra_volcanica
+  - id: arbol_2
+    kind: cylinder
+    position: [6, -2, 3]
+    scale: [0.35, 4, 0.35]
+    material: pared_madera_oscura
+  - id: copa_2
+    kind: sphere
+    position: [6, 1.6, 3]
+    scale: 1.4
+    material: piedra_volcanica
+  - id: fuente
+    kind: cylinder
+    position: [0, -5.7, 0]
+    scale: [1.3, 0.25, 1.3]
+    material: marmol_blanco_vetas
+    label: Fuente
+    interact: true
+  - id: banca
+    kind: box
+    position: [3.5, -5.55, -2]
+    scale: [1.2, 0.22, 0.35]
+    material: pared_madera_oscura
+    label: Banca
+    interact: true
+npc:
+  - id: jardinero
+    name: Jardinero
+    role: guide
+    position: [-2, -6, -6]
+    dialog:
+      - El parque es un aula al aire libre.
+      - Camina hasta la fuente.
+zones:
+  - id: fuente
+    kind: sphere
+    position: [0, -5.5, 0]
+    hidden: false
+    radius: 2.0
+missions:
+  - id: m1
+    title: Saludo
+    description: Habla con el jardinero.
+    objective:
+      talk: jardinero
+    success: "Completaste: Saludo"
+    rewards:
+      xp: 30
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Fuente
+    description: Entra a la zona de la fuente.
+    objective:
+      enter_zone: fuente
+    success: "Completaste: Fuente"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: parque
+    required: true

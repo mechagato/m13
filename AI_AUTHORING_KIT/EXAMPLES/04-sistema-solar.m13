@@ -1,0 +1,233 @@
+# Sistema solar — lección STEM MVP
+
+version: "0.3"
+name: sistema_solar
+title: Sistema Solar
+description: "Lección STEM: identifica planetas caminando por el sistema."
+bounds: [42, 8, 22]
+spawn: [0, -6.4, -16]
+ambient:
+  background: [0.01, 0.01, 0.02]
+  ambientColor: [0.04, 0.04, 0.07]
+  tint: [1, 1, 1.05]
+  fogColor: [0.02, 0.02, 0.04]
+  fogDensity: 0.008
+light:
+  position: [0, 4, 0]
+  color: [1.4, 1.15, 0.7]
+  intensity: 2.2
+floor:
+  concept: piso_concreto_industrial
+sky:
+  horizon: [0.03, 0.04, 0.08]
+  zenith: [0.0, 0.0, 0.015]
+cameraSpeed: 6.0
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -6.4, -16]
+  height: 1.6
+  speed: 5.5
+education:
+  subject: Astronomía
+  grade: secundaria
+  durationMin: 20
+  language: es
+  difficulty: easy
+  objectives:
+    - Identificar Marte
+    - Identificar Saturno
+    - Relacionar tamaño aparente
+  bloom:
+    - remember
+    - understand
+    - apply
+  stem: true
+  mode: student
+objects:
+  - id: sun
+    kind: sphere
+    position: [0, -4, 0]
+    scale: 2.2
+    material: metal_dorado_pulido
+    animate:
+      mode: pulse
+      speed: 0.4
+      amplitude: 0.06
+    label: Sol
+    interact: true
+  - id: mercury
+    kind: sphere
+    position: [6, -6.5, 0]
+    scale: 0.28
+    material: metal_oxidado
+    label: Mercurio
+    interact: true
+  - id: venus
+    kind: sphere
+    position: [9, -6.2, 0]
+    scale: 0.48
+    material: metal_bronce_pulido
+    label: Venus
+    interact: true
+  - id: earth
+    kind: sphere
+    position: [12.5, -6.1, 0]
+    scale: 0.52
+    material: vidrio_esmerilado
+    label: Tierra
+    interact: true
+  - id: mars
+    kind: sphere
+    position: [16, -6.4, 0]
+    scale: 0.38
+    material: metal_oxidado
+    animate:
+      mode: rotate
+      speed: 0.5
+      amplitude: 0.1
+    label: Marte
+    interact: true
+  - id: jupiter
+    kind: sphere
+    position: [22, -5.2, 0]
+    scale: 1.15
+    material: cuero_vintage
+    label: Júpiter
+    interact: true
+  - id: saturn
+    kind: sphere
+    position: [28, -5.6, 0]
+    scale: 0.95
+    material: metal_bronce_pulido
+    label: Saturno
+    interact: true
+  - id: saturn_ring
+    kind: torus
+    position: [28, -5.6, 0]
+    scale: [1.35, 0.08, 1.35]
+    material: marmol_blanco_vetas
+    animate:
+      mode: rotate
+      speed: 0.25
+      amplitude: 0.1
+  - id: uranus
+    kind: sphere
+    position: [34, -6.2, 0]
+    scale: 0.62
+    material: vidrio_esmerilado
+    label: Urano
+    interact: true
+  - id: neptune
+    kind: sphere
+    position: [39, -6.3, 0]
+    scale: 0.58
+    material: pared_concreto_pulido
+    label: Neptuno
+    interact: true
+npc:
+  - id: profesor
+    name: Profesor Vega
+    role: teacher
+    position: [1.5, -8, -10]
+    dialog:
+      - Bienvenido.
+      - Hoy aprenderemos el Sistema Solar.
+      - Camina hacia el Sol y luego encuentra Marte — el de color óxido.
+      - "Después busca Saturno: es el que tiene anillo."
+    mission: mission1
+zones:
+  - id: mars
+    kind: sphere
+    position: [16, -6.4, 0]
+    hidden: false
+    radius: 1.4
+    label: Marte
+  - id: saturn
+    kind: sphere
+    position: [28, -5.6, 0]
+    hidden: false
+    radius: 2.0
+    label: Saturno
+  - id: earth
+    kind: sphere
+    position: [12.5, -6.1, 0]
+    hidden: false
+    radius: 1.3
+    label: Tierra
+quizzes:
+  - id: q_orden
+    prompt: "¿Cuál planeta está entre la Tierra y Júpiter?"
+    choices:
+      - Venus
+      - Marte
+      - Saturno
+      - Mercurio
+    answer: 1
+    bloom: remember
+    xp: 80
+missions:
+  - id: mission1
+    title: Habla con el profesor
+    description: Escucha la introducción.
+    objective:
+      talk: profesor
+    success: "Completaste: Habla con el profesor"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: mission2
+    hints:
+      - El profesor está detrás de ti, cerca del spawn.
+  - id: mission2
+    title: Encuentra Marte
+    description: Entra a la zona de Marte.
+    objective:
+      enter_zone: mars
+    success: "Completaste: Encuentra Marte"
+    rewards:
+      xp: 120
+      stars: 1
+      badge: explorer
+    required: true
+    next: mission3
+    hints:
+      - Marte es la cuarta esfera desde el Sol, de material oxidado.
+  - id: mission3
+    title: Encuentra Saturno
+    description: Interactúa con Saturno.
+    objective:
+      interact: saturn
+    success: "Completaste: Encuentra Saturno"
+    rewards:
+      xp: 140
+      stars: 1
+      badge: saturno
+    required: true
+    next: mission4
+  - id: mission4
+    title: Quiz del orden
+    description: Responde el quiz cerca de la Tierra.
+    objective:
+      quiz: q_orden
+    success: "Completaste: Quiz del orden"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: astronomo
+    required: true
+events:
+  - trigger: mission_completed
+    target: mission2
+    action:
+      sound: success
+      xp: 0
+  - trigger: mission_completed
+    target: mission4
+    action:
+      fireworks: true
+      sound: success
