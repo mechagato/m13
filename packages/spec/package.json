@@ -10,6 +10,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./strip": {
+      "types": "./src/strip.ts",
+      "import": "./src/strip.ts"
     }
   },
   "files": [

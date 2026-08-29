@@ -36,7 +36,10 @@ describe('strip-to-visual', () => {
     }
 
     expect(() => validateScene(result.visual, { strict: true, silent: true })).not.toThrow();
-    expect(() => parseScene(loadFixture('C-ambos.m13'), SILENT)).toThrow(/v0\.3 no soportado/);
+    const scene = parseScene(loadFixture('C-ambos.m13'), SILENT);
+    expect(scene.version).toBe('0.2');
+    expect(scene.name).toBe('lab_y_claro');
+    expect((scene as { education?: unknown }).education).toBeUndefined();
   });
 
   it('A (English Lab) stripeado es visual v0.2 aceptado por parseScene', () => {

@@ -7,6 +7,11 @@ import { defineConfig } from 'vitest/config';
  * editor en D-4). El root tsconfig se reutiliza vía esbuild de Vitest.
  */
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@m13/spec/strip': new URL('./packages/spec/src/strip.ts', import.meta.url).pathname,
+    },
+  },
   test: {
     include: ['packages/**/src/**/*.test.ts', 'packages/**/__tests__/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],

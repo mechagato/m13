@@ -27,6 +27,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
+    "@m13/spec": "workspace:*",
     "@m13/synth": "workspace:*",
     "yaml": "^2.4.2",
     "zod": "^3.23.4"
