@@ -19,7 +19,7 @@ light:
 walls:
   concept: pared_yeso_blanco
 floor:
-  concept: piso_concreto_industrial
+  concept: piso_madera_envejecida
 ceiling:
   concept: pared_yeso_blanco
 ui:
@@ -112,6 +112,19 @@ objects:
     material: pared_concreto_pulido
     label: Pizarrón
     interact: true
+  - id: poster_mapa
+    kind: box
+    position: [7.7, 0.2, 1.5]
+    scale: [0.05, 0.7, 0.9]
+    rotation: [0, 90, 0]
+    material: metal_bronce_pulido
+    label: Mapa
+  - id: estante
+    kind: box
+    position: [-7.2, -1.8, 2]
+    scale: [0.22, 1.1, 1.4]
+    material: pared_madera_oscura
+    label: Estante
   - id: lampara
     kind: concept
     position: [0, 2.2, 0]

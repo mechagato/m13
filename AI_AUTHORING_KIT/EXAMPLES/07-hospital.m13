@@ -52,6 +52,12 @@ objects:
     material: marmol_blanco_vetas
     label: Camilla
     interact: true
+  - id: estante_med
+    kind: box
+    position: [5.8, -1.6, 2]
+    scale: [0.25, 1.1, 0.9]
+    material: pared_yeso_blanco
+    label: Estante
   - id: dispensador
     kind: cylinder
     position: [4.8, -2.4, -4]

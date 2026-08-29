@@ -1,26 +1,26 @@
-# Sistema solar — lección STEM MVP
+# Sistema solar — lección STEM MVP (planetario)
 
 version: "0.3"
 name: sistema_solar
 title: Sistema Solar
-description: "Lección STEM: identifica planetas caminando por el sistema."
+description: "Lección STEM: identifica planetas caminando por el planetario."
 bounds: [42, 8, 22]
 spawn: [0, -6.4, -16]
 ambient:
-  background: [0.01, 0.01, 0.02]
-  ambientColor: [0.04, 0.04, 0.07]
+  background: [0.004, 0.004, 0.01]
+  ambientColor: [0.03, 0.04, 0.07]
   tint: [1, 1, 1.05]
-  fogColor: [0.02, 0.02, 0.04]
-  fogDensity: 0.008
+  fogColor: [0.01, 0.012, 0.02]
+  fogDensity: 0.0022
 light:
-  position: [0, 4, 0]
-  color: [1.4, 1.15, 0.7]
-  intensity: 2.2
+  position: [0, -4, 0]
+  color: [1.5, 1.2, 0.72]
+  intensity: 2.4
 floor:
-  concept: piso_concreto_industrial
+  concept: piedra_volcanica
 sky:
-  horizon: [0.03, 0.04, 0.08]
-  zenith: [0.0, 0.0, 0.015]
+  horizon: [0.02, 0.03, 0.07]
+  zenith: [0.0, 0.0, 0.012]
 cameraSpeed: 6.0
 ui:
   hud: education
@@ -108,7 +108,7 @@ objects:
   - id: saturn_ring
     kind: torus
     position: [28, -5.6, 0]
-    scale: [1.35, 0.08, 1.35]
+    scale: [1.55, 0.07, 1.55]
     material: marmol_blanco_vetas
     animate:
       mode: rotate
@@ -128,34 +128,40 @@ objects:
     material: pared_concreto_pulido
     label: Neptuno
     interact: true
+  - id: telescopio
+    kind: cylinder
+    position: [-1.6, -7.15, -11.2]
+    scale: [0.1, 0.85, 0.1]
+    rotation: [38, 18, 0]
+    material: metal_oxidado
 npc:
   - id: profesor
     name: Profesor Vega
     role: teacher
     position: [1.5, -8, -10]
     dialog:
-      - Bienvenido.
-      - Hoy aprenderemos el Sistema Solar.
-      - Camina hacia el Sol y luego encuentra Marte — el de color óxido.
-      - "Después busca Saturno: es el que tiene anillo."
+      - Bienvenido al planetario Vega.
+      - Hoy recorremos el Sistema Solar a escala de salón.
+      - Camina hacia el Sol — la esfera dorada que pulsa — y luego encuentra Marte, el de color óxido.
+      - "Después busca Saturno: es el que tiene anillo. Acércate y pulsa E."
     mission: mission1
 zones:
   - id: mars
     kind: sphere
     position: [16, -6.4, 0]
-    hidden: false
+    hidden: true
     radius: 1.4
     label: Marte
   - id: saturn
     kind: sphere
     position: [28, -5.6, 0]
-    hidden: false
+    hidden: true
     radius: 2.0
     label: Saturno
   - id: earth
     kind: sphere
     position: [12.5, -6.1, 0]
-    hidden: false
+    hidden: true
     radius: 1.3
     label: Tierra
 quizzes:
@@ -182,7 +188,7 @@ missions:
     required: true
     next: mission2
     hints:
-      - El profesor está detrás de ti, cerca del spawn.
+      - El profesor está detrás de ti, cerca del telescopio.
   - id: mission2
     title: Encuentra Marte
     description: Entra a la zona de Marte.
@@ -196,7 +202,7 @@ missions:
     required: true
     next: mission3
     hints:
-      - Marte es la cuarta esfera desde el Sol, de material oxidado.
+      - Marte es la cuarta esfera desde el Sol, de material oxidado. Sigue el anillo de órbita.
   - id: mission3
     title: Encuentra Saturno
     description: Interactúa con Saturno.
