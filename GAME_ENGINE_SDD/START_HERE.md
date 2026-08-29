@@ -1,66 +1,68 @@
 # START HERE — M13 Game Engine SDD
 
 **Documento:** diseño solamente  
-**Repo ancla:** [mechagato/m13](https://github.com/mechagato/m13) @ `main` (`b4711e10`)  
-**Fecha:** 2026-08-28  
+**Repo ancla:** [mechagato/m13](https://github.com/mechagato/m13)  
+**Fecha:** 2026-08-28 (rev. unificación v0.3)  
 **Estado:** draft para aprobación  
 **Código de motor en esta entrega:** cero
 
 ## Qué es esto
 
-Diseño de cómo **m13 deja de ser solo un sintetizador de mundos** y se convierte en **motor de gameplay**, sin tocar el renderer WebGPU, el compilador WGSL ni el runtime de raymarch.
+Diseño de cómo m13 gana **gameplay** sin tocar el renderer WebGPU, el compilador WGSL ni el runtime de raymarch.
 
-El juego que justifica cada módulo:
+El juego que justifica los módulos **nuevos** de este SDD:
 
-> **AI Survival Sandbox** — local-first, generado por IA, persistido en `.m13` + sidecar de save.
+> **AI Survival Sandbox** — local-first, generado por IA, archivos `.m13`.
 
-No se está diseñando Unity. Se están diseñando **contratos sobre el formato `.m13`**.
+No se diseña Unity. Se diseñan contratos sobre **un solo** `.m13` v0.3 modular.
 
-## Qué hay hoy en el repo (hechos, no deseos)
+## Regla de versión (obligatoria)
 
-El runtime real **no** tiene NPC, misiones, quizzes, zonas de gameplay ni inventario.
-
-| Capa | Estado en `mechagato/m13` |
+| Versión | Qué es |
 |---|---|
-| Formato `.m13` | v0.1 (escena visual) + v0.2 (keyframes + `events: light_flash`) |
-| Parser | Zod en `packages/runtime/src/parser/schema.ts` |
-| Renderer | WebGPU SDF raymarch, **intocable** |
-| Autoría IA | MCP `get_m13_format_guide` + `@m13/generator` + editor experimental — **editor-time only** |
-| Determinismo visual | `compileScene` byte-a-byte + hash WGSL |
-| Gameplay / ECS | **no existe** |
-| Visor educativo (English Lab, supermercado, residuos, aula) | **fuera de este SDD** — no mezclar |
+| **v0.1 / v0.2** | Escena **visual** (SDF). Intocable. `events` v0.2 = `light_flash` de shader. |
+| **v0.3** | Escena visual **+ módulos opcionales**. Un solo número. |
 
-Cuando el prompt de esta sesión habla de “`.m13` v0.3 con objects, npc, missions, quizzes, zones, events, education”, se interpreta así:
+v0.3 no es “el formato del survival”. v0.3 es el formato **modular** con dos perfiles de producto:
 
-- `objects` + `events` **ya existen** (visual / temporal).
-- `npc`, `missions`, `quizzes`, `zones`, `education` son **extensiones propuestas de v0.3 gameplay**, no código shipped.
-- Un `.m13` educativo v0.3 hipotético o un v0.1 actual **debe seguir abriendo** en el renderer: las claves de gameplay se ignoran al compilar WGSL.
+| Módulo | Perfil | Estado |
+|---|---|---|
+| `education:` | Vertical 1 — capacitación / lección guiada | **Ya existe** en el studio educativo (visor + AI Authoring Kit). English Lab, supermercado, residuos, aula. |
+| `game:` | Vertical 2 — AI Survival Sandbox | **Lo que este SDD aporta.** No shipped como loop de juego. |
 
-## Cómo leer este SDD
+Un archivo `version: "0.3"` puede traer `education`, `game`, **ambos**, o **ninguno**. Sin ninguno es solo visual (equivalente funcional a v0.2 para el renderer).
 
-1. `00-philosophy.md` — leyes.
-2. `01-architecture.md` + `diagrams/` — capas y dependencias.
-3. `05-m13-extensions.md` — **el documento más importante** (el contrato de datos).
-4. `02-ecs.md` + `03-gameplay-framework.md` — sistemas MVP.
-5. `08-survival-sandbox-contracts.md` — el juego ancla, aún no el juego.
-6. `06-plugin-sdk.md` + `07-ai-integration.md` — cómo crece sin romper el núcleo.
-7. `04-physics.md` — Fase 2, interfaces vacías.
-8. `09-roadmap.md` + `10-testing-and-risks.md`.
+El renderer **no entiende** `education` ni `game`. Ambos se *stripean* antes de `compileScene`.
 
-## Qué queda fuera (ley de esta sesión)
+## Qué hay hoy (hechos)
 
-- Código de producción, ECS implementado, física, red.
-- Reescribir renderer / WGSL / compiler.
-- Motor paralelo en React / Three.js.
-- Implementar Survival Sandbox.
-- GDD de 40 sistemas al mismo nivel de detalle.
-- Mezclar el visor educativo con el gameplay loop.
+| Capa | Hecho |
+|---|---|
+| `@m13/runtime` en `mechagato/m13` | Parser visual v0.1/v0.2 + WebGPU SDF. **No** ejecuta lecciones ni survival. |
+| Studio / AI Authoring Kit (Vertical 1) | **Ya emite y consume** `.m13` v0.3 con `education`, `npc` (singular), `missions` (`objective.talk | interact | quiz | enter_zone`), `quizzes`, `zones`, events educativos, `player`, `ui.hud: education`. Eso **no es hipotético**. |
+| Vertical 2 (`game`) | Diseñado aquí. No implementado. |
+
+Este SDD **no** rebautiza Vertical 1 como “passthrough inventado”. El host educativo **sí** ejecuta `education` / `quizzes` / `objective.*`. El host survival **no** los trata como combate. Comparten documento, no loop.
+
+## Cómo leer
+
+1. `00-philosophy.md` — leyes (§8 = compat modular).
+2. `05-m13-extensions.md` — **contrato de datos unificado**.
+3. `01-architecture.md` + `diagrams/`.
+4. `02`–`03` + `08` — ECS y contratos **del módulo `game`**.
+5. `06`–`07`, `04`, `09`–`10`.
+
+## Qué queda fuera de esta sesión
+
+- Código, schema Zod, fixtures de engine, ECS, Survival implementado.
+- PRs de código. Merge a `main`.
+- Tocar renderer / WGSL / runtime.
+- Un segundo número de versión (v0.4) para evadir el conflicto.
+- Reescribir el visor educativo.
 
 ## Criterio de aprobación
 
-Apruebas este SDD si:
-
-1. La frontera renderer ↔ gameplay es clara.
-2. v0.1 / v0.2 siguen siendo documentos válidos.
-3. Todo estado generable por IA cabe en `.m13` v0.3 o en un sidecar justificado.
-4. El Survival Sandbox tiene contratos suficientes para un primer PR de **schema + sim headless**, no de shaders.
+1. v0.3 es un número, dos módulos.
+2. English Lab v0.3 actual sigue siendo v0.3 válido.
+3. `npc` es la colección canónica; `npcs` solo alias deprecado.
+4. El primer PR de código, **cuando se apruebe este draft**, acepta `education` ya existente **y** `game` nuevo — no un v0.3 solo-survival.
