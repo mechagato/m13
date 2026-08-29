@@ -20,6 +20,8 @@ export default defineConfig({
     alias: {
       // Vite no resuelve workspace packages automáticamente fuera de raíz; ayudamos.
       '@m13/synth': fileURLToPath(new URL('../synth/src/index.ts', import.meta.url)),
+      // Solo strip/keys — no el overlay Zod (education/game) para no inflar el bundle.
+      '@m13/spec/strip': fileURLToPath(new URL('../spec/src/strip.ts', import.meta.url)),
     },
   },
   build: {

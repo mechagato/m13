@@ -1,9 +1,10 @@
 import { parse as parseYaml } from 'yaml';
+import { normalizeVersion, stripToVisual } from '@m13/spec/strip';
 import { m13SceneSchema, type M13Scene } from './schema.js';
 
-/** Última versión del formato soportada por este runtime. */
+/** Última versión visual del formato soportada por este runtime. */
 export const SUPPORTED_VERSION = '0.2';
-/** Todas las versiones que el parser puede leer y validar. */
+/** Versiones visuales que Zod valida. `0.3` overlay se stripea a `0.2` antes de esto. */
 export const SUPPORTED_VERSIONS = ['0.1', '0.2'] as const;
 
 /** Keys reconocidas en el nivel raíz de un documento .m13. */
@@ -58,24 +59,28 @@ export function parseScene(yamlText: string, opts: ParseOptions = {}): M13Scene 
  * Valida un objeto contra el schema .m13 y devuelve la escena con defaults aplicados.
  */
 export function validateScene(raw: unknown, opts: ParseOptions = {}): M13Scene {
-  // 1. Validación de versión antes del schema general: error explícito si no tiene ruta.
-  if (
-    isPlainObject(raw) &&
-    typeof raw.version === 'string' &&
-    !SUPPORTED_VERSIONS.includes(raw.version as (typeof SUPPORTED_VERSIONS)[number])
-  ) {
-    throw new Error(
-      `[m13/parser] m13 v${raw.version} no soportado por este runtime (soporta ${SUPPORTED_VERSIONS.join(', ')})`,
-    );
+  let doc: unknown = raw;
+  if (isPlainObject(doc)) {
+    const version = normalizeVersion(doc.version);
+    if (version === '0.3') {
+      // Overlay education/game: el renderer solo ve el documento visual.
+      doc = stripToVisual(doc);
+    } else if (version !== undefined && version !== '0.1' && version !== '0.2') {
+      throw new Error(
+        `[m13/parser] m13 v${version} no soportado por este runtime (soporta ${SUPPORTED_VERSIONS.join(', ')}, overlay 0.3)`,
+      );
+    }
   }
-  if (isPlainObject(raw) && raw.version === '0.1' && raw.events !== undefined) {
+
+  // 1. Validación de versión visual.
+  if (isPlainObject(doc) && doc.version === '0.1' && doc.events !== undefined) {
     throw new Error('[m13/parser] events requiere version: "0.2".');
   }
 
   // 2. Validación Zod estándar.
   // Los documentos v0.1 históricos podían omitir version; normalizarlos antes de usar la unión
   // discriminada conserva ese contrato y deja errores precisos para el resto de los campos.
-  const rawForSchema = isPlainObject(raw) && raw.version === undefined ? { ...raw, version: '0.1' } : raw;
+  const rawForSchema = isPlainObject(doc) && doc.version === undefined ? { ...doc, version: '0.1' } : doc;
   const result = m13SceneSchema.safeParse(rawForSchema);
   if (!result.success) {
     const issues = result.error.issues
@@ -86,14 +91,14 @@ export function validateScene(raw: unknown, opts: ParseOptions = {}): M13Scene {
 
   // 3. Campos desconocidos: en strict, error recursivo (B9); si no, warning solo raíz.
   if (opts.strict) {
-    const unknown = collectUnknownKeys(raw, result.data);
+    const unknown = collectUnknownKeys(doc, result.data);
     if (unknown.length > 0) {
       throw new Error(
         `[m13/parser] campos desconocidos (modo strict):\n${unknown.map((u) => `  · ${u}`).join('\n')}`,
       );
     }
-  } else if (!opts.silent && isPlainObject(raw)) {
-    for (const key of Object.keys(raw)) {
+  } else if (!opts.silent && isPlainObject(doc)) {
+    for (const key of Object.keys(doc)) {
       if (!KNOWN_ROOT_KEYS.has(key)) {
         console.warn(`[m13/parser] campo desconocido: ${key}`);
       }

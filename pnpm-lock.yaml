@@ -228,6 +228,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@m13/spec':
+        specifier: workspace:*
+        version: link:../spec
       '@m13/synth':
         specifier: workspace:*
         version: link:../synth

@@ -3277,3 +3277,12 @@ ECS, tick, Survival jugable, inventario runtime, física, HUD, WebGPU, WGSL, com
 ### Verificar
 `pnpm --filter @m13/spec test` y `pnpm test` (suite completa, parser visual sigue verde).
 
+---
+
+## 2026-08-29 — Entrada 044 — parseScene acepta overlay v0.3 (strip-to-visual)
+
+**Player nativo.** El renderer/compiler/WGSL no se tocó.
+
+`validateScene` / `engine.loadScene`: si `version` es `0.3`, `stripToVisual()` (solo `@m13/spec/strip`, sin Zod education/game) deja un doc visual v0.2. English Lab y valle_minimo se ven; missions/npc no se ejecutan.
+
+Cero ECS, cero Survival.

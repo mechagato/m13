@@ -1,8 +1,17 @@
 import { VISUAL_EVENT_KEY_SET, VISUAL_OBJECT_KEY_SET, VISUAL_ROOT_KEYS } from './keys.js';
-import { isLightFlashEvent } from './schema.js';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Inline — no importar schema.ts para que el runtime pueda tree-shakear el overlay Zod. */
+function isLightFlashEvent(value: unknown): boolean {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    (value as { kind?: unknown }).kind === 'light_flash'
+  );
 }
 
 export function normalizeVersion(value: unknown): string | undefined {
