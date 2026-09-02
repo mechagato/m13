@@ -1,0 +1,142 @@
+# Museo / galería white-cube
+
+version: "0.3"
+name: museo
+title: Museo
+description: Galería white-cube con tres piezas y fichas de sala.
+bounds: [7, 3.5, 7]
+spawn: [0, -1.9, -5]
+ambient:
+  ambientColor: [0.2, 0.21, 0.23]
+  fogDensity: 0.01
+  tint: [0.98, 0.99, 1.03]
+  background: [0.07, 0.075, 0.085]
+  fogColor: [0.07, 0.075, 0.085]
+light:
+  position: [0, 3.1, 0]
+  color: [0.98, 0.99, 1.02]
+  intensity: 1.25
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+  params:
+    veinIntensity: 0.25
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.9, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Arte
+  grade: preparatoria
+  durationMin: 20
+  language: es
+  difficulty: easy
+  objectives:
+    - Observar tres piezas
+    - Leer ficha
+  bloom:
+    - understand
+    - analyze
+  stem: false
+  mode: student
+objects:
+  - id: pedestal_c
+    kind: concept
+    position: [0, -2.7, 0]
+    scale: [0.4, 0.4, 0.4]
+    concept: pedestal_marmol
+  - id: esfera_blanca
+    kind: concept
+    position: [0, -1.5, 0]
+    scale: 0.38
+    concept: esfera_decorativa
+    animate:
+      mode: bob
+      speed: 0.3
+      amplitude: 0.04
+    label: Esfera
+    interact: true
+  - id: pedestal_i
+    kind: concept
+    position: [-3, -2.7, -1.2]
+    scale: [0.3, 0.35, 0.3]
+    concept: pedestal_marmol
+  - id: torus_bronce
+    kind: torus
+    position: [-3, -1.7, -1.2]
+    scale: [0.28, 0.08, 0.28]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.4
+    label: Torus
+    interact: true
+  - id: pedestal_d
+    kind: concept
+    position: [3, -2.7, -1.2]
+    scale: [0.3, 0.35, 0.3]
+    concept: pedestal_marmol
+  - id: cubo_marmol
+    kind: box
+    position: [3, -1.7, -1.2]
+    scale: [0.25, 0.25, 0.25]
+    material: marmol_blanco_vetas
+    label: Cubo
+    interact: true
+npc:
+  - id: curadora
+    name: Curadora
+    role: guide
+    position: [2.2, -3.5, -4]
+    dialog:
+      - Esta sala reúne tres volúmenes.
+      - Acércate a cada pieza y pulsa E.
+      - El torus de bronce es la clave de la segunda misión.
+zones:
+  - id: sala_central
+    kind: box
+    position: [0, -2, 0]
+    hidden: false
+    size: [1.4, 1.5, 1.4]
+missions:
+  - id: m1
+    title: Habla con la curadora
+    description: Recibe la ficha de sala.
+    objective:
+      talk: curadora
+    success: "Completaste: Habla con la curadora"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Observa la esfera
+    description: Interactúa con la pieza central.
+    objective:
+      interact: esfera_blanca
+    success: "Completaste: Observa la esfera"
+    rewards:
+      xp: 80
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Observa el torus
+    description: Interactúa con el torus de bronce.
+    objective:
+      interact: torus_bronce
+    success: "Completaste: Observa el torus"
+    rewards:
+      xp: 90
+      stars: 1
+      badge: curador
+    required: true

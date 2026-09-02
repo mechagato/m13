@@ -1,0 +1,129 @@
+# Ciudad inteligente
+
+version: "0.3"
+name: ciudad_inteligente
+title: Ciudad inteligente
+description: Manzana, semáforos y sensores.
+bounds: [20, 6, 20]
+spawn: [0, -4.4, -12]
+ambient:
+  background: [0.08, 0.09, 0.12]
+  ambientColor: [0.1, 0.11, 0.14]
+  tint: [0.95, 0.98, 1.05]
+  fogColor: [0.1, 0.12, 0.16]
+  fogDensity: 0.014
+light:
+  position: [0, 7, 0]
+  color: [0.85, 0.9, 1.1]
+  intensity: 1.3
+floor:
+  concept: piso_concreto_industrial
+sky:
+  horizon: [0.15, 0.18, 0.25]
+  zenith: [0.04, 0.05, 0.1]
+cameraSpeed: 6.0
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -4.4, -12]
+  height: 1.6
+  speed: 5.5
+education:
+  subject: Smart city
+  grade: preparatoria
+  durationMin: 16
+  language: es
+  difficulty: medium
+  objectives:
+    - Identificar un sensor
+    - Cruzar en verde
+  bloom:
+    - apply
+  stem: true
+  mode: student
+objects:
+  - id: edificio_a
+    kind: box
+    position: [-6, -2, 4]
+    scale: [2.2, 4, 2.2]
+    material: pared_concreto_pulido
+  - id: edificio_b
+    kind: box
+    position: [6, -1.5, 3]
+    scale: [1.8, 4.5, 1.8]
+    material: pared_ladrillo_viejo
+  - id: semaforo
+    kind: cylinder
+    position: [1.4, -3.6, -2]
+    scale: [0.12, 2.2, 0.12]
+    material: metal_oxidado
+    label: Semáforo
+    interact: true
+  - id: luz
+    kind: sphere
+    position: [1.4, -2.1, -2]
+    scale: 0.18
+    material: metal_dorado_pulido
+    animate:
+      mode: pulse
+      speed: 2.0
+      amplitude: 0.2
+  - id: sensor
+    kind: box
+    position: [-1.5, -5.4, -2]
+    scale: [0.3, 0.15, 0.3]
+    material: vidrio_esmerilado
+    label: Sensor
+    interact: true
+npc:
+  - id: urbanista
+    name: Urbanista
+    role: teacher
+    position: [-2, -6, -8]
+    dialog:
+      - La ciudad habla con sensores.
+      - Encuentra el semáforo y el sensor de piso.
+zones:
+  - id: cruce
+    kind: box
+    position: [1.4, -5, -2]
+    hidden: false
+    size: [2, 1.4, 2]
+    label: Cruce
+missions:
+  - id: m1
+    title: Plan
+    description: Habla con la urbanista.
+    objective:
+      talk: urbanista
+    success: "Completaste: Plan"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Sensor
+    description: Interactúa con el sensor.
+    objective:
+      interact: sensor
+    success: "Completaste: Sensor"
+    rewards:
+      xp: 90
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Cruce
+    description: Entra a la zona del cruce.
+    objective:
+      enter_zone: cruce
+    success: "Completaste: Cruce"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: ciudad
+    required: true

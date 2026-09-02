@@ -1,0 +1,182 @@
+# Aula escolar
+
+version: "0.3"
+name: aula_escolar
+title: Aula escolar
+description: Salón con pupitres, pizarrón y misión de observación.
+bounds: [8, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.14, 0.14, 0.13]
+  fogDensity: 0.01
+  tint: [1.02, 1, 0.96]
+  background: [0.07, 0.07, 0.06]
+  fogColor: [0.07, 0.07, 0.06]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.97, 0.9]
+  intensity: 1.15
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_madera_envejecida
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Educación
+  grade: secundaria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Identificar el pizarrón
+    - Recorrer pupitres
+  bloom:
+    - remember
+  stem: false
+  mode: student
+objects:
+  - id: pupitre_0_0
+    kind: box
+    position: [-3.2, -2.7, -1.5]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_0_1
+    kind: box
+    position: [-3.2, -2.7, 0.8]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_0_2
+    kind: box
+    position: [-3.2, -2.7, 3.0]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_1_0
+    kind: box
+    position: [-1.1, -2.7, -1.5]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_1_1
+    kind: box
+    position: [-1.1, -2.7, 0.8]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_1_2
+    kind: box
+    position: [-1.1, -2.7, 3.0]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_2_0
+    kind: box
+    position: [1.1, -2.7, -1.5]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_2_1
+    kind: box
+    position: [1.1, -2.7, 0.8]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_2_2
+    kind: box
+    position: [1.1, -2.7, 3.0]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_3_0
+    kind: box
+    position: [3.2, -2.7, -1.5]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_3_1
+    kind: box
+    position: [3.2, -2.7, 0.8]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pupitre_3_2
+    kind: box
+    position: [3.2, -2.7, 3.0]
+    scale: [0.55, 0.35, 0.4]
+    material: pared_madera_oscura
+  - id: pizarron
+    kind: box
+    position: [0, -0.4, 6.6]
+    scale: [3.2, 1.4, 0.08]
+    material: pared_concreto_pulido
+    label: Pizarrón
+    interact: true
+  - id: poster_mapa
+    kind: box
+    position: [7.7, 0.2, 1.5]
+    scale: [0.05, 0.7, 0.9]
+    rotation: [0, 90, 0]
+    material: metal_bronce_pulido
+    label: Mapa
+  - id: estante
+    kind: box
+    position: [-7.2, -1.8, 2]
+    scale: [0.22, 1.1, 1.4]
+    material: pared_madera_oscura
+    label: Estante
+  - id: lampara
+    kind: concept
+    position: [0, 2.2, 0]
+    scale: [0.18, 0.3, 0.18]
+    concept: lampara_colgante
+npc:
+  - id: maestra
+    name: Maestra Elena
+    role: teacher
+    position: [-2.5, -3.2, 5.5]
+    dialog:
+      - Buenos días.
+      - Hoy observamos el aula.
+      - Encuentra el pizarrón y luego siéntate en un pupitre.
+zones:
+  - id: frente
+    kind: box
+    position: [0, -2, 5.8]
+    hidden: false
+    size: [2.2, 1.4, 1.0]
+    label: Frente del aula
+missions:
+  - id: m1
+    title: Saluda a la maestra
+    description: Habla con la maestra.
+    objective:
+      talk: maestra
+    success: "Completaste: Saluda a la maestra"
+    rewards:
+      xp: 50
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Observa el pizarrón
+    description: Interactúa con el pizarrón.
+    objective:
+      interact: pizarron
+    success: "Completaste: Observa el pizarrón"
+    rewards:
+      xp: 80
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Camina al frente
+    description: Entra a la zona frente al pizarrón.
+    objective:
+      enter_zone: frente
+    success: "Completaste: Camina al frente"
+    rewards:
+      xp: 70
+      stars: 1
+      badge: alumno
+    required: true

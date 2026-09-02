@@ -1,0 +1,118 @@
+# Museo interactivo
+
+version: "0.3"
+name: museo_interactivo
+title: Museo interactivo
+description: Piezas audio-reactivas y misiones de sala.
+bounds: [7, 3.4, 7]
+spawn: [0, -1.8, -5]
+ambient:
+  ambientColor: [0.18, 0.18, 0.22]
+  fogDensity: 0.011
+  tint: [0.98, 0.98, 1.04]
+  background: [0.06, 0.06, 0.08]
+  fogColor: [0.06, 0.06, 0.08]
+light:
+  position: [0, 2.8, 0]
+  color: [0.95, 0.97, 1.1]
+  intensity: 1.3
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.8, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Museografía
+  grade: preparatoria
+  durationMin: 18
+  language: es
+  difficulty: medium
+  objectives:
+    - Activar pieza sonora
+    - Comparar materiales
+  bloom:
+    - analyze
+  stem: false
+  mode: student
+objects:
+  - id: pedestal
+    kind: concept
+    position: [0, -2.6, 1]
+    scale: [0.4, 0.4, 0.4]
+    concept: pedestal_marmol
+  - id: pieza_sonora
+    kind: sphere
+    position: [0, -1.5, 1]
+    scale: 0.4
+    material: metal_dorado_pulido
+    animate:
+      mode: pulse
+      speed: 1.6
+      amplitude: 0.12
+    label: Pieza sonora
+    interact: true
+  - id: relieve
+    kind: box
+    position: [0, 0.2, 6.6]
+    scale: [2.4, 1.2, 0.1]
+    material: piedra_volcanica
+    label: Relieve
+    interact: true
+npc:
+  - id: mediadora
+    name: Mediadora
+    role: guide
+    position: [2.4, -3.4, -3]
+    dialog:
+      - Algunas piezas reaccionan al sonido.
+      - Activa la esfera y luego lee el relieve.
+zones:
+  - id: sala
+    kind: box
+    position: [0, -2, 1]
+    hidden: false
+    size: [1.6, 1.4, 1.6]
+missions:
+  - id: m1
+    title: Mediación
+    description: Habla con la mediadora.
+    objective:
+      talk: mediadora
+    success: "Completaste: Mediación"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Pieza sonora
+    description: Interactúa con la esfera.
+    objective:
+      interact: pieza_sonora
+    success: "Completaste: Pieza sonora"
+    rewards:
+      xp: 100
+      stars: 1
+      badge: sonido
+    required: true
+    next: m3
+  - id: m3
+    title: Relieve
+    description: Lee el relieve de muro.
+    objective:
+      interact: relieve
+    success: "Completaste: Relieve"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true

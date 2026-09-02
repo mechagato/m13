@@ -1,0 +1,185 @@
+# Supermercado — inglés básico (preescolar / 1°–2° primaria)
+
+version: "0.3"
+name: supermercado_ingles
+title: STORE
+description: "This is a store. Aprende STORE, MILK y cómo indicar el camino."
+bounds: [8, 3.2, 7]
+spawn: [0, -1.85, -5]
+ambient:
+  background: [0.1, 0.09, 0.08]
+  ambientColor: [0.2, 0.18, 0.15]
+  tint: [1.04, 1.0, 0.95]
+  fogColor: [0.1, 0.09, 0.08]
+  fogDensity: 0.008
+light:
+  position: [0, 2.4, 0]
+  color: [1.05, 0.96, 0.84]
+  intensity: 1.22
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_yeso_blanco
+cameraSpeed: 2.8
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.85, -5]
+  height: 1.35
+  speed: 2.6
+education:
+  subject: Inglés
+  grade: 3° preescolar – 2° primaria
+  durationMin: 12
+  language: en
+  difficulty: intro
+  objectives:
+    - Identificar STORE (tienda)
+    - Encontrar MILK (leche)
+    - Indicar el camino en inglés
+  bloom:
+    - remember
+    - apply
+  stem: false
+  mode: student
+objects:
+  - id: store_sign
+    kind: box
+    position: [0, 0.6, 6.5]
+    scale: [1.6, 0.45, 0.08]
+    material: metal_oxidado
+    label: STORE
+    interact: true
+  - id: estante_leche
+    kind: box
+    position: [-3.4, -1.7, 2.2]
+    scale: [0.9, 1.2, 0.35]
+    material: pared_yeso_blanco
+  - id: milk
+    kind: box
+    position: [-3.4, -1.35, 2.55]
+    scale: [0.12, 0.28, 0.08]
+    material: vidrio_esmerilado
+    label: MILK
+    interact: true
+  - id: apple
+    kind: sphere
+    position: [2.6, -2.35, 1.4]
+    scale: 0.16
+    material: metal_oxidado
+    label: APPLE
+    interact: true
+  - id: bread
+    kind: box
+    position: [2.6, -2.45, 2.2]
+    scale: [0.28, 0.1, 0.16]
+    material: cuero_vintage
+    label: BREAD
+    interact: true
+  - id: cart
+    kind: box
+    position: [1.4, -2.7, -1.2]
+    scale: [0.4, 0.35, 0.3]
+    material: metal_bronce_pulido
+    label: CART
+  - id: mesa_caja
+    kind: box
+    position: [3.4, -2.75, -3.2]
+    scale: [1.1, 0.32, 0.5]
+    material: pared_madera_oscura
+  - id: lampara
+    kind: concept
+    position: [0, 2.15, 0]
+    scale: [0.16, 0.28, 0.16]
+    concept: lampara_colgante
+npc:
+  - id: miss_luna
+    name: Miss Luna
+    role: teacher
+    voice: en-US
+    position: [-2.4, -3.2, 5.2]
+    dialog:
+      - "Hello! This is a STORE. Una tienda."
+      - "Look around. Find the MILK. Leche."
+      - "Then help the customer. He will ask: where is the milk?"
+    mission: m1
+  - id: customer
+    name: Customer
+    role: peer
+    voice: en-US
+    position: [2.8, -3.2, -3.2]
+    dialog:
+      - "Excuse me."
+      - "Where is the milk?"
+      - "Can you tell me? Di: milk."
+    mission: m3
+zones:
+  - id: dairy
+    kind: box
+    position: [-3.4, -2.2, 2.2]
+    hidden: true
+    size: [1.4, 1.4, 1.2]
+    label: Dairy
+quizzes:
+  - id: q_where_milk
+    prompt: "Customer: Where is the milk? Di la palabra o elige."
+    choices:
+      - Apple
+      - Milk
+      - Cart
+      - Bread
+    answer: 1
+    bloom: apply
+    xp: 100
+missions:
+  - id: m1
+    title: This is a STORE
+    description: Habla con Miss Luna. STORE = tienda.
+    objective:
+      talk: miss_luna
+    success: "Store! Muy bien."
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+    hints:
+      - Miss Luna está junto al letrero STORE. Pulsa E.
+  - id: m2
+    title: Find the MILK
+    description: Toca la leche. MILK = leche.
+    objective:
+      interact: milk
+    success: "Milk! Excellent."
+    rewards:
+      xp: 90
+      stars: 1
+      badge: dairy
+    required: true
+    next: m3
+    hints:
+      - El estante de leche está a la izquierda.
+  - id: m3
+    title: Where is the milk?
+    description: El cliente pregunta. Di "milk" o elige la palabra.
+    objective:
+      quiz: q_where_milk
+    success: "This way. You did it!"
+    rewards:
+      xp: 120
+      stars: 1
+      badge: store
+    required: true
+    hints:
+      - Pulsa Hablar y di milk. Si no hay micrófono, toca Milk.
+events:
+  - trigger: mission_completed
+    target: m3
+    action:
+      fireworks: true
+      sound: success

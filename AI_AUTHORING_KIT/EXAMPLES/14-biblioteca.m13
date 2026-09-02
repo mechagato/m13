@@ -1,0 +1,127 @@
+# Biblioteca
+
+version: "0.3"
+name: biblioteca
+title: Biblioteca
+description: Estantería, silencio y ficha de libro.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.1, 0.08, 0.06]
+  fogDensity: 0.016
+  tint: [1.05, 0.98, 0.9]
+  background: [0.05, 0.04, 0.03]
+  fogColor: [0.05, 0.04, 0.03]
+light:
+  position: [0, 2.4, 0]
+  color: [1, 0.86, 0.7]
+  intensity: 1.15
+walls:
+  concept: pared_madera_oscura
+floor:
+  concept: piso_madera_envejecida
+ceiling:
+  concept: pared_madera_oscura
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Letras
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Estantería, silencio y ficha de libro.
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: estante_a
+    kind: box
+    position: [-4.5, -1.2, 0]
+    scale: [0.28, 2.0, 2.4]
+    material: pared_madera_oscura
+    label: Estante A
+    interact: true
+  - id: estante_b
+    kind: box
+    position: [4.5, -1.2, 0]
+    scale: [0.28, 2.0, 2.4]
+    material: pared_madera_oscura
+    label: Estante B
+    interact: true
+  - id: mesa
+    kind: box
+    position: [0, -2.75, 0]
+    scale: [1.6, 0.22, 0.9]
+    material: pared_madera_oscura
+  - id: libro
+    kind: box
+    position: [0.2, -2.45, 0.1]
+    scale: [0.22, 0.06, 0.3]
+    material: cuero_vintage
+    label: Códice
+    interact: true
+  - id: lampara
+    kind: concept
+    position: [0, 2.0, 0]
+    scale: [0.14, 0.24, 0.14]
+    concept: lampara_colgante
+npc:
+  - id: bibliotecaria
+    name: Bibliotecaria
+    role: teacher
+    position: [1.6, -3.2, -4]
+    dialog:
+      - Silencio en sala.
+      - El códice está sobre la mesa.
+      - Luego busca el estante A.
+zones:
+  - id: sala
+    kind: box
+    position: [0, -2, 0]
+    hidden: false
+    size: [2, 1.4, 2]
+missions:
+  - id: m1
+    title: Ficha
+    description: Habla con la bibliotecaria.
+    objective:
+      talk: bibliotecaria
+    success: "Completaste: Ficha"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Códice
+    description: Toma el libro de la mesa.
+    objective:
+      interact: libro
+    success: "Completaste: Códice"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: lector
+    required: true
+    next: m3
+  - id: m3
+    title: Estante A
+    description: Interactúa con el estante A.
+    objective:
+      interact: estante_a
+    success: "Completaste: Estante A"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true

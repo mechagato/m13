@@ -1,0 +1,127 @@
+# Tutorial inicial — onboarding caminable
+
+version: "0.3"
+name: tutorial_inicial
+title: Tutorial inicial
+description: Aprende a caminar, hablar y completar tu primera misión.
+bounds: [6, 3, 6]
+spawn: [0, -1.4, -4.5]
+ambient:
+  ambientColor: [0.16, 0.16, 0.17]
+  fogDensity: 0.012
+  tint: [1, 1, 1]
+  background: [0.06, 0.06, 0.07]
+  fogColor: [0.06, 0.06, 0.07]
+light:
+  position: [0, 2.4, 0]
+  color: [1, 0.96, 0.9]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_madera_envejecida
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.4, -4.5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Onboarding
+  grade: todos
+  durationMin: 8
+  language: es
+  difficulty: intro
+  objectives:
+    - Moverse
+    - Hablar con NPC
+    - Completar una misión
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: pedestal
+    kind: concept
+    position: [0, -2.4, 0]
+    scale: [0.4, 0.4, 0.4]
+    concept: pedestal_marmol
+  - id: esfera
+    kind: sphere
+    position: [0, -1.4, 0]
+    scale: 0.35
+    material: metal_dorado_pulido
+    animate:
+      mode: bob
+      speed: 0.6
+      amplitude: 0.08
+    label: Esfera m13
+    interact: true
+  - id: cubo_meta
+    kind: box
+    position: [3.5, -2.4, 3.5]
+    scale: [0.35, 0.35, 0.35]
+    material: metal_bronce_pulido
+    label: Meta
+    interact: true
+npc:
+  - id: guia
+    name: Guia
+    role: teacher
+    position: [1.5, -3, -2]
+    dialog:
+      - Bienvenido al tutorial.
+      - Camina con WASD. Mira con el mouse.
+      - Acércate a la esfera dorada y pulsa E.
+      - Luego encuentra el cubo de bronce.
+    mission: m1
+zones:
+  - id: meta
+    kind: box
+    position: [3.5, -2.2, 3.5]
+    hidden: false
+    size: [0.8, 0.8, 0.8]
+    label: Meta
+missions:
+  - id: m1
+    title: Habla con el guía
+    description: Pulsa E cerca del guía.
+    objective:
+      talk: guia
+    success: "Completaste: Habla con el guía"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+    hints:
+      - El guía está a tu derecha.
+  - id: m2
+    title: Toca la esfera
+    description: Interactúa con la esfera dorada.
+    objective:
+      interact: esfera
+    success: "Completaste: Toca la esfera"
+    rewards:
+      xp: 60
+      stars: 1
+      badge: primer_paso
+    required: true
+    next: m3
+  - id: m3
+    title: Llega a la meta
+    description: Entra a la zona del cubo de bronce.
+    objective:
+      enter_zone: meta
+    success: "Completaste: Llega a la meta"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: explorador
+    required: true

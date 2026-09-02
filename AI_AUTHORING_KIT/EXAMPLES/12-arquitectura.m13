@@ -1,0 +1,116 @@
+# Arquitectura
+
+version: "0.3"
+name: arquitectura
+title: Arquitectura
+description: Volúmenes, ejes y recorrido espacial.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Diseño
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Volúmenes, ejes y recorrido espacial.
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: volumen_a
+    kind: box
+    position: [-2.5, -1.6, 1]
+    scale: [0.8, 1.6, 0.8]
+    material: marmol_blanco_vetas
+    label: Volumen A
+    interact: true
+  - id: volumen_b
+    kind: cylinder
+    position: [2.2, -1.8, 1.4]
+    scale: [0.7, 1.4, 0.7]
+    material: piedra_volcanica
+    label: Volumen B
+    interact: true
+  - id: eje
+    kind: box
+    position: [0, -3.05, 0]
+    scale: [5.5, 0.05, 0.08]
+    material: metal_dorado_pulido
+npc:
+  - id: critico
+    name: Critico
+    role: teacher
+    position: [0, -3.2, -4.6]
+    dialog:
+      - Camina el eje central.
+      - Compara los dos volúmenes.
+      - El cilindro es la pieza B.
+zones:
+  - id: eje
+    kind: box
+    position: [0, -2.4, 0]
+    hidden: false
+    size: [4, 1.5, 0.8]
+    label: Eje
+missions:
+  - id: m1
+    title: Critica
+    description: Habla con el crítico.
+    objective:
+      talk: critico
+    success: "Completaste: Critica"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Volumen A
+    description: Interactúa con el prisma.
+    objective:
+      interact: volumen_a
+    success: "Completaste: Volumen A"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true
+    next: m3
+  - id: m3
+    title: Volumen B
+    description: Interactúa con el cilindro.
+    objective:
+      interact: volumen_b
+    success: "Completaste: Volumen B"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: espacio
+    required: true

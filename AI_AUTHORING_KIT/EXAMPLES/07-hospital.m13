@@ -1,0 +1,127 @@
+# Hospital
+
+version: "0.3"
+name: hospital
+title: Hospital
+description: Triage, cubículos y misión de higiene.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: piso_marmol_blanco
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Salud
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Triage, cubículos y misión de higiene.
+  bloom:
+    - remember
+    - understand
+  stem: false
+  mode: student
+objects:
+  - id: camilla
+    kind: box
+    position: [-2.5, -2.85, 1]
+    scale: [1.6, 0.22, 0.7]
+    material: marmol_blanco_vetas
+    label: Camilla
+    interact: true
+  - id: estante_med
+    kind: box
+    position: [5.8, -1.6, 2]
+    scale: [0.25, 1.1, 0.9]
+    material: pared_yeso_blanco
+    label: Estante
+  - id: dispensador
+    kind: cylinder
+    position: [4.8, -2.4, -4]
+    scale: [0.15, 0.4, 0.15]
+    material: vidrio_esmerilado
+    label: Gel
+    interact: true
+  - id: monitor
+    kind: box
+    position: [-2.5, -1.8, 1.5]
+    scale: [0.35, 0.28, 0.08]
+    material: metal_bronce_pulido
+  - id: lampara
+    kind: concept
+    position: [0, 2.2, 0]
+    scale: [0.14, 0.22, 0.14]
+    concept: lampara_colgante
+npc:
+  - id: enfermera
+    name: Enfermera
+    role: teacher
+    position: [1.2, -3.2, -3.5]
+    dialog:
+      - Lava tus manos antes de acercarte al paciente.
+      - El gel está junto a la entrada.
+      - Luego revisa la camilla.
+zones:
+  - id: triage
+    kind: box
+    position: [0, -2, -4]
+    hidden: false
+    size: [2, 1.4, 1.2]
+    label: Triage
+missions:
+  - id: m1
+    title: Indicaciones
+    description: Habla con enfermería.
+    objective:
+      talk: enfermera
+    success: "Completaste: Indicaciones"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Higiene
+    description: Usa el dispensador de gel.
+    objective:
+      interact: dispensador
+    success: "Completaste: Higiene"
+    rewards:
+      xp: 80
+      stars: 1
+      badge: higiene
+    required: true
+    next: m3
+  - id: m3
+    title: Paciente
+    description: Interactúa con la camilla.
+    objective:
+      interact: camilla
+    success: "Completaste: Paciente"
+    rewards:
+      xp: 90
+      stars: 1
+    required: true

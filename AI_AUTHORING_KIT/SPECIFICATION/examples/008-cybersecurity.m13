@@ -1,0 +1,129 @@
+# Ciberseguridad
+
+version: "0.3"
+name: ciberseguridad
+title: Ciberseguridad
+description: Sala de servidores y laboratorio de phishing.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.06, 0.08, 0.1]
+  fogDensity: 0.02
+  tint: [0.9, 1.0, 1.1]
+  background: [0.03, 0.04, 0.05]
+  fogColor: [0.03, 0.04, 0.05]
+light:
+  position: [0, 2.2, 0]
+  color: [0.7, 0.85, 1.1]
+  intensity: 1.1
+walls:
+  concept: pared_concreto_pulido
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_concreto_pulido
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Informática
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Sala de servidores y laboratorio de phishing.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: rack_a
+    kind: box
+    position: [-3, -1.6, 1]
+    scale: [0.4, 1.6, 1.1]
+    material: metal_oxidado
+    label: Rack A
+    interact: true
+  - id: rack_b
+    kind: box
+    position: [3, -1.6, 1]
+    scale: [0.4, 1.6, 1.1]
+    material: metal_oxidado
+    label: Rack B
+    interact: true
+  - id: terminal
+    kind: box
+    position: [0, -2.55, -1.2]
+    scale: [0.7, 0.08, 0.45]
+    material: pared_madera_oscura
+    label: Terminal
+    interact: true
+  - id: esfera_red
+    kind: sphere
+    position: [0, -1.2, 3.5]
+    scale: 0.28
+    material: metal_dorado_pulido
+    animate:
+      mode: pulse
+      speed: 1.4
+      amplitude: 0.12
+    label: Nodo
+    interact: true
+npc:
+  - id: analista
+    name: Analista
+    role: teacher
+    position: [1.8, -3.2, -4]
+    dialog:
+      - No conectes USB desconocidos.
+      - El correo falso está en la terminal.
+      - Aísla el nodo rojo-dorado.
+zones:
+  - id: soc
+    kind: box
+    position: [0, -2, -1.2]
+    hidden: false
+    size: [1.4, 1.2, 1.2]
+    label: SOC
+missions:
+  - id: m1
+    title: Briefing SOC
+    description: Habla con el analista.
+    objective:
+      talk: analista
+    success: "Completaste: Briefing SOC"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Phishing
+    description: Revisa la terminal.
+    objective:
+      interact: terminal
+    success: "Completaste: Phishing"
+    rewards:
+      xp: 90
+      stars: 1
+      badge: soc
+    required: true
+    next: m3
+  - id: m3
+    title: Aísla el nodo
+    description: Interactúa con el nodo comprometido.
+    objective:
+      interact: esfera_red
+    success: "Completaste: Aísla el nodo"
+    rewards:
+      xp: 120
+      stars: 1
+    required: true

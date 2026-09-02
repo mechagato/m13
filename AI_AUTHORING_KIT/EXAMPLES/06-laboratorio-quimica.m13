@@ -1,0 +1,128 @@
+# Laboratorio de química
+
+version: "0.3"
+name: laboratorio_quimica
+title: Laboratorio de química
+description: Mesas, frascos y protocolo de seguridad.
+bounds: [7, 3.2, 7]
+spawn: [0, -1.6, -5]
+ambient:
+  ambientColor: [0.12, 0.12, 0.12]
+  fogDensity: 0.014
+  tint: [1, 1, 1]
+  background: [0.05, 0.05, 0.05]
+  fogColor: [0.05, 0.05, 0.05]
+light:
+  position: [0, 2.6, 0]
+  color: [1, 0.95, 0.88]
+  intensity: 1.2
+walls:
+  concept: pared_concreto_pulido
+floor:
+  concept: piso_concreto_industrial
+ceiling:
+  concept: pared_concreto_pulido
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.6, -5]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: STEM
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Mesas, frascos y protocolo de seguridad.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: mesa
+    kind: box
+    position: [0, -2.7, 0]
+    scale: [2.2, 0.35, 0.9]
+    material: pared_concreto_pulido
+  - id: frasco_a
+    kind: cylinder
+    position: [-0.6, -2.1, 0]
+    scale: [0.12, 0.28, 0.12]
+    material: vidrio_esmerilado
+    label: Ácido
+    interact: true
+  - id: frasco_b
+    kind: cylinder
+    position: [0.6, -2.1, 0]
+    scale: [0.12, 0.28, 0.12]
+    material: metal_oxidado
+    label: Base
+    interact: true
+  - id: lavaojos
+    kind: round_box
+    position: [4.5, -2.4, 4.5]
+    scale: [0.35, 0.5, 0.35]
+    material: metal_bronce_pulido
+    label: Lavaojos
+    interact: true
+  - id: lampara
+    kind: concept
+    position: [0, 2.1, 0]
+    scale: [0.16, 0.28, 0.16]
+    concept: lampara_colgante
+npc:
+  - id: tecnico
+    name: Tecnico
+    role: teacher
+    position: [2.5, -3.2, -3]
+    dialog:
+      - Bata y goggles antes de tocar reactivos.
+      - Identifica el lavaojos.
+      - No mezcles los frascos sin protocolo.
+zones:
+  - id: campana
+    kind: box
+    position: [0, -2, 0]
+    hidden: false
+    size: [1.4, 1.2, 1.0]
+    label: Campana
+missions:
+  - id: m1
+    title: Recibe el protocolo
+    description: Habla con el técnico.
+    objective:
+      talk: tecnico
+    success: "Completaste: Recibe el protocolo"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Localiza el lavaojos
+    description: Interactúa con la estación de seguridad.
+    objective:
+      interact: lavaojos
+    success: "Completaste: Localiza el lavaojos"
+    rewards:
+      xp: 90
+      stars: 1
+      badge: ehs
+    required: true
+    next: m3
+  - id: m3
+    title: Identifica el ácido
+    description: Interactúa con el frasco A.
+    objective:
+      interact: frasco_a
+    success: "Completaste: Identifica el ácido"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true

@@ -1,0 +1,143 @@
+# Gemelo digital
+
+version: "0.3"
+name: gemelo_digital
+title: Gemelo digital
+description: Oficina NeoNodos con pieza emblemática.
+bounds: [5.5, 3, 5.5]
+spawn: [0, -1.4, -4]
+ambient:
+  background: [0.06, 0.04, 0.03]
+  ambientColor: [0.14, 0.1, 0.07]
+  tint: [1.08, 0.95, 0.78]
+  fogColor: [0.06, 0.04, 0.03]
+  fogDensity: 0.015
+light:
+  position: [0, 2.8, 0]
+  color: [1, 0.88, 0.65]
+  intensity: 1.4
+walls:
+  concept: pared_yeso_blanco
+floor:
+  concept: pared_madera_oscura
+ceiling:
+  concept: pared_yeso_blanco
+ui:
+  hud: education
+  locale: es
+  map: true
+  hints: true
+player:
+  spawn: [0, -1.4, -4]
+  height: 1.6
+  speed: 3.2
+education:
+  subject: Ingeniería
+  grade: preparatoria
+  durationMin: 15
+  language: es
+  difficulty: easy
+  objectives:
+    - Oficina NeoNodos con pieza emblemática.
+  bloom:
+    - remember
+    - understand
+  stem: true
+  mode: student
+objects:
+  - id: pedestal
+    kind: concept
+    position: [0, -2.5, 0]
+    scale: [0.45, 0.45, 0.45]
+    concept: pedestal_marmol
+  - id: esfera_emblema
+    kind: sphere
+    position: [0, -1.5, 0]
+    scale: 0.42
+    material: metal_dorado_pulido
+    animate:
+      mode: bob
+      speed: 0.5
+      amplitude: 0.1
+    label: Emblema
+    interact: true
+  - id: cubo_i
+    kind: box
+    position: [-3.5, -2.5, -3.5]
+    scale: [0.3, 0.5, 0.3]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.7
+  - id: cubo_d
+    kind: box
+    position: [3.5, -2.5, -3.5]
+    scale: [0.3, 0.5, 0.3]
+    material:
+      concept: metal_bronce_pulido
+      params:
+        shimmer: 0.7
+  - id: vitrina
+    kind: round_box
+    position: [-3, -1.8, 2]
+    scale: [0.25, 0.7, 0.5]
+    material:
+      concept: vidrio_esmerilado
+      params:
+        clarity: 0.4
+    label: Vitrina
+    interact: true
+  - id: lampara
+    kind: concept
+    position: [0, 1.5, -2.5]
+    scale: [0.15, 0.25, 0.15]
+    concept: lampara_colgante
+npc:
+  - id: arquitecta
+    name: Arquitecta
+    role: teacher
+    position: [2.4, -3, -3.2]
+    dialog:
+      - Este espacio es un gemelo de la oficina.
+      - La esfera dorada es el núcleo del modelo.
+      - Revisa la vitrina de datos.
+zones:
+  - id: nucleo
+    kind: sphere
+    position: [0, -1.5, 0]
+    hidden: false
+    radius: 1.3
+missions:
+  - id: m1
+    title: Contexto
+    description: Habla con la arquitecta.
+    objective:
+      talk: arquitecta
+    success: "Completaste: Contexto"
+    rewards:
+      xp: 40
+      stars: 1
+    required: true
+    next: m2
+  - id: m2
+    title: Núcleo
+    description: Interactúa con la esfera emblemática.
+    objective:
+      interact: esfera_emblema
+    success: "Completaste: Núcleo"
+    rewards:
+      xp: 100
+      stars: 1
+      badge: digital-twin
+    required: true
+    next: m3
+  - id: m3
+    title: Datos
+    description: Revisa la vitrina.
+    objective:
+      interact: vitrina
+    success: "Completaste: Datos"
+    rewards:
+      xp: 70
+      stars: 1
+    required: true

@@ -1,0 +1,562 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://m13.phi-core.com/schema/v0.3.json",
+  "title": "m13 scene v0.3",
+  "type": "object",
+  "required": [
+    "name",
+    "floor"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": [
+        "0.1",
+        "0.2",
+        "0.3"
+      ],
+      "default": "0.3"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "bounds": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "default": [
+        5,
+        3,
+        5
+      ]
+    },
+    "spawn": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      },
+      "default": [
+        0,
+        0,
+        -3.5
+      ]
+    },
+    "ambient": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "ambientColor": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "tint": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "fogColor": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "fogDensity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "color": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "walls": {
+      "type": "object",
+      "required": [
+        "concept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+    "floor": {
+      "type": "object",
+      "required": [
+        "concept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+    "ceiling": {
+      "type": "object",
+      "required": [
+        "concept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+    "sky": {
+      "type": "object",
+      "required": [
+        "horizon",
+        "zenith"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "horizon": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "zenith": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cameraSpeed": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "window": {
+      "type": "object",
+      "required": [
+        "position",
+        "size"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "size": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "$ref": "#/definitions/object"
+      }
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 48
+    },
+    "player": {
+      "type": "object",
+      "properties": {
+        "spawn": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "hud": {
+          "enum": [
+            "education",
+            "minimal",
+            "none"
+          ]
+        },
+        "locale": {
+          "type": "string"
+        },
+        "map": {
+          "type": "boolean"
+        },
+        "hints": {
+          "type": "boolean"
+        }
+      }
+    },
+    "education": {
+      "type": "object"
+    },
+    "missions": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/mission"
+      }
+    },
+    "npc": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {
+        "$ref": "#/definitions/npc"
+      }
+    },
+    "zones": {
+      "type": "array",
+      "maxItems": 48,
+      "items": {
+        "$ref": "#/definitions/zone"
+      }
+    },
+    "quizzes": {
+      "type": "array"
+    },
+    "score": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "object": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "sphere",
+            "box",
+            "round_box",
+            "cylinder",
+            "torus",
+            "concept"
+          ]
+        },
+        "concept": {
+          "type": "string"
+        },
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "rotation": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          ]
+        },
+        "seed": {
+          "type": "number"
+        },
+        "material": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "required": [
+                "concept"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          ]
+        },
+        "audio_reactive": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "animate": {
+          "type": "object"
+        },
+        "label": {
+          "type": "string"
+        },
+        "interact": {
+          "type": "boolean"
+        },
+        "zone": {
+          "type": "string"
+        }
+      }
+    },
+    "mission": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "objective"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "objective": {
+          "type": "object"
+        },
+        "success": {
+          "type": "string"
+        },
+        "failure": {
+          "type": "string"
+        },
+        "hints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rewards": {
+          "type": "object"
+        },
+        "next": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "npc": {
+      "type": "object",
+      "required": [
+        "id",
+        "position",
+        "dialog"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "teacher",
+            "guide",
+            "peer",
+            "narrator",
+            "evaluator"
+          ]
+        },
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "dialog": {
+          "type": "array"
+        },
+        "voice": {
+          "type": "string"
+        },
+        "mission": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        },
+        "reward": {
+          "type": "object"
+        }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "required": [
+        "id",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "box",
+            "sphere"
+          ]
+        },
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "size": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "label": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
